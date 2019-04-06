@@ -43,6 +43,11 @@ static void close_ogles2_library(void)
     }
 }
 
+static STRPTR task_name()
+{
+    return (((struct Node *)IExec->FindTask(NULL))->ln_Name);
+}
+
 // We patch IExec->GetInterface to be able to patch later IOGLES2 interface.
 
 static struct Interface* (*old_GetInterface)(struct ExecIFace* Self, struct Library *, STRPTR, ULONG, struct TagItem *);
@@ -70,12 +75,12 @@ static void patch_GetInterface(BOOL patching)
     if (patching) {
         old_GetInterface = IExec->SetMethod((struct Interface *)IExec, offsetof(struct ExecIFace, GetInterface), my_GetInterface);
         if (old_GetInterface) {
-            IExec->DebugPrintF("Patched GetInterface %p with %p\n", old_GetInterface, my_GetInterface);
+            IExec->DebugPrintF("%s: Patched GetInterface %p with %p\n", task_name(), old_GetInterface, my_GetInterface);
         }
     } else {
         if (old_GetInterface) {
             IExec->SetMethod((struct Interface *)IExec, offsetof(struct ExecIFace, GetInterface), old_GetInterface);
-            IExec->DebugPrintF("Restored GetInterface %p\n", old_GetInterface);
+            IExec->DebugPrintF("%s: Restored GetInterface %p\n", task_name(), old_GetInterface);
             old_GetInterface = NULL;
         }
     }
@@ -90,7 +95,7 @@ static void (*old_glBufferData)(struct OGLES2IFace *Self, GLenum target, GLsizei
 
 static void my_aglSwapBuffers(struct OGLES2IFace *Self)
 {
-    IExec->DebugPrintF("%s\n", __func__);
+    IExec->DebugPrintF("%s: %s\n", task_name(), __func__);
     if (old_aglSwapBuffers) {
         old_aglSwapBuffers(Self);
     }
@@ -98,7 +103,7 @@ static void my_aglSwapBuffers(struct OGLES2IFace *Self)
 
 static void my_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 {
-    IExec->DebugPrintF("%s: shader %u\n", __func__, shader);
+    IExec->DebugPrintF("%s: %s: shader %u\n", task_name(), __func__, shader);
     if (old_glCompileShader) {
         old_glCompileShader(Self, shader);
     }
@@ -106,7 +111,7 @@ static void my_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 
 static void my_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage)
 {
-    IExec->DebugPrintF("%s\n", __func__);
+    IExec->DebugPrintF("%s: %s\n", task_name(), __func__);
     if (old_glBufferData) {
         old_glBufferData(Self, target, size, data, usage);
     }
