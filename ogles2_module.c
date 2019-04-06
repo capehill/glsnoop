@@ -1,12 +1,12 @@
 #include "ogles2_module.h"
+#include "common.h"
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>
-//#include <proto/dos.h>
 
 #include <stdio.h>
 
-struct OGLES2IFace* IOGLES2; // We don't actually use IOGLES2 at the moment
+//struct OGLES2IFace* IOGLES2;
 struct Library* OGLES2Base;
 
 static void patch_ogles2_functions(struct Interface* interface);
@@ -16,13 +16,13 @@ static BOOL open_ogles2_library(void)
 {
     OGLES2Base = IExec->OpenLibrary("ogles2.library", 0);
     if (OGLES2Base) {
-        IOGLES2 = (struct OGLES2IFace *)IExec->GetInterface(OGLES2Base, "main", 1, NULL);
+        //IOGLES2 = (struct OGLES2IFace *)IExec->GetInterface(OGLES2Base, "main", 1, NULL);
 
-        if (IOGLES2) {
+        //if (IOGLES2) {
             return TRUE;
-        }
+        //}
 
-        printf("Failed to get ogles2 interface\n");
+        //printf("Failed to get ogles2 interface\n");
     } else {
         printf("Failed to open ogles2.library\n");
     }
@@ -32,20 +32,15 @@ static BOOL open_ogles2_library(void)
 
 static void close_ogles2_library(void)
 {
-    if (IOGLES2) {
-        IExec->DropInterface((struct Interface *)IOGLES2);
-        IOGLES2 = NULL;
-    }
+    //if (IOGLES2) {
+    //    IExec->DropInterface((struct Interface *)IOGLES2);
+    //    IOGLES2 = NULL;
+    //}
 
     if (OGLES2Base) {
         IExec->CloseLibrary(OGLES2Base);
         OGLES2Base = NULL;
     }
-}
-
-static STRPTR task_name()
-{
-    return (((struct Node *)IExec->FindTask(NULL))->ln_Name);
 }
 
 // We patch IExec->GetInterface to be able to patch later IOGLES2 interface.
@@ -68,26 +63,7 @@ static struct Interface* my_GetInterface(struct ExecIFace* Self, struct Library 
     return interface;
 }
 
-static void patch_GetInterface(BOOL patching)
-{
-    IExec->Forbid();
-
-    if (patching) {
-        old_GetInterface = IExec->SetMethod((struct Interface *)IExec, offsetof(struct ExecIFace, GetInterface), my_GetInterface);
-        if (old_GetInterface) {
-            IExec->DebugPrintF("%s: Patched GetInterface %p with %p\n", task_name(), old_GetInterface, my_GetInterface);
-        }
-    } else {
-        if (old_GetInterface) {
-            IExec->SetMethod((struct Interface *)IExec, offsetof(struct ExecIFace, GetInterface), old_GetInterface);
-            IExec->DebugPrintF("%s: Restored GetInterface %p\n", task_name(), old_GetInterface);
-            old_GetInterface = NULL;
-        }
-    }
-
-    IExec->Permit();
-}
-
+PATCH_INTERFACE(ExecIFace, GetInterface)
 
 static void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
 static void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader) = NULL;
@@ -96,6 +72,7 @@ static void (*old_glBufferData)(struct OGLES2IFace *Self, GLenum target, GLsizei
 static void my_aglSwapBuffers(struct OGLES2IFace *Self)
 {
     IExec->DebugPrintF("%s: %s\n", task_name(), __func__);
+
     if (old_aglSwapBuffers) {
         old_aglSwapBuffers(Self);
     }
@@ -104,6 +81,7 @@ static void my_aglSwapBuffers(struct OGLES2IFace *Self)
 static void my_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 {
     IExec->DebugPrintF("%s: %s: shader %u\n", task_name(), __func__, shader);
+
     if (old_glCompileShader) {
         old_glCompileShader(Self, shader);
     }
@@ -111,33 +89,16 @@ static void my_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 
 static void my_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage)
 {
-    IExec->DebugPrintF("%s: %s\n", task_name(), __func__);
+    IExec->DebugPrintF("%s: %s: target %d, size %u, data %p, usage %d\n", task_name(), __func__);
+
     if (old_glBufferData) {
         old_glBufferData(Self, target, size, data, usage);
     }
 }
 
-#define PATCH_OGLES2(func) \
-static void patch_##func(BOOL patching, struct Interface* interface) \
-{ \
-    if (patching) { \
-        old_##func = IExec->SetMethod(interface, offsetof(struct OGLES2IFace, func), my_##func); \
-        if (old_##func) { \
-            IExec->DebugPrintF("Patched " #func " %p with %p\n", old_##func, my_##func); \
-        } \
-    } else { \
-        if (old_##func) { \
-            IExec->SetMethod(interface, offsetof(struct OGLES2IFace, func), old_##func); \
-            IExec->DebugPrintF("Restored " #func " %p\n", old_##func); \
-            old_##func = NULL; \
-        } \
-    } \
-} \
-
-
-PATCH_OGLES2(aglSwapBuffers)
-PATCH_OGLES2(glCompileShader)
-PATCH_OGLES2(glBufferData)
+PATCH_INTERFACE(OGLES2IFace, aglSwapBuffers)
+PATCH_INTERFACE(OGLES2IFace, glCompileShader)
+PATCH_INTERFACE(OGLES2IFace, glBufferData)
 
 static void (*patches[])(BOOL, struct Interface*) = {
     patch_aglSwapBuffers,
@@ -146,46 +107,40 @@ static void (*patches[])(BOOL, struct Interface*) = {
     NULL
 };
 
-//__attribute__((constructor))
 void ogles2_install_patches(void)
 {
     open_ogles2_library();
 
     // Actually, patches only IExec
-    patch_GetInterface(TRUE);
+    patch_GetInterface(TRUE, (struct Interface *)IExec);
 }
 
 static void patch_ogles2_functions(struct Interface* interface)
 {
     if (interface) {
         int i;
-        IExec->Forbid();
         for (i = 0; i < sizeof(patches) / sizeof(patches[0]); i++) {
             if (patches[i]) {
                 patches[i](TRUE, interface);
             }
         }
-        IExec->Permit();
 
         patchedInterface = interface;
     }
 }
 
-//__attribute__((destructor))
 void ogles2_remove_patches(void)
 {
     if (patchedInterface) {
         int i;
-        IExec->Forbid();
         for (i = 0; i < sizeof(patches) / sizeof(patches[0]); i++) {
             if (patches[i]) {
                 patches[i](FALSE, patchedInterface);
             }
         }
-        IExec->Permit();
     }
 
-    patch_GetInterface(FALSE);
+    patch_GetInterface(FALSE, (struct Interface *)IExec);
 
     close_ogles2_library();
 }

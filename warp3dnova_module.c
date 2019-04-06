@@ -1,4 +1,5 @@
 #include "warp3dnova_module.h"
+#include "common.h"
 
 #include <proto/exec.h>
 #include <proto/warp3dnova.h>
@@ -38,11 +39,6 @@ static void close_warp3dnova_library()
         IExec->CloseLibrary(Warp3DNovaBase);
         Warp3DNovaBase = NULL;
     }
-}
-
-static STRPTR task_name()
-{
-    return (((struct Node *)IExec->FindTask(NULL))->ln_Name);
 }
 
 static W3DN_ErrorCode (*old_DrawArrays)(struct W3DN_Context_s *self,
@@ -94,42 +90,28 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
     if (old_W3DN_CreateContext) {
         context = old_W3DN_CreateContext(Self, errCode, tags);
 
-        patch_context_functions(context);
+        if (context) {
+            patch_context_functions(context);
+        }
     }
 
     return context;
 }
 
-static void patch_W3DN_CreateContext(BOOL patching)
-{
-    IExec->Forbid();
-
-    if (patching) {
-        old_W3DN_CreateContext = IExec->SetMethod(IWarp3DNova, offsetof(struct Warp3DNovaIFace, W3DN_CreateContext), my_W3DN_CreateContext);
-        if (old_W3DN_CreateContext) {
-            IExec->DebugPrintF("%s: Patched W3DN_CreateContext %p with %p\n", task_name(), old_W3DN_CreateContext, my_W3DN_CreateContext);
-        }
-    } else {
-        if (old_W3DN_CreateContext) {
-            IExec->SetMethod(IWarp3DNova, offsetof(struct Warp3DNovaIFace, W3DN_CreateContext), old_W3DN_CreateContext);
-            IExec->DebugPrintF("%s: Restored W3DN_CreateContext %p\n", task_name(), old_W3DN_CreateContext);
-            old_W3DN_CreateContext = NULL;
-        }
-    }
-
-    IExec->Permit();
-}
+PATCH_INTERFACE(Warp3DNovaIFace, W3DN_CreateContext)
 
 void warp3dnova_install_patches()
 {
-    open_warp3dnova_library();
-
-    patch_W3DN_CreateContext(TRUE);
+    if (open_warp3dnova_library()) {
+        patch_W3DN_CreateContext(TRUE, IWarp3DNova);
+    }
 }
 
 void warp3dnova_remove_patches()
 {
-    patch_W3DN_CreateContext(FALSE);
+    if (IWarp3DNova) {
+        patch_W3DN_CreateContext(FALSE, IWarp3DNova);
+    }
 
     close_warp3dnova_library();
 }
