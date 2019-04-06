@@ -9,7 +9,7 @@
 struct OGLES2IFace* IOGLES2; // We don't actually use IOGLES2 at the moment
 struct Library* OGLES2Base;
 
-static void patch_gl_functions(struct Interface* interface);
+static void patch_ogles2_functions(struct Interface* interface);
 static struct Interface* patchedInterface;
 
 static BOOL open_ogles2_library(void)
@@ -61,7 +61,7 @@ static struct Interface* my_GetInterface(struct ExecIFace* Self, struct Library 
 
         if (library == OGLES2Base) {
             // Applications wants IOGLES2, patch it
-            patch_gl_functions(interface);
+            patch_ogles2_functions(interface);
         }
     }
 
@@ -155,7 +155,7 @@ void ogles2_install_patches(void)
     patch_GetInterface(TRUE);
 }
 
-static void patch_gl_functions(struct Interface* interface)
+static void patch_ogles2_functions(struct Interface* interface)
 {
     if (interface) {
         int i;
@@ -185,9 +185,7 @@ void ogles2_remove_patches(void)
         IExec->Permit();
     }
 
-    if (old_GetInterface) {
-        patch_GetInterface(FALSE);
-    }
+    patch_GetInterface(FALSE);
 
     close_ogles2_library();
 }
