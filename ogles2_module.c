@@ -106,50 +106,27 @@ static void my_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr 
     }
 }
 
-static void patch_aglSwapBuffers(BOOL patching, struct Interface* interface)
-{
-    if (patching) {
-        old_aglSwapBuffers = IExec->SetMethod(interface, offsetof(struct OGLES2IFace, aglSwapBuffers), my_aglSwapBuffers);
-        if (old_aglSwapBuffers) {
-            IExec->DebugPrintF("Patched aglSwapBuffers %p with %p\n", old_aglSwapBuffers, my_aglSwapBuffers);
-        }
-    } else {
-        if (old_aglSwapBuffers) {
-            IExec->SetMethod(interface, offsetof(struct OGLES2IFace, aglSwapBuffers), old_aglSwapBuffers);
-            IExec->DebugPrintF("Restored aglSwapBuffers %p\n", old_aglSwapBuffers);
-        }
-    }
-}
+#define PATCH_OGLES2(func) \
+static void patch_##func(BOOL patching, struct Interface* interface) \
+{ \
+    if (patching) { \
+        old_##func = IExec->SetMethod(interface, offsetof(struct OGLES2IFace, func), my_##func); \
+        if (old_##func) { \
+            IExec->DebugPrintF("Patched " #func " %p with %p\n", old_##func, my_##func); \
+        } \
+    } else { \
+        if (old_##func) { \
+            IExec->SetMethod(interface, offsetof(struct OGLES2IFace, func), old_##func); \
+            IExec->DebugPrintF("Restored " #func " %p\n", old_##func); \
+            old_##func = NULL; \
+        } \
+    } \
+} \
 
-static void patch_glCompileShader(BOOL patching, struct Interface* interface)
-{
-    if (patching) {
-        old_glCompileShader = IExec->SetMethod(interface, offsetof(struct OGLES2IFace, glCompileShader), my_glCompileShader);
-        if (old_glCompileShader) {
-            IExec->DebugPrintF("Patched glCompileShader %p with %p\n", old_glCompileShader, my_glCompileShader);
-        }
-    } else {
-        if (old_glCompileShader) {
-            IExec->SetMethod(interface, offsetof(struct OGLES2IFace, glCompileShader), old_glCompileShader);
-            IExec->DebugPrintF("Restored glCompileShader %p\n", old_glCompileShader);
-        }
-    }
-}
 
-static void patch_glBufferData(BOOL patching, struct Interface* interface)
-{
-    if (patching) {
-        old_glBufferData = IExec->SetMethod(interface, offsetof(struct OGLES2IFace, glBufferData), my_glBufferData);
-        if (old_glBufferData) {
-            IExec->DebugPrintF("Patched glBufferData %p with %p\n", old_glBufferData, my_glBufferData);
-        }
-    } else {
-        if (old_glBufferData) {
-            IExec->SetMethod(interface, offsetof(struct OGLES2IFace, glBufferData), old_glBufferData);
-            IExec->DebugPrintF("Restored glBufferData %p\n", old_glBufferData);
-        }
-    }
-}
+PATCH_OGLES2(aglSwapBuffers)
+PATCH_OGLES2(glCompileShader)
+PATCH_OGLES2(glBufferData)
 
 static void (*patches[])(BOOL, struct Interface*) = {
     patch_aglSwapBuffers,
