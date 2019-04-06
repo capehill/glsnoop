@@ -1,4 +1,4 @@
-OBJS = main.o ogles2_module.o
+OBJS = main.o ogles2_module.o warp3dnova_module.o
 
 %.o : %.c
 	gcc -o $@ -c $< -Wall -O0 -ggdb
