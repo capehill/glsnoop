@@ -79,7 +79,8 @@ static void my_aglSwapBuffers(struct OGLES2IFace *Self)
 
 static void my_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 {
-    IExec->DebugPrintF("%s: %s: shader %u\n", task_name(), __func__, shader);
+    IExec->DebugPrintF("%s: %s: shader %u\n", task_name(), __func__,
+        shader);
 
     if (old_glCompileShader) {
         old_glCompileShader(Self, shader);
@@ -88,7 +89,8 @@ static void my_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 
 static void my_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
 {
-    IExec->DebugPrintF("%s: %s: n %d, buffers %p\n", task_name(), __func__, n, buffers);
+    IExec->DebugPrintF("%s: %s: n %d, buffers %p\n", task_name(), __func__,
+        n, buffers);
 
     if (old_glGenBuffers) {
         old_glGenBuffers(Self, n, buffers);
@@ -97,7 +99,8 @@ static void my_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffer
 
 static void my_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buffer)
 {
-    IExec->DebugPrintF("%s: %s: target %d, buffer %u\n", task_name(), __func__, target, buffer);
+    IExec->DebugPrintF("%s: %s: target %d, buffer %u\n", task_name(), __func__,
+        target, buffer);
 
     if (old_glBindBuffer) {
         old_glBindBuffer(Self, target, buffer);
@@ -106,7 +109,8 @@ static void my_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buff
 
 static void my_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage)
 {
-    IExec->DebugPrintF("%s: %s: target %d, size %u, data %p, usage %d\n", task_name(), __func__, target, size, data, usage);
+    IExec->DebugPrintF("%s: %s: target %d, size %u, data %p, usage %d\n", task_name(), __func__,
+        target, size, data, usage);
 
     if (old_glBufferData) {
         old_glBufferData(Self, target, size, data, usage);
@@ -115,7 +119,8 @@ static void my_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr 
 
 static void my_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLintptr offset, GLsizeiptr size, const void * data)
 {
-    IExec->DebugPrintF("%s: %s: target %d, offset %u, size %u, data %p\n", task_name(), __func__, target, offset, size, data);
+    IExec->DebugPrintF("%s: %s: target %d, offset %u, size %u, data %p\n", task_name(), __func__,
+        target, offset, size, data);
 
     if (old_glBufferSubData) {
         old_glBufferSubData(Self, target, offset, size, data);
@@ -124,7 +129,8 @@ static void my_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLintptr
 
 static void my_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
 {
-    IExec->DebugPrintF("%s: %s: n %d, buffers %p\n", task_name(), __func__, n, buffers);
+    IExec->DebugPrintF("%s: %s: n %d, buffers %p\n", task_name(), __func__,
+         n, buffers);
 
     if (old_glDeleteBuffers) {
         old_glDeleteBuffers(Self, n, buffers);
@@ -133,7 +139,8 @@ static void my_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buf
 
 static void my_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint index)
 {
-    IExec->DebugPrintF("%s: %s: index %u\n", task_name(), __func__, index);
+    IExec->DebugPrintF("%s: %s: index %u\n", task_name(), __func__,
+        index);
 
     if (old_glEnableVertexAttribArray) {
         old_glEnableVertexAttribArray(Self, index);
@@ -152,7 +159,8 @@ static void my_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index, GLi
 
 static void my_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count)
 {
-    IExec->DebugPrintF("%s: %s: mode %d, first %d, count %d\n", task_name(), __func__, mode, first, count);
+    IExec->DebugPrintF("%s: %s: mode %d, first %d, count %d\n", task_name(), __func__,
+        mode, first, count);
 
     if (old_glDrawArrays) {
         old_glDrawArrays(Self, mode, first, count);
@@ -161,7 +169,8 @@ static void my_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint first, 
 
 static void my_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices)
 {
-    IExec->DebugPrintF("%s: %s: mode %d, count %d, type %d, indices %p\n", task_name(), __func__, mode, count, type, indices);
+    IExec->DebugPrintF("%s: %s: mode %d, count %d, type %d, indices %p\n", task_name(), __func__,
+        mode, count, type, indices);
 
     if (old_glDrawElements) {
         old_glDrawElements(Self, mode, count, type, indices);
@@ -181,7 +190,7 @@ PATCH_INTERFACE(OGLES2IFace, glDrawArrays)
 PATCH_INTERFACE(OGLES2IFace, glDrawElements)
 
 static void (*patches[])(BOOL, struct Interface*) = {
-    patch_aglSwapBuffers,
+    //patch_aglSwapBuffers,
     patch_glCompileShader,
     patch_glGenBuffers,
     patch_glBindBuffer,
