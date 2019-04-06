@@ -43,6 +43,8 @@ static void close_ogles2_library(void)
     }
 }
 
+// We patch IExec->GetInterface to be able to patch later IOGLES2 interface.
+
 static struct Interface* (*old_GetInterface)(struct ExecIFace* Self, struct Library *, STRPTR, ULONG, struct TagItem *);
 
 static struct Interface* my_GetInterface(struct ExecIFace* Self, struct Library * library, STRPTR name, ULONG version, struct TagItem *ti)
@@ -63,6 +65,8 @@ static struct Interface* my_GetInterface(struct ExecIFace* Self, struct Library 
 
 static void patch_GetInterface(BOOL patching)
 {
+    IExec->Forbid();
+
     if (patching) {
         old_GetInterface = IExec->SetMethod((struct Interface *)IExec, offsetof(struct ExecIFace, GetInterface), my_GetInterface);
         if (old_GetInterface) {
@@ -75,6 +79,8 @@ static void patch_GetInterface(BOOL patching)
             old_GetInterface = NULL;
         }
     }
+
+    IExec->Permit();
 }
 
 
