@@ -9,13 +9,13 @@
 struct Library* OGLES2Base;
 
 static void patch_ogles2_functions(struct Interface* interface);
-static struct Interface* patchedInterface;
+static struct Interface* patchedInterface; // TODO FIXME: can only support one OGLES2 application the moment
 
 static BOOL open_ogles2_library(void)
 {
     OGLES2Base = IExec->OpenLibrary("ogles2.library", 0);
     if (OGLES2Base) {
-        return TRUE; // We need only library pointer, interface cannot be patched anyway
+        return TRUE;
     } else {
         printf("Failed to open ogles2.library\n");
     }
@@ -52,6 +52,8 @@ static struct Interface* EXEC_GetInterface(struct ExecIFace* Self, struct Librar
 
 PATCH_INTERFACE(ExecIFace, GetInterface, EXEC)
 
+// Store original function pointers so that they can be still called
+
 static void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
 static void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
 
@@ -68,12 +70,30 @@ static void (*old_glVertexAttribPointer)(struct OGLES2IFace *Self, GLuint index,
 static void (*old_glEnableVertexAttribArray)(struct OGLES2IFace *Self, GLuint index);
 //static void (*old_glVertexAttrib3fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
 
+static void check_errors(const char* info)
+{
+    GLenum err;
+    while ((err = ((struct OGLES2IFace *)patchedInterface)->glGetError()) != GL_NO_ERROR) {
+        IExec->DebugPrintF("%s: GL error %d detected %s call\n", task_name(), err, info);
+    }
+}
+
+#define PRE_CHECK check_errors("before");
+#define POST_CHECK check_errors("after");
+
+#define CHECK(x) \
+PRE_CHECK \
+x; \
+POST_CHECK
+
+// Wrap traced function calls
+
 static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
 {
     IExec->DebugPrintF("%s: %s\n", task_name(), __func__);
 
     if (old_aglSwapBuffers) {
-        old_aglSwapBuffers(Self);
+        CHECK(old_aglSwapBuffers(Self))
     }
 }
 
@@ -83,7 +103,7 @@ static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
         shader);
 
     if (old_glCompileShader) {
-        old_glCompileShader(Self, shader);
+        CHECK(old_glCompileShader(Self, shader))
     }
 }
 
@@ -93,7 +113,7 @@ static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * bu
         n, buffers);
 
     if (old_glGenBuffers) {
-        old_glGenBuffers(Self, n, buffers);
+        CHECK(old_glGenBuffers(Self, n, buffers))
     }
 }
 
@@ -103,7 +123,7 @@ static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint 
         target, buffer);
 
     if (old_glBindBuffer) {
-        old_glBindBuffer(Self, target, buffer);
+        CHECK(old_glBindBuffer(Self, target, buffer))
     }
 }
 
@@ -113,7 +133,7 @@ static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizei
         target, size, data, usage);
 
     if (old_glBufferData) {
-        old_glBufferData(Self, target, size, data, usage);
+        CHECK(old_glBufferData(Self, target, size, data, usage))
     }
 }
 
@@ -123,7 +143,7 @@ static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLin
         target, offset, size, data);
 
     if (old_glBufferSubData) {
-        old_glBufferSubData(Self, target, offset, size, data);
+        CHECK(old_glBufferSubData(Self, target, offset, size, data))
     }
 }
 
@@ -133,7 +153,7 @@ static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint *
          n, buffers);
 
     if (old_glDeleteBuffers) {
-        old_glDeleteBuffers(Self, n, buffers);
+        CHECK(old_glDeleteBuffers(Self, n, buffers))
     }
 }
 
@@ -143,7 +163,7 @@ static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint in
         index);
 
     if (old_glEnableVertexAttribArray) {
-        old_glEnableVertexAttribArray(Self, index);
+        CHECK(old_glEnableVertexAttribArray(Self, index))
     }
 }
 
@@ -153,7 +173,7 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
         index, size, type, normalized, stride, pointer);
 
     if (old_glVertexAttribPointer) {
-        old_glVertexAttribPointer(Self, index, size, type, normalized, stride, pointer);
+        CHECK(old_glVertexAttribPointer(Self, index, size, type, normalized, stride, pointer))
     }
 }
 
@@ -163,7 +183,7 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
         mode, first, count);
 
     if (old_glDrawArrays) {
-        old_glDrawArrays(Self, mode, first, count);
+        CHECK(old_glDrawArrays(Self, mode, first, count))
     }
 }
 
@@ -173,7 +193,7 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
         mode, count, type, indices);
 
     if (old_glDrawElements) {
-        old_glDrawElements(Self, mode, count, type, indices);
+        CHECK(old_glDrawElements(Self, mode, count, type, indices))
     }
 }
 
