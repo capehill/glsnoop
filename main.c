@@ -13,7 +13,7 @@ struct Params {
 
 static struct Params params = { FALSE };
 
-void parse_args()
+static void parse_args()
 {
     struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S", (int32 *)&params, NULL);
 
@@ -26,11 +26,12 @@ void parse_args()
         params.ogles2 = params.nova = TRUE;
     }
 
-    printf("OGLES2 tracing: %s\n", params.ogles2 ? "enabled" : "disabled");
-    printf("WARP3DNOVA tracing: %s\n", params.nova ? "enabled" : "disabled");
+    printf("OGLES2 tracing: [%s]\n", params.ogles2 ? "enabled" : "disabled");
+    printf("WARP3DNOVA tracing: [%s]\n", params.nova ? "enabled" : "disabled");
 }
 
-static void install_patches() {
+static void install_patches()
+{
     if (params.ogles2) {
         ogles2_install_patches();
     }
@@ -40,7 +41,8 @@ static void install_patches() {
     }
 }
 
-static void remove_patches() {
+static void remove_patches()
+{
     if (params.nova) {
         warp3dnova_remove_patches();
     }
