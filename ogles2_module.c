@@ -35,7 +35,7 @@ static void close_ogles2_library(void)
 
 static struct Interface* (*old_GetInterface)(struct ExecIFace* Self, struct Library *, STRPTR, ULONG, struct TagItem *);
 
-static struct Interface* my_GetInterface(struct ExecIFace* Self, struct Library * library, STRPTR name, ULONG version, struct TagItem *ti)
+static struct Interface* EXEC_GetInterface(struct ExecIFace* Self, struct Library * library, STRPTR name, ULONG version, struct TagItem *ti)
 {
     struct Interface* interface = NULL;
 
@@ -50,7 +50,7 @@ static struct Interface* my_GetInterface(struct ExecIFace* Self, struct Library 
     return interface;
 }
 
-PATCH_INTERFACE(ExecIFace, GetInterface)
+PATCH_INTERFACE(ExecIFace, GetInterface, EXEC)
 
 static void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
 static void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
@@ -68,7 +68,7 @@ static void (*old_glVertexAttribPointer)(struct OGLES2IFace *Self, GLuint index,
 static void (*old_glEnableVertexAttribArray)(struct OGLES2IFace *Self, GLuint index);
 //static void (*old_glVertexAttrib3fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
 
-static void my_aglSwapBuffers(struct OGLES2IFace *Self)
+static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
 {
     IExec->DebugPrintF("%s: %s\n", task_name(), __func__);
 
@@ -77,7 +77,7 @@ static void my_aglSwapBuffers(struct OGLES2IFace *Self)
     }
 }
 
-static void my_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
+static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 {
     IExec->DebugPrintF("%s: %s: shader %u\n", task_name(), __func__,
         shader);
@@ -87,7 +87,7 @@ static void my_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
     }
 }
 
-static void my_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
+static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
 {
     IExec->DebugPrintF("%s: %s: n %d, buffers %p\n", task_name(), __func__,
         n, buffers);
@@ -97,7 +97,7 @@ static void my_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffer
     }
 }
 
-static void my_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buffer)
+static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buffer)
 {
     IExec->DebugPrintF("%s: %s: target %d, buffer %u\n", task_name(), __func__,
         target, buffer);
@@ -107,7 +107,7 @@ static void my_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buff
     }
 }
 
-static void my_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage)
+static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage)
 {
     IExec->DebugPrintF("%s: %s: target %d, size %u, data %p, usage %d\n", task_name(), __func__,
         target, size, data, usage);
@@ -117,7 +117,7 @@ static void my_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr 
     }
 }
 
-static void my_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLintptr offset, GLsizeiptr size, const void * data)
+static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLintptr offset, GLsizeiptr size, const void * data)
 {
     IExec->DebugPrintF("%s: %s: target %d, offset %u, size %u, data %p\n", task_name(), __func__,
         target, offset, size, data);
@@ -127,7 +127,7 @@ static void my_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLintptr
     }
 }
 
-static void my_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
+static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
 {
     IExec->DebugPrintF("%s: %s: n %d, buffers %p\n", task_name(), __func__,
          n, buffers);
@@ -137,7 +137,7 @@ static void my_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buf
     }
 }
 
-static void my_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint index)
+static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint index)
 {
     IExec->DebugPrintF("%s: %s: index %u\n", task_name(), __func__,
         index);
@@ -147,7 +147,7 @@ static void my_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint index)
     }
 }
 
-static void my_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)
+static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)
 {
     IExec->DebugPrintF("%s: %s: index %u, size %d, type %d, normalized %d, stride %d, pointer %p\n", task_name(), __func__,
         index, size, type, normalized, stride, pointer);
@@ -157,7 +157,7 @@ static void my_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index, GLi
     }
 }
 
-static void my_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count)
+static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count)
 {
     IExec->DebugPrintF("%s: %s: mode %d, first %d, count %d\n", task_name(), __func__,
         mode, first, count);
@@ -167,7 +167,7 @@ static void my_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint first, 
     }
 }
 
-static void my_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices)
+static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices)
 {
     IExec->DebugPrintF("%s: %s: mode %d, count %d, type %d, indices %p\n", task_name(), __func__,
         mode, count, type, indices);
@@ -177,17 +177,17 @@ static void my_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei cou
     }
 }
 
-PATCH_INTERFACE(OGLES2IFace, aglSwapBuffers)
-PATCH_INTERFACE(OGLES2IFace, glCompileShader)
-PATCH_INTERFACE(OGLES2IFace, glGenBuffers)
-PATCH_INTERFACE(OGLES2IFace, glBindBuffer)
-PATCH_INTERFACE(OGLES2IFace, glBufferData)
-PATCH_INTERFACE(OGLES2IFace, glBufferSubData)
-PATCH_INTERFACE(OGLES2IFace, glDeleteBuffers)
-PATCH_INTERFACE(OGLES2IFace, glEnableVertexAttribArray)
-PATCH_INTERFACE(OGLES2IFace, glVertexAttribPointer)
-PATCH_INTERFACE(OGLES2IFace, glDrawArrays)
-PATCH_INTERFACE(OGLES2IFace, glDrawElements)
+PATCH_INTERFACE(OGLES2IFace, aglSwapBuffers, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glCompileShader, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glGenBuffers, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glBindBuffer, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glBufferData, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glBufferSubData, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glDeleteBuffers, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glEnableVertexAttribArray, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glVertexAttribPointer, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glDrawArrays, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glDrawElements, OGLES2)
 
 static void (*patches[])(BOOL, struct Interface*) = {
     //patch_aglSwapBuffers,
