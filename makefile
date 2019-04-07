@@ -1,10 +1,12 @@
-OBJS = main.o ogles2_module.o warp3dnova_module.o
+OBJS = main.o ogles2_module.o warp3dnova_module.o logger.o
+CFLAGS = -Wall -O3 -ggdb
 
-%.o : %.c
-	gcc -o $@ -c $< -Wall -O3 -ggdb
+%.o : %.c makefile
+	gcc -o $@ -c $< $(CFLAGS)
 
-glsnoop: $(OBJS)
-	gcc -o $@ $(OBJS) -logles2
+glsnoop: $(OBJS) makefile
+	gcc -o $@ $(OBJS)
 
 clean:
 	delete $(OBJS)
+

@@ -9,6 +9,11 @@
 struct Library* Warp3DNovaBase;
 struct Interface* IWarp3DNova;
 
+static STRPTR task_name()
+{
+    return (((struct Node *)IExec->FindTask(NULL))->ln_Name);
+}
+
 static BOOL open_warp3dnova_library()
 {
     Warp3DNovaBase = IExec->OpenLibrary("Warp3DNova.library", 0);
@@ -82,15 +87,15 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 {
     W3DN_VertexBuffer* result = old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
 
-    IExec->DebugPrintF("%s: %s: size %u, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d\n", task_name(), __func__,
-        (unsigned)size, usage, maxArrays, tags, result, *errCode);
+    logLine("%s: %s: size %u, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d", task_name(), __func__,
+        (unsigned)size, usage, (unsigned)maxArrays, tags, result, *errCode);
 
     return result;
 }
 
 static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer)
 {
-    IExec->DebugPrintF("%s: %s: vertexBuffer %p\n", task_name(), __func__,
+    logLine("%s: %s: vertexBuffer %p", task_name(), __func__,
         vertexBuffer);
 
     old_DestroyVertexBufferObject(self, vertexBuffer);
@@ -100,7 +105,7 @@ static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *ve
 {
     const uint64 result = old_VBOGetAttr(self, vertexBuffer, attr);
 
-    IExec->DebugPrintF("%s: %s: vertexBuffer %p, attr %d. Result %u\n", task_name(), __func__,
+    logLine("%s: %s: vertexBuffer %p, attr %d. Result %u", task_name(), __func__,
         vertexBuffer, attr, (unsigned)result);
 
     return result;
@@ -112,9 +117,9 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 {
     const W3DN_ErrorCode result = old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
-    IExec->DebugPrintF("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %u, stride %u, offset %u, count %u. Result %d\n",
+    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %u, stride %u, offset %u, count %u. Result %d",
         task_name(), __func__,
-        buffer, arrayIdx, elementType, normalized, (unsigned)numElements, (unsigned)stride, (unsigned)offset, (unsigned)count, result);
+        buffer, (unsigned)arrayIdx, elementType, normalized, (unsigned)numElements, (unsigned)stride, (unsigned)offset, (unsigned)count, result);
 
     return result;
 }
@@ -125,9 +130,9 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 {
     const W3DN_ErrorCode result = old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
-    IExec->DebugPrintF("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %u, stride %u, offset %u, count %u. Result %d\n",
+    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %u, stride %u, offset %u, count %u. Result %d",
         task_name(), __func__,
-        buffer, arrayIdx, *elementType, *normalized, (unsigned)*numElements, (unsigned)*stride, (unsigned)*offset, (unsigned)*count, result);
+        buffer, (unsigned)arrayIdx, *elementType, *normalized, (unsigned)*numElements, (unsigned)*stride, (unsigned)*offset, (unsigned)*count, result);
 
     return result;
 }
@@ -137,7 +142,7 @@ static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 {
     W3DN_BufferLock* result = old_VBOLock(self, errCode, buffer, readOffset, readSize);
 
-    IExec->DebugPrintF("%s: %s: buffer %p, readOffset %u, readSize %u. Lock address %p, errCode %d\n", task_name(), __func__,
+    logLine("%s: %s: buffer %p, readOffset %u, readSize %u. Lock address %p, errCode %d", task_name(), __func__,
         buffer, (unsigned)readOffset, (unsigned)readSize, result, *errCode);
 
     return result;
@@ -148,7 +153,7 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 {
     const W3DN_ErrorCode result = old_BufferUnlock(self, bufferLock, writeOffset, writeSize);
 
-    IExec->DebugPrintF("%s: %s: bufferLock %p, writeOffset %u, writeSize %u. Result %d\n", task_name(), __func__,
+    logLine("%s: %s: bufferLock %p, writeOffset %u, writeSize %u. Result %d", task_name(), __func__,
         bufferLock, (unsigned)writeOffset, (unsigned)writeSize, result);
 
     return result;
@@ -160,8 +165,8 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 {
     const W3DN_ErrorCode result = old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
 
-    IExec->DebugPrintF("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d\n", task_name(), __func__,
-        renderState, attribNum, buffer, arrayIdx, result);
+    logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d", task_name(), __func__,
+        renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result);
 
     return result;
 }
@@ -171,8 +176,8 @@ static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 {
     const W3DN_ErrorCode result = old_DrawArrays(self, renderState, primitive, base, count);
 
-    IExec->DebugPrintF("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d\n", task_name(), __func__,
-        renderState, primitive, base, count, result);
+    logLine("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d", task_name(), __func__,
+        renderState, primitive, (unsigned)base, (unsigned)count, result);
 
     return result;
 }
@@ -183,9 +188,9 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 {
     const W3DN_ErrorCode result = old_DrawElements(self, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx);
 
-    IExec->DebugPrintF("%s: %s: renderState %p, primitive %d, baseVertex %u, count %u, indexBuffer %p, arrayIdx %u. Result %d\n",
+    logLine("%s: %s: renderState %p, primitive %d, baseVertex %u, count %u, indexBuffer %p, arrayIdx %u. Result %d",
         task_name(), __func__,
-        renderState, primitive, baseVertex, count, indexBuffer, arrayIdx, result);
+        renderState, primitive, (unsigned)baseVertex, (unsigned)count, indexBuffer, (unsigned)arrayIdx, result);
 
     return result;
 }
@@ -193,7 +198,7 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 #define PATCH_W3DN_CONTEXT(function) \
 old_##function = context->function; \
 context->function = W3DN_##function; \
-IExec->DebugPrintF("Patched W3DN context function " #function "\n"); \
+logLine("Patched W3DN context function " #function);
 
 
 static void patch_context_functions(W3DN_Context* context)

@@ -11,6 +11,11 @@ struct Library* OGLES2Base;
 static void patch_ogles2_functions(struct Interface* interface);
 static struct Interface* patchedInterface; // TODO FIXME: can only support one OGLES2 application the moment
 
+static STRPTR task_name()
+{
+    return (((struct Node *)IExec->FindTask(NULL))->ln_Name);
+}
+
 static BOOL open_ogles2_library(void)
 {
     OGLES2Base = IExec->OpenLibrary("ogles2.library", 0);
@@ -74,7 +79,7 @@ static void check_errors(const char* info)
 {
     GLenum err;
     while ((err = ((struct OGLES2IFace *)patchedInterface)->glGetError()) != GL_NO_ERROR) {
-        IExec->DebugPrintF("%s: GL error %d detected %s call\n", task_name(), err, info);
+        logLine("%s: GL error %d detected %s call", task_name(), err, info);
     }
 }
 
@@ -90,7 +95,7 @@ POST_CHECK
 
 static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
 {
-    IExec->DebugPrintF("%s: %s\n", task_name(), __func__);
+    logLine("%s: %s", task_name(), __func__);
 
     if (old_aglSwapBuffers) {
         CHECK(old_aglSwapBuffers(Self))
@@ -99,7 +104,7 @@ static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
 
 static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 {
-    IExec->DebugPrintF("%s: %s: shader %u\n", task_name(), __func__,
+    logLine("%s: %s: shader %u", task_name(), __func__,
         shader);
 
     if (old_glCompileShader) {
@@ -109,7 +114,7 @@ static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 
 static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
 {
-    IExec->DebugPrintF("%s: %s: n %d, buffers %p\n", task_name(), __func__,
+    logLine("%s: %s: n %d, buffers %p", task_name(), __func__,
         n, buffers);
 
     if (old_glGenBuffers) {
@@ -119,7 +124,7 @@ static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * bu
 
 static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buffer)
 {
-    IExec->DebugPrintF("%s: %s: target %d, buffer %u\n", task_name(), __func__,
+    logLine("%s: %s: target %d, buffer %u", task_name(), __func__,
         target, buffer);
 
     if (old_glBindBuffer) {
@@ -129,7 +134,7 @@ static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint 
 
 static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage)
 {
-    IExec->DebugPrintF("%s: %s: target %d, size %u, data %p, usage %d\n", task_name(), __func__,
+    logLine("%s: %s: target %d, size %u, data %p, usage %d", task_name(), __func__,
         target, size, data, usage);
 
     if (old_glBufferData) {
@@ -139,7 +144,7 @@ static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizei
 
 static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLintptr offset, GLsizeiptr size, const void * data)
 {
-    IExec->DebugPrintF("%s: %s: target %d, offset %u, size %u, data %p\n", task_name(), __func__,
+    logLine("%s: %s: target %d, offset %u, size %u, data %p", task_name(), __func__,
         target, offset, size, data);
 
     if (old_glBufferSubData) {
@@ -149,7 +154,7 @@ static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLin
 
 static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
 {
-    IExec->DebugPrintF("%s: %s: n %d, buffers %p\n", task_name(), __func__,
+    logLine("%s: %s: n %d, buffers %p", task_name(), __func__,
          n, buffers);
 
     if (old_glDeleteBuffers) {
@@ -159,7 +164,7 @@ static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint *
 
 static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint index)
 {
-    IExec->DebugPrintF("%s: %s: index %u\n", task_name(), __func__,
+    logLine("%s: %s: index %u", task_name(), __func__,
         index);
 
     if (old_glEnableVertexAttribArray) {
@@ -169,7 +174,7 @@ static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint in
 
 static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)
 {
-    IExec->DebugPrintF("%s: %s: index %u, size %d, type %d, normalized %d, stride %d, pointer %p\n", task_name(), __func__,
+    logLine("%s: %s: index %u, size %d, type %d, normalized %d, stride %d, pointer %p", task_name(), __func__,
         index, size, type, normalized, stride, pointer);
 
     if (old_glVertexAttribPointer) {
@@ -179,7 +184,7 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
 
 static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count)
 {
-    IExec->DebugPrintF("%s: %s: mode %d, first %d, count %d\n", task_name(), __func__,
+    logLine("%s: %s: mode %d, first %d, count %d", task_name(), __func__,
         mode, first, count);
 
     if (old_glDrawArrays) {
@@ -189,7 +194,7 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
 
 static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices)
 {
-    IExec->DebugPrintF("%s: %s: mode %d, count %d, type %d, indices %p\n", task_name(), __func__,
+    logLine("%s: %s: mode %d, count %d, type %d, indices %p", task_name(), __func__,
         mode, count, type, indices);
 
     if (old_glDrawElements) {
