@@ -75,6 +75,22 @@ static void (*old_glVertexAttribPointer)(struct OGLES2IFace *Self, GLuint index,
 static void (*old_glEnableVertexAttribArray)(struct OGLES2IFace *Self, GLuint index);
 //static void (*old_glVertexAttrib3fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
 
+static void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
+
+static void (*old_glActiveTexture)(struct OGLES2IFace *Self, GLenum texture);
+static void (*old_glBindTexture)(struct OGLES2IFace *Self, GLenum target, GLuint texture);
+static void (*old_glGenTextures)(struct OGLES2IFace *Self, GLsizei n, GLuint * textures);
+static void (*old_glGenerateMipmap)(struct OGLES2IFace *Self, GLenum target);
+static void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
+static void (*old_glTexParameterfv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLfloat * params);
+static void (*old_glTexParameteri)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint param);
+static void (*old_glTexParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLint * params);
+static void (*old_glTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);
+static void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
+static void (*old_glDeleteTextures)(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures);
+
+// Error checking helpers
+
 static void check_errors(const char* info)
 {
     GLenum err;
@@ -120,6 +136,11 @@ static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * bu
     if (old_glGenBuffers) {
         CHECK(old_glGenBuffers(Self, n, buffers))
     }
+
+    size_t i;
+    for (i = 0; i < n; i++) {
+        logLine("Buffer[%u] = %u", i, buffers[i]);
+    }
 }
 
 static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buffer)
@@ -156,6 +177,11 @@ static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint *
 {
     logLine("%s: %s: n %d, buffers %p", task_name(), __func__,
          n, buffers);
+
+    size_t i;
+    for (i = 0; i < n; i++) {
+        logLine("Deleting buffer[%u] = %u", i, buffers[i]);
+    }
 
     if (old_glDeleteBuffers) {
         CHECK(old_glDeleteBuffers(Self, n, buffers))
@@ -202,6 +228,141 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
     }
 }
 
+static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
+{
+    logLine("%s: %s: shader %u, count %u, string %p length %p", task_name(), __func__,
+        shader, count, string, length);
+
+    size_t i;
+    for (i = 0; i < count; i++) {
+        logLine("Line %u: length %d: '%s'", i, length[i], string[i]);
+    }
+
+    if (old_glShaderSource) {
+        CHECK(old_glShaderSource(Self, shader, count, string, length))
+    }
+}
+
+static void OGLES2_glActiveTexture(struct OGLES2IFace *Self, GLenum texture)
+{
+    logLine("%s: %s: texture %d", task_name(), __func__,
+        texture);
+
+    if (old_glActiveTexture) {
+        CHECK(old_glActiveTexture(Self, texture))
+    }
+}
+
+static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint texture)
+{
+    logLine("%s: %s: target %d, texture %d", task_name(), __func__,
+        target, texture);
+
+    if (old_glBindTexture) {
+        CHECK(old_glBindTexture(Self, target, texture))
+    }
+}
+
+static void OGLES2_glGenTextures(struct OGLES2IFace *Self, GLsizei n, GLuint * textures)
+{
+    logLine("%s: %s: n %d, textures %p", task_name(), __func__,
+        n, textures);
+
+    if (old_glGenTextures) {
+        CHECK(old_glGenTextures(Self, n, textures))
+    }
+
+    size_t i;
+    for (i = 0; i < n; i++) {
+        logLine("Texture[%u] = %u", i, textures[i]);
+    }
+}
+
+static void OGLES2_glGenerateMipmap(struct OGLES2IFace *Self, GLenum target)
+{
+    logLine("%s: %s: target %d", task_name(), __func__,
+        target);
+
+    if (old_glGenerateMipmap) {
+        CHECK(old_glGenerateMipmap(Self, target))
+    }
+}
+
+static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param)
+{
+    logLine("%s: %s: target %d, pname %d, param %f", task_name(), __func__,
+        target, pname, param);
+
+    if (old_glTexParameterf) {
+        CHECK(old_glTexParameterf(Self, target, pname, param))
+    }
+}
+
+static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLfloat * params)
+{
+    logLine("%s: %s: target %d, pname %d, params %p", task_name(), __func__,
+        target, pname, params);
+
+    if (old_glTexParameterfv) {
+        CHECK(old_glTexParameterfv(Self, target, pname, params))
+    }
+}
+
+static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint param)
+{
+    logLine("%s: %s: target %d, pname %d, param %d", task_name(), __func__,
+        target, pname, param);
+
+    if (old_glTexParameteri) {
+        CHECK(old_glTexParameteri(Self, target, pname, param))
+    }
+}
+
+static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLint * params)
+{
+    logLine("%s: %s: target %d, pname %d, params %p", task_name(), __func__,
+        target, pname, params);
+
+    if (old_glTexParameteriv) {
+        CHECK(old_glTexParameteriv(Self, target, pname, params))
+    }
+}
+
+static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels)
+{
+    logLine("%s: %s: target %d, level %d, xoffset %d, yoffset %d, width %u, height %u, format %d, type %d, pixels %p", task_name(), __func__,
+        target, level, xoffset, yoffset, width, height, format, type, pixels);
+
+    if (old_glTexSubImage2D) {
+        CHECK(old_glTexSubImage2D(Self, target, level, xoffset, yoffset, width, height, format, type, pixels))
+    }
+}
+
+static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels)
+{
+    logLine("%s: %s: target %d, level %d, internalformat %d, width %u, height %u, border %d, format %d, type %d, pixels %p", task_name(), __func__,
+        target, level, internalformat, width, height, border, format, type, pixels);
+
+    if (old_glTexImage2D) {
+        CHECK(old_glTexImage2D(Self, target, level, internalformat, width, height, border, format, type, pixels))
+    }
+}
+
+static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures)
+{
+    logLine("%s: %s: n %u, textures %p", task_name(), __func__,
+        n, textures);
+
+    size_t i;
+    for (i = 0; i < n; i++) {
+        logLine("Deleting texture[%u] = %u", i, textures[i]);
+    }
+
+    if (old_glDeleteTextures) {
+        CHECK(old_glDeleteTextures(Self, n, textures))
+    }
+}
+
 PATCH_INTERFACE(OGLES2IFace, aglSwapBuffers, OGLES2)
 PATCH_INTERFACE(OGLES2IFace, glCompileShader, OGLES2)
 PATCH_INTERFACE(OGLES2IFace, glGenBuffers, OGLES2)
@@ -213,6 +374,18 @@ PATCH_INTERFACE(OGLES2IFace, glEnableVertexAttribArray, OGLES2)
 PATCH_INTERFACE(OGLES2IFace, glVertexAttribPointer, OGLES2)
 PATCH_INTERFACE(OGLES2IFace, glDrawArrays, OGLES2)
 PATCH_INTERFACE(OGLES2IFace, glDrawElements, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glShaderSource, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glActiveTexture, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glBindTexture, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glGenTextures, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glGenerateMipmap, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glTexParameterf, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glTexParameterfv, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glTexParameteri, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glTexParameteriv, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glTexSubImage2D, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glTexImage2D, OGLES2)
+PATCH_INTERFACE(OGLES2IFace, glDeleteTextures, OGLES2)
 
 static void (*patches[])(BOOL, struct Interface*) = {
     //patch_aglSwapBuffers,
@@ -226,6 +399,18 @@ static void (*patches[])(BOOL, struct Interface*) = {
     patch_glVertexAttribPointer,
     patch_glDrawArrays,
     patch_glDrawElements,
+    patch_glShaderSource,
+    patch_glActiveTexture,
+    patch_glBindTexture,
+    patch_glGenTextures,
+    patch_glGenerateMipmap,
+    patch_glTexParameterf,
+    patch_glTexParameterfv,
+    patch_glTexParameteri,
+    patch_glTexParameteriv,
+    patch_glTexSubImage2D,
+    patch_glTexImage2D,
+    patch_glDeleteTextures,
     NULL
 };
 
