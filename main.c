@@ -1,6 +1,7 @@
 #include "ogles2_module.h"
 #include "warp3dnova_module.h"
 #include "common.h"
+#include "gui.h"
 
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -10,13 +11,14 @@
 struct Params {
     LONG ogles2;
     LONG nova;
+    LONG gui;
 };
 
 static struct Params params = { 0 };
 
 static void parse_args()
 {
-    struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S", (int32 *)&params, NULL);
+    struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S,GUI/S", (int32 *)&params, NULL);
 
     if (result) {
         IDOS->FreeArgs(result);
@@ -29,6 +31,7 @@ static void parse_args()
 
     printf("OGLES2 tracing: [%s]\n", params.ogles2 ? "enabled" : "disabled");
     printf("WARP3DNOVA tracing: [%s]\n", params.nova ? "enabled" : "disabled");
+    printf("GUI: [%s]\n", params.gui ? "enabled" : "disabled");
 }
 
 static void install_patches()
@@ -62,7 +65,11 @@ int main(int argc, char* argv[])
 
     puts("System patched. Press Control-C to quit...");
 
-    IExec->Wait(SIGBREAKF_CTRL_C);
+    if (params.gui) {
+        run_gui();
+    } else {
+        IExec->Wait(SIGBREAKF_CTRL_C);
+    }
 
     remove_patches();
 

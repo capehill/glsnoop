@@ -4,6 +4,8 @@
 #include <proto/exec.h>
 
 void logLine(const char * fmt, ...) __attribute__ ((format (printf, 1, 2)));
+void pause_log(void);
+void unpause_log(void);
 
 #define PATCH_INTERFACE(type,func,prefix) \
 static void patch_##func(BOOL patching, struct Interface* interface) \

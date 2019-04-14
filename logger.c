@@ -5,17 +5,32 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+static BOOL paused = FALSE;
+
 void logLine(const char * fmt, ...)
 {
-    char buffer[1024];
+    if (!paused) {
+        char buffer[1024];
 
-    va_list ap;
-    va_start(ap, fmt);
+        va_list ap;
+        va_start(ap, fmt);
 
-    vsnprintf(buffer, sizeof(buffer), fmt, ap);
+        vsnprintf(buffer, sizeof(buffer), fmt, ap);
 
-    va_end(ap);
+        va_end(ap);
 
-    IExec->DebugPrintF("%s\n", buffer);
+        IExec->DebugPrintF("%s\n", buffer);
+    }
 }
 
+void pause_log(void)
+{
+    paused = TRUE;
+    IExec->DebugPrintF("glSnoop: tracing paused\n");
+}
+
+void unpause_log(void)
+{
+    IExec->DebugPrintF("glSnoop: tracing started\n");
+    paused = FALSE;
+}
