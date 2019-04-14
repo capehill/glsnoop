@@ -234,8 +234,15 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
         shader, count, string, length);
 
     size_t i;
-    for (i = 0; i < count; i++) {
-        logLine("Line %u: length %d: '%s'", i, length[i], string[i]);
+
+    if (length) {
+        for (i = 0; i < count; i++) {
+            logLine("Line %u: length %d: '%s'", i, length[i], string[i]);
+        }
+    } else {
+        for (i = 0; i < count; i++) {
+            logLine("Line %u: '%s'", i, string[i]);
+        }
     }
 
     if (old_glShaderSource) {
