@@ -25,12 +25,16 @@ void logLine(const char * fmt, ...)
 
 void pause_log(void)
 {
-    paused = TRUE;
-    IExec->DebugPrintF("glSnoop: tracing paused\n");
+    if (!paused) {
+        paused = TRUE;
+        IExec->DebugPrintF("glSnoop: tracing paused\n");
+    }
 }
 
 void unpause_log(void)
 {
-    IExec->DebugPrintF("glSnoop: tracing started\n");
-    paused = FALSE;
+    if (paused) {
+        IExec->DebugPrintF("glSnoop: tracing started\n");
+        paused = FALSE;
+    }
 }

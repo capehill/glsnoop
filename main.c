@@ -47,6 +47,9 @@ static void install_patches()
 
 static void remove_patches()
 {
+    // It may be useful to see the cleanup in serial
+    unpause_log();
+
     if (params.nova) {
         warp3dnova_remove_patches();
     }
@@ -58,7 +61,7 @@ static void remove_patches()
 
 int main(int argc, char* argv[])
 {
-    logLine("glSnoop starting");
+    logLine("glSnoop started");
 
     parse_args();
     install_patches();
@@ -73,7 +76,8 @@ int main(int argc, char* argv[])
 
     remove_patches();
 
-    logLine("glSnoop terminated");
+    puts("Patches removed. glSnoop terminating");
+    logLine("glSnoop exiting");
 
     return 0;
 }
