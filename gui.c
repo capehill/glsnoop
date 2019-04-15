@@ -71,7 +71,7 @@ static void on_trace(void)
     IIntuition->SetAttrs(objects[OID_Pause], GA_Disabled, FALSE, TAG_DONE);
 
     refresh();
-    unpause_log();
+    resume_log();
 }
 
 static void on_pause()

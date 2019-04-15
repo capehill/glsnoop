@@ -31,10 +31,10 @@ void pause_log(void)
     }
 }
 
-void unpause_log(void)
+void resume_log(void)
 {
     if (paused) {
-        IExec->DebugPrintF("glSnoop: tracing started\n");
+        IExec->DebugPrintF("glSnoop: tracing resumed\n");
         paused = FALSE;
     }
 }

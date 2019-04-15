@@ -48,7 +48,7 @@ static void install_patches()
 static void remove_patches()
 {
     // It may be useful to see the cleanup in serial
-    unpause_log();
+    resume_log();
 
     if (params.nova) {
         warp3dnova_remove_patches();
