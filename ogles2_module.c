@@ -444,6 +444,7 @@ static void patch_ogles2_functions(struct Interface* interface)
 
 void ogles2_remove_patches(void)
 {
+    // FIXME: should somehow verify that patched interface is still active
     if (patchedInterface) {
         int i;
         for (i = 0; i < sizeof(patches) / sizeof(patches[0]); i++) {

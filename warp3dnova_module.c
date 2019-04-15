@@ -241,6 +241,8 @@ void warp3dnova_install_patches()
     }
 }
 
+// FIXME: if glSnoop quits before application, application may crash
+// -> Should restore Nova interface back
 void warp3dnova_remove_patches()
 {
     if (IWarp3DNova) {
