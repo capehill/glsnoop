@@ -3,8 +3,10 @@
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>
+#include <proto/dos.h>
 
 #include <stdio.h>
+#include <string.h>
 
 struct Library* OGLES2Base;
 
@@ -13,6 +15,7 @@ struct Ogles2Context
 {
     struct OGLES2IFace* interface;
     struct Task* task;
+    char name[NAME_LEN];
 
     void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
     void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
@@ -50,9 +53,21 @@ static APTR mutex;
 
 static void patch_ogles2_functions(struct Ogles2Context *);
 
-static STRPTR task_name(struct Task *task)
+static void find_process_name(struct Ogles2Context * context)
 {
-    return (((struct Node *)task)->ln_Name);
+    struct Node * node = (struct Node *)context->task;
+
+    if (node->ln_Type == NT_PROCESS) {
+        char buffer[NAME_LEN];
+
+        if (IDOS->GetCliProgramName(buffer, NAME_LEN) == FALSE) {
+            strncpy(context->name, node->ln_Name, NAME_LEN);
+        } else {
+            snprintf(context->name, NAME_LEN, "%s '%s'", node->ln_Name, buffer);
+        }
+    } else {
+        strncpy(context->name, node->ln_Name, NAME_LEN);
+    }
 }
 
 static BOOL open_ogles2_library(void)
@@ -100,6 +115,8 @@ static struct Interface* EXEC_GetInterface(struct ExecIFace* Self, struct Librar
                 context->task = IExec->FindTask(NULL);
                 context->interface = (struct OGLES2IFace *)interface;
 
+                find_process_name(context);
+
                 IExec->MutexObtain(mutex);
 
                 size_t i;
@@ -134,7 +151,7 @@ static void EXEC_DropInterface(struct ExecIFace* Self, struct Interface* interfa
 
     for (i = 0; i < MAX_CLIENTS; i++) {
         if (contexts[i] && (struct Interface *)contexts[i]->interface == interface) {
-            logLine("%s: dropping patched interface %p", task_name(contexts[i]->task), interface);
+            logLine("%s: dropping patched interface %p", contexts[i]->name, interface);
 
             // No need to remove patches because every OGLES2 applications has its own interface
             IExec->FreeVec(contexts[i]);
@@ -173,7 +190,6 @@ static struct Ogles2Context* find_context(struct OGLES2IFace *interface)
 }
 
 #define GET_CONTEXT struct Ogles2Context* context = find_context(Self);
-#define TASK_NAME (((struct Node *)context->task)->ln_Name)
 
 // Error checking helpers
 
@@ -181,7 +197,7 @@ static void check_errors(const char* info, struct Ogles2Context * context)
 {
     GLenum err;
     while ((err = context->interface->glGetError()) != GL_NO_ERROR) {
-        logLine("%s: GL error %d detected %s call", TASK_NAME, err, info);
+        logLine("%s: GL error %d detected %s call", context->name, err, info);
     }
 }
 
@@ -199,7 +215,7 @@ static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
 {
     GET_CONTEXT
 
-    logLine("%s: %s", TASK_NAME, __func__);
+    logLine("%s: %s", context->name, __func__);
 
     if (context->old_aglSwapBuffers) {
         CHECK(context->old_aglSwapBuffers(Self))
@@ -210,7 +226,7 @@ static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: shader %u", TASK_NAME, __func__,
+    logLine("%s: %s: shader %u", context->name, __func__,
         shader);
 
     if (context->old_glCompileShader) {
@@ -222,7 +238,7 @@ static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * bu
 {
     GET_CONTEXT
 
-    logLine("%s: %s: n %d, buffers %p", TASK_NAME, __func__,
+    logLine("%s: %s: n %d, buffers %p", context->name, __func__,
         n, buffers);
 
     if (context->old_glGenBuffers) {
@@ -239,7 +255,7 @@ static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, buffer %u", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, buffer %u", context->name, __func__,
         target, buffer);
 
     if (context->old_glBindBuffer) {
@@ -251,7 +267,7 @@ static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizei
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, size %u, data %p, usage %d", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, size %u, data %p, usage %d", context->name, __func__,
         target, size, data, usage);
 
     if (context->old_glBufferData) {
@@ -263,7 +279,7 @@ static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLin
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, offset %u, size %u, data %p", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, offset %u, size %u, data %p", context->name, __func__,
         target, offset, size, data);
 
     if (context->old_glBufferSubData) {
@@ -275,7 +291,7 @@ static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint *
 {
     GET_CONTEXT
 
-    logLine("%s: %s: n %d, buffers %p", TASK_NAME, __func__,
+    logLine("%s: %s: n %d, buffers %p", context->name, __func__,
          n, buffers);
 
     size_t i;
@@ -292,7 +308,7 @@ static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint in
 {
     GET_CONTEXT
 
-    logLine("%s: %s: index %u", TASK_NAME, __func__,
+    logLine("%s: %s: index %u", context->name, __func__,
         index);
 
     if (context->old_glEnableVertexAttribArray) {
@@ -304,7 +320,7 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
 {
     GET_CONTEXT
 
-    logLine("%s: %s: index %u, size %d, type %d, normalized %d, stride %d, pointer %p", TASK_NAME, __func__,
+    logLine("%s: %s: index %u, size %d, type %d, normalized %d, stride %d, pointer %p", context->name, __func__,
         index, size, type, normalized, stride, pointer);
 
     if (context->old_glVertexAttribPointer) {
@@ -316,7 +332,7 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %d, first %d, count %d", TASK_NAME, __func__,
+    logLine("%s: %s: mode %d, first %d, count %d", context->name, __func__,
         mode, first, count);
 
     if (context->old_glDrawArrays) {
@@ -328,7 +344,7 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %d, count %d, type %d, indices %p", TASK_NAME, __func__,
+    logLine("%s: %s: mode %d, count %d, type %d, indices %p", context->name, __func__,
         mode, count, type, indices);
 
     if (context->old_glDrawElements) {
@@ -340,7 +356,7 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
 {
     GET_CONTEXT
 
-    logLine("%s: %s: shader %u, count %u, string %p length %p", TASK_NAME, __func__,
+    logLine("%s: %s: shader %u, count %u, string %p length %p", context->name, __func__,
         shader, count, string, length);
 
     size_t i;
@@ -364,7 +380,7 @@ static void OGLES2_glActiveTexture(struct OGLES2IFace *Self, GLenum texture)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: texture %d", TASK_NAME, __func__,
+    logLine("%s: %s: texture %d", context->name, __func__,
         texture);
 
     if (context->old_glActiveTexture) {
@@ -376,7 +392,7 @@ static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, texture %d", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, texture %d", context->name, __func__,
         target, texture);
 
     if (context->old_glBindTexture) {
@@ -388,7 +404,7 @@ static void OGLES2_glGenTextures(struct OGLES2IFace *Self, GLsizei n, GLuint * t
 {
     GET_CONTEXT
 
-    logLine("%s: %s: n %d, textures %p", TASK_NAME, __func__,
+    logLine("%s: %s: n %d, textures %p", context->name, __func__,
         n, textures);
 
     if (context->old_glGenTextures) {
@@ -405,7 +421,7 @@ static void OGLES2_glGenerateMipmap(struct OGLES2IFace *Self, GLenum target)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d", TASK_NAME, __func__,
+    logLine("%s: %s: target %d", context->name, __func__,
         target);
 
     if (context->old_glGenerateMipmap) {
@@ -417,7 +433,7 @@ static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, pname %d, param %f", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, pname %d, param %f", context->name, __func__,
         target, pname, param);
 
     if (context->old_glTexParameterf) {
@@ -429,7 +445,7 @@ static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, pname %d, params %p", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, pname %d, params %p", context->name, __func__,
         target, pname, params);
 
     if (context->old_glTexParameterfv) {
@@ -441,7 +457,7 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, pname %d, param %d", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, pname %d, param %d", context->name, __func__,
         target, pname, param);
 
     if (context->old_glTexParameteri) {
@@ -453,7 +469,7 @@ static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, pname %d, params %p", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, pname %d, params %p", context->name, __func__,
         target, pname, params);
 
     if (context->old_glTexParameteriv) {
@@ -465,7 +481,7 @@ static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLin
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, level %d, xoffset %d, yoffset %d, width %u, height %u, format %d, type %d, pixels %p", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, level %d, xoffset %d, yoffset %d, width %u, height %u, format %d, type %d, pixels %p", context->name, __func__,
         target, level, xoffset, yoffset, width, height, format, type, pixels);
 
     if (context->old_glTexSubImage2D) {
@@ -477,7 +493,7 @@ static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint l
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, level %d, internalformat %d, width %u, height %u, border %d, format %d, type %d, pixels %p", TASK_NAME, __func__,
+    logLine("%s: %s: target %d, level %d, internalformat %d, width %u, height %u, border %d, format %d, type %d, pixels %p", context->name, __func__,
         target, level, internalformat, width, height, border, format, type, pixels);
 
     if (context->old_glTexImage2D) {
@@ -489,7 +505,7 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
 {
     GET_CONTEXT
 
-    logLine("%s: %s: n %u, textures %p", TASK_NAME, __func__,
+    logLine("%s: %s: n %u, textures %p", context->name, __func__,
         n, textures);
 
     size_t i;
