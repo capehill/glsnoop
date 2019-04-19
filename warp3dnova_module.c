@@ -266,53 +266,68 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
     IExec->MutexRelease(mutex);
 }
 
-#define PATCH_W3DN_CONTEXT(function) \
-nova->old_##function = context->function; \
-context->function = W3DN_##function; \
-logLine("Patched W3DN context function " #function);
-
-#define RESTORE_W3DN_CONTEXT(function) \
-context->function = nova->old_##function; \
-nova->old_##function = NULL;
-
-static void patch_context_functions(W3DN_Context* context, struct NovaContext* nova)
-{
-    PATCH_W3DN_CONTEXT(Destroy)
-    PATCH_W3DN_CONTEXT(CreateVertexBufferObject)
-    PATCH_W3DN_CONTEXT(DestroyVertexBufferObject)
-    PATCH_W3DN_CONTEXT(VBOSetArray)
-    PATCH_W3DN_CONTEXT(VBOGetArray)
-    PATCH_W3DN_CONTEXT(VBOGetAttr)
-    PATCH_W3DN_CONTEXT(VBOLock)
-    PATCH_W3DN_CONTEXT(BufferUnlock)
-    PATCH_W3DN_CONTEXT(BindVertexAttribArray)
-    PATCH_W3DN_CONTEXT(DrawArrays)
-    PATCH_W3DN_CONTEXT(DrawElements)
+#define GENERATE_NOVA_PATCH(function) \
+static void patch_##function(BOOL patching, struct NovaContext* nova) \
+{ \
+    if (patching) { \
+        nova->old_##function = nova->context->function; \
+        nova->context->function = W3DN_##function; \
+        logLine("Patched W3DN context function " #function); \
+    } else { \
+        nova->context->function = nova->old_##function; \
+        nova->old_##function = NULL; \
+    } \
 }
 
-// TODO: combine patch and restore
+GENERATE_NOVA_PATCH(Destroy)
+GENERATE_NOVA_PATCH(CreateVertexBufferObject)
+GENERATE_NOVA_PATCH(DestroyVertexBufferObject)
+GENERATE_NOVA_PATCH(VBOSetArray)
+GENERATE_NOVA_PATCH(VBOGetArray)
+GENERATE_NOVA_PATCH(VBOGetAttr)
+GENERATE_NOVA_PATCH(VBOLock)
+GENERATE_NOVA_PATCH(BufferUnlock)
+GENERATE_NOVA_PATCH(BindVertexAttribArray)
+GENERATE_NOVA_PATCH(DrawArrays)
+GENERATE_NOVA_PATCH(DrawElements)
+
+static void (*patches[])(BOOL, struct NovaContext *) = {
+    patch_Destroy,
+    patch_CreateVertexBufferObject,
+    patch_DestroyVertexBufferObject,
+    patch_VBOSetArray,
+    patch_VBOGetArray,
+    patch_VBOGetAttr,
+    patch_VBOLock,
+    patch_BufferUnlock,
+    patch_BindVertexAttribArray,
+    patch_DrawArrays,
+    patch_DrawElements
+};
+
+static void patch_context_functions(struct NovaContext* nova)
+{
+    size_t i;
+    for (i = 0; i < sizeof(patches) / sizeof(patches[0]); i++) {
+        patches[i](TRUE, nova);
+    }
+}
+
 static void restore_context_functions(struct NovaContext* nova)
 {
-    struct W3DN_Context_s* context = nova->context;
-
+    // Use Forbid because functions may be in use right now
     IExec->Forbid();
 
-    RESTORE_W3DN_CONTEXT(Destroy)
-    RESTORE_W3DN_CONTEXT(CreateVertexBufferObject)
-    RESTORE_W3DN_CONTEXT(DestroyVertexBufferObject)
-    RESTORE_W3DN_CONTEXT(VBOSetArray)
-    RESTORE_W3DN_CONTEXT(VBOGetArray)
-    RESTORE_W3DN_CONTEXT(VBOGetAttr)
-    RESTORE_W3DN_CONTEXT(VBOLock)
-    RESTORE_W3DN_CONTEXT(BufferUnlock)
-    RESTORE_W3DN_CONTEXT(BindVertexAttribArray)
-    RESTORE_W3DN_CONTEXT(DrawArrays)
-    RESTORE_W3DN_CONTEXT(DrawElements)
+    size_t i;
+    for (i = 0; i < sizeof(patches) / sizeof(patches[0]); i++) {
+        patches[i](FALSE, nova);
+    }
 
     IExec->Permit();
 }
 
 struct ContextCreation {
+    struct Interface* interface;
     W3DN_Context* (*old_W3DN_CreateContext)(struct Warp3DNovaIFace *Self, W3DN_ErrorCode * errCode, struct TagItem * tags);
 };
 
@@ -347,7 +362,7 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                 if (i == MAX_CLIENTS) {
                     logLine("glSnoop: too many clients, cannot patch");
                 } else {
-                    patch_context_functions(context, nova); // TODO
+                    patch_context_functions(nova);
                 }
             }
         }
@@ -356,7 +371,7 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
     return context;
 }
 
-PATCH_INTERFACE(Warp3DNovaIFace, W3DN_CreateContext, my, ContextCreation)
+GENERATE_PATCH(Warp3DNovaIFace, W3DN_CreateContext, my, ContextCreation)
 
 void warp3dnova_install_patches()
 {
@@ -368,14 +383,16 @@ void warp3dnova_install_patches()
     }
 
     if (open_warp3dnova_library()) {
-        patch_W3DN_CreateContext(TRUE, IWarp3DNova, &creation);
+        creation.interface = IWarp3DNova;
+
+        patch_W3DN_CreateContext(TRUE, &creation);
     }
 }
 
 void warp3dnova_remove_patches(void)
 {
     if (IWarp3DNova) {
-        patch_W3DN_CreateContext(FALSE, IWarp3DNova, &creation);
+        patch_W3DN_CreateContext(FALSE, &creation);
     }
 
     if (mutex) {

@@ -78,6 +78,7 @@ static void close_ogles2_library(void)
 // We patch IExec->GetInterface to be able to patch later IOGLES2 interface.
 
 struct ExecContext {
+    struct ExecIFace * interface;
     struct Interface* (*old_GetInterface)(struct ExecIFace* Self, struct Library *, STRPTR, ULONG, struct TagItem *);
     void (*old_DropInterface)(struct ExecIFace* Self, struct Interface* interface);
 };
@@ -149,8 +150,8 @@ static void EXEC_DropInterface(struct ExecIFace* Self, struct Interface* interfa
     }
 }
 
-PATCH_INTERFACE(ExecIFace, GetInterface, EXEC, ExecContext)
-PATCH_INTERFACE(ExecIFace, DropInterface, EXEC, ExecContext)
+GENERATE_PATCH(ExecIFace, GetInterface, EXEC, ExecContext)
+GENERATE_PATCH(ExecIFace, DropInterface, EXEC, ExecContext)
 
 static struct Ogles2Context* find_context(struct OGLES2IFace *interface)
 {
@@ -501,31 +502,31 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
     }
 }
 
-PATCH_INTERFACE(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glBindBuffer, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glBufferData, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glBufferSubData, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glEnableVertexAttribArray, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glDrawElements, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glActiveTexture, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glBindTexture, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glGenTextures, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glGenerateMipmap, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glTexParameterfv, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glTexParameteri, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glTexParameteriv, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glTexSubImage2D, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
-PATCH_INTERFACE(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glBindBuffer, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glBufferData, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glBufferSubData, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glEnableVertexAttribArray, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glDrawElements, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glActiveTexture, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glBindTexture, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glGenTextures, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glGenerateMipmap, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glTexParameterfv, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glTexParameteri, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glTexParameteriv, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glTexSubImage2D, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
+GENERATE_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
 
-static void (*patches[])(BOOL, struct Interface*, struct Ogles2Context *) = {
+static void (*patches[])(BOOL, struct Ogles2Context *) = {
     //patch_aglSwapBuffers,
     patch_glCompileShader,
     patch_glGenBuffers,
@@ -554,6 +555,8 @@ static void (*patches[])(BOOL, struct Interface*, struct Ogles2Context *) = {
 
 void ogles2_install_patches(void)
 {
+    execContext.interface = IExec;
+
     mutex = IExec->AllocSysObject(ASOT_MUTEX, TAG_DONE);
 
     if (!mutex) {
@@ -562,8 +565,8 @@ void ogles2_install_patches(void)
     }
 
     if (open_ogles2_library()) {
-        patch_GetInterface(TRUE, (struct Interface *)IExec, &execContext);
-        patch_DropInterface(TRUE, (struct Interface *)IExec, &execContext);
+        patch_GetInterface(TRUE, &execContext);
+        patch_DropInterface(TRUE, &execContext);
     }
 }
 
@@ -573,7 +576,7 @@ static void patch_ogles2_functions(struct Ogles2Context * ctx)
         size_t i;
         for (i = 0; i < sizeof(patches) / sizeof(patches[0]); i++) {
             if (patches[i]) {
-                patches[i](TRUE, (struct Interface *)ctx->interface, ctx);
+                patches[i](TRUE, ctx);
             }
         }
     }
@@ -581,8 +584,8 @@ static void patch_ogles2_functions(struct Ogles2Context * ctx)
 
 void ogles2_remove_patches(void)
 {
-    patch_DropInterface(FALSE, (struct Interface *)IExec, &execContext);
-    patch_GetInterface(FALSE, (struct Interface *)IExec, &execContext);
+    patch_DropInterface(FALSE, &execContext);
+    patch_GetInterface(FALSE, &execContext);
 
     if (mutex) {
         // Remove patches
@@ -595,7 +598,7 @@ void ogles2_remove_patches(void)
                 size_t p;
                 for (p = 0; p < sizeof(patches) / sizeof(patches[0]); p++) {
                     if (patches[p]) {
-                        patches[p](FALSE, (struct Interface *)contexts[i]->interface, contexts[i]);
+                        patches[p](FALSE, contexts[i]);
                     }
                 }
             }
