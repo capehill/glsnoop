@@ -58,9 +58,9 @@ static void find_process_name(struct Ogles2Context * context)
     struct Node * node = (struct Node *)context->task;
 
     if (node->ln_Type == NT_PROCESS) {
-        char buffer[NAME_LEN];
+        char buffer[32];
 
-        if (IDOS->GetCliProgramName(buffer, NAME_LEN) == FALSE) {
+        if (IDOS->GetCliProgramName(buffer, sizeof(buffer)) == FALSE) {
             strncpy(context->name, node->ln_Name, NAME_LEN);
         } else {
             snprintf(context->name, NAME_LEN, "%s '%s'", node->ln_Name, buffer);
@@ -294,7 +294,7 @@ static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint *
     logLine("%s: %s: n %d, buffers %p", context->name, __func__,
          n, buffers);
 
-    size_t i;
+    GLsizei i;
     for (i = 0; i < n; i++) {
         logLine("Deleting buffer[%u] = %u", i, buffers[i]);
     }
@@ -359,7 +359,7 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
     logLine("%s: %s: shader %u, count %u, string %p length %p", context->name, __func__,
         shader, count, string, length);
 
-    size_t i;
+    GLsizei i;
 
     if (length) {
         for (i = 0; i < count; i++) {
@@ -411,7 +411,7 @@ static void OGLES2_glGenTextures(struct OGLES2IFace *Self, GLsizei n, GLuint * t
         CHECK(context->old_glGenTextures(Self, n, textures))
     }
 
-    size_t i;
+    GLsizei i;
     for (i = 0; i < n; i++) {
         logLine("Texture[%u] = %u", i, textures[i]);
     }
@@ -508,7 +508,7 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
     logLine("%s: %s: n %u, textures %p", context->name, __func__,
         n, textures);
 
-    size_t i;
+    GLsizei i;
     for (i = 0; i < n; i++) {
         logLine("Deleting texture[%u] = %u", i, textures[i]);
     }

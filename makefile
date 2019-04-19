@@ -7,7 +7,7 @@ else
 endif
 
 OBJS = main.o ogles2_module.o warp3dnova_module.o logger.o gui.o
-CFLAGS = -Wall -O3 -gstabs
+CFLAGS = -Wall -Wextra -O3 -gstabs
 
 %.o : %.c makefile
 	$(CC) -o $@ -c $< $(CFLAGS)

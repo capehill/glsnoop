@@ -15,7 +15,7 @@ struct Params {
 };
 
 static const char* portName = "glSnoop port";
-static struct Params params = { 0 };
+static struct Params params = { 0, 0, 0 };
 
 static struct MsgPort* port;
 
@@ -101,7 +101,7 @@ static void remove_patches(void)
     ogles2_free();
 }
 
-int main(int argc, char* argv[])
+int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 {
     logLine("glSnoop started. Built date: %s", __DATE__);
 
