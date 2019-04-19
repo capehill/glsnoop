@@ -3,10 +3,8 @@
 
 #include <proto/exec.h>
 #include <proto/warp3dnova.h>
-#include <proto/dos.h>
 
 #include <stdio.h>
-#include <string.h>
 
 struct Library* Warp3DNovaBase;
 struct Interface* IWarp3DNova;
@@ -90,19 +88,7 @@ static void close_warp3dnova_library()
 
 static void find_process_name(struct NovaContext * context)
 {
-    struct Node * node = (struct Node *)context->task;
-
-    if (node->ln_Type == NT_PROCESS) {
-        char buffer[32];
-
-        if (IDOS->GetCliProgramName(buffer, sizeof(buffer)) == FALSE) {
-            strncpy(context->name, node->ln_Name, NAME_LEN);
-        } else {
-            snprintf(context->name, NAME_LEN, "%s '%s'", node->ln_Name, buffer);
-        }
-    } else {
-        strncpy(context->name, node->ln_Name, NAME_LEN);
-    }
+    find_process_name2((struct Node *)context->task, context->name);
 }
 
 static struct NovaContext* find_context(struct W3DN_Context_s* context)

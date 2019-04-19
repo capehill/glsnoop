@@ -6,6 +6,8 @@
 #define NAME_LEN 64
 #define MAX_CLIENTS 5
 
+void find_process_name2(struct Node * node, char * destination);
+
 void logLine(const char * fmt, ...) __attribute__ ((format (printf, 1, 2)));
 void pause_log(void);
 void resume_log(void);

@@ -103,7 +103,7 @@ static void remove_patches(void)
 
 int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 {
-    logLine("glSnoop started. Built date: %s", __DATE__);
+    logLine("*** glSnoop started. Built date: %s ***", __DATE__);
 
     if (already_running()) {
         puts("glSnoop is already running");

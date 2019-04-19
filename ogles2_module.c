@@ -3,10 +3,8 @@
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>
-#include <proto/dos.h>
 
 #include <stdio.h>
-#include <string.h>
 
 struct Library* OGLES2Base;
 
@@ -55,19 +53,7 @@ static void patch_ogles2_functions(struct Ogles2Context *);
 
 static void find_process_name(struct Ogles2Context * context)
 {
-    struct Node * node = (struct Node *)context->task;
-
-    if (node->ln_Type == NT_PROCESS) {
-        char buffer[32];
-
-        if (IDOS->GetCliProgramName(buffer, sizeof(buffer)) == FALSE) {
-            strncpy(context->name, node->ln_Name, NAME_LEN);
-        } else {
-            snprintf(context->name, NAME_LEN, "%s '%s'", node->ln_Name, buffer);
-        }
-    } else {
-        strncpy(context->name, node->ln_Name, NAME_LEN);
-    }
+    find_process_name2((struct Node *)context->task, context->name);
 }
 
 static BOOL open_ogles2_library(void)

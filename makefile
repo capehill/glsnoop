@@ -6,7 +6,7 @@ else
 	DELETE		= delete
 endif
 
-OBJS = main.o ogles2_module.o warp3dnova_module.o logger.o gui.o
+OBJS = main.o ogles2_module.o warp3dnova_module.o logger.o gui.o common.o
 CFLAGS = -Wall -Wextra -O3 -gstabs
 
 %.o : %.c makefile
