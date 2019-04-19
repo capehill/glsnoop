@@ -16,7 +16,7 @@ struct Params {
 
 static struct Params params = { 0 };
 
-static void parse_args()
+static void parse_args(void)
 {
     struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S,GUI/S", (int32 *)&params, NULL);
 
@@ -34,7 +34,7 @@ static void parse_args()
     printf("GUI: [%s]\n", params.gui ? "enabled" : "disabled");
 }
 
-static void install_patches()
+static void install_patches(void)
 {
     if (params.ogles2) {
         ogles2_install_patches();
@@ -45,18 +45,27 @@ static void install_patches()
     }
 }
 
-static void remove_patches()
+static void patch_cooldown(void)
+{
+    logLine("Wait before quit");
+
+    // It's possible that some patched application is still running inside glSnoop wrappers.
+    // Give it time to exit before process memory goes out.
+    IDOS->Delay(50);
+}
+
+static void remove_patches(void)
 {
     // It may be useful to see the cleanup in serial
     resume_log();
 
-    if (params.nova) {
-        warp3dnova_remove_patches();
-    }
+    warp3dnova_remove_patches();
+    ogles2_remove_patches();
 
-    if (params.ogles2) {
-        ogles2_remove_patches();
-    }
+    patch_cooldown();
+
+    warp3dnova_free();
+    ogles2_free();
 }
 
 int main(int argc, char* argv[])

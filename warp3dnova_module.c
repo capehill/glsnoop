@@ -9,10 +9,49 @@
 struct Library* Warp3DNovaBase;
 struct Interface* IWarp3DNova;
 
-static STRPTR task_name()
-{
-    return (((struct Node *)IExec->FindTask(NULL))->ln_Name);
-}
+struct NovaContext {
+    struct Task* task;
+    struct W3DN_Context_s* context;
+
+    // Store original function pointers so that they can be still called
+
+    void (*old_Destroy)(struct W3DN_Context_s *self);
+
+    W3DN_VertexBuffer* (*old_CreateVertexBufferObject)(struct W3DN_Context_s *self,
+    		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags);
+
+    void (*old_DestroyVertexBufferObject)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer);
+
+    uint64 (*old_VBOGetAttr)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr);
+
+    W3DN_ErrorCode (*old_VBOSetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
+    		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
+    		uint64 stride, uint64 offset, uint64 count);
+
+    W3DN_ErrorCode (*old_VBOGetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
+    		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
+    		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count);
+
+    W3DN_BufferLock* (*old_VBOLock)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
+    		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize);
+
+    W3DN_ErrorCode (*old_BufferUnlock)(struct W3DN_Context_s *self,
+    		W3DN_BufferLock *bufferLock, uint64 writeOffset, uint64 writeSize);
+
+    W3DN_ErrorCode (*old_BindVertexAttribArray)(struct W3DN_Context_s *self,
+    		W3DN_RenderState *renderState, uint32 attribNum,
+    		W3DN_VertexBuffer *buffer, uint32 arrayIdx);
+
+    W3DN_ErrorCode (*old_DrawArrays)(struct W3DN_Context_s *self,
+    		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 base, uint32 count);
+
+    W3DN_ErrorCode (*old_DrawElements)(struct W3DN_Context_s *self,
+    		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 baseVertex, uint32 count,
+    		W3DN_VertexBuffer *indexBuffer, uint32 arrayIdx);
+};
+
+static struct NovaContext* contexts[MAX_CLIENTS];
+static APTR mutex;
 
 static BOOL open_warp3dnova_library()
 {
@@ -46,48 +85,38 @@ static void close_warp3dnova_library()
     }
 }
 
-// Store original function pointers so that they can be still called
+static struct NovaContext* find_context(struct W3DN_Context_s* context)
+{
+    size_t i;
+    struct NovaContext* result = NULL;
 
-static W3DN_VertexBuffer* (*old_CreateVertexBufferObject)(struct W3DN_Context_s *self,
-		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags);
+    IExec->MutexObtain(mutex);
 
-static void (*old_DestroyVertexBufferObject)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer);
+    for (i = 0; i < MAX_CLIENTS; i++) {
+        if (contexts[i]->context == context) {
+            result = contexts[i];
+            break;
+        }
+    }
 
-static uint64 (*old_VBOGetAttr)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr);
+    IExec->MutexRelease(mutex);
 
-static W3DN_ErrorCode (*old_VBOSetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
-		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
-		uint64 stride, uint64 offset, uint64 count);
+    return result;
+}
 
-static W3DN_ErrorCode (*old_VBOGetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
-		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
-		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count);
-
-static W3DN_BufferLock* (*old_VBOLock)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
-		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize);
-
-static W3DN_ErrorCode (*old_BufferUnlock)(struct W3DN_Context_s *self,
-		W3DN_BufferLock *bufferLock, uint64 writeOffset, uint64 writeSize);
-
-static W3DN_ErrorCode (*old_BindVertexAttribArray)(struct W3DN_Context_s *self,
-		W3DN_RenderState *renderState, uint32 attribNum,
-		W3DN_VertexBuffer *buffer, uint32 arrayIdx);
-
-static W3DN_ErrorCode (*old_DrawArrays)(struct W3DN_Context_s *self,
-		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 base, uint32 count);
-
-static W3DN_ErrorCode (*old_DrawElements)(struct W3DN_Context_s *self,
-		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 baseVertex, uint32 count,
-		W3DN_VertexBuffer *indexBuffer, uint32 arrayIdx);
+#define GET_CONTEXT struct NovaContext* context = find_context(self);
+#define TASK_NAME (((struct Node *)context->task)->ln_Name)
 
 // Wrap traced calls
 
 static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *self,
 		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags)
 {
-    W3DN_VertexBuffer* result = old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
+    GET_CONTEXT
 
-    logLine("%s: %s: size %u, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d", task_name(), __func__,
+    W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
+
+    logLine("%s: %s: size %u, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d", TASK_NAME, __func__,
         (unsigned)size, usage, (unsigned)maxArrays, tags, result, *errCode);
 
     return result;
@@ -95,17 +124,21 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
 static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer)
 {
-    logLine("%s: %s: vertexBuffer %p", task_name(), __func__,
+    GET_CONTEXT
+
+    logLine("%s: %s: vertexBuffer %p", TASK_NAME, __func__,
         vertexBuffer);
 
-    old_DestroyVertexBufferObject(self, vertexBuffer);
+    context->old_DestroyVertexBufferObject(self, vertexBuffer);
 }
 
 static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr)
 {
-    const uint64 result = old_VBOGetAttr(self, vertexBuffer, attr);
+    GET_CONTEXT
 
-    logLine("%s: %s: vertexBuffer %p, attr %d. Result %u", task_name(), __func__,
+    const uint64 result = context->old_VBOGetAttr(self, vertexBuffer, attr);
+
+    logLine("%s: %s: vertexBuffer %p, attr %d. Result %u", TASK_NAME, __func__,
         vertexBuffer, attr, (unsigned)result);
 
     return result;
@@ -115,10 +148,12 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
 		uint64 stride, uint64 offset, uint64 count)
 {
-    const W3DN_ErrorCode result = old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
+    GET_CONTEXT
+
+    const W3DN_ErrorCode result = context->old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
     logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %u, stride %u, offset %u, count %u. Result %d",
-        task_name(), __func__,
+        TASK_NAME, __func__,
         buffer, (unsigned)arrayIdx, elementType, normalized, (unsigned)numElements, (unsigned)stride, (unsigned)offset, (unsigned)count, result);
 
     return result;
@@ -128,10 +163,12 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
 		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count)
 {
-    const W3DN_ErrorCode result = old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
+    GET_CONTEXT
+
+    const W3DN_ErrorCode result = context->old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
     logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %u, stride %u, offset %u, count %u. Result %d",
-        task_name(), __func__,
+        TASK_NAME, __func__,
         buffer, (unsigned)arrayIdx, *elementType, *normalized, (unsigned)*numElements, (unsigned)*stride, (unsigned)*offset, (unsigned)*count, result);
 
     return result;
@@ -140,9 +177,11 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
 		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize)
 {
-    W3DN_BufferLock* result = old_VBOLock(self, errCode, buffer, readOffset, readSize);
+    GET_CONTEXT
 
-    logLine("%s: %s: buffer %p, readOffset %u, readSize %u. Lock address %p, errCode %d", task_name(), __func__,
+    W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
+
+    logLine("%s: %s: buffer %p, readOffset %u, readSize %u. Lock address %p, errCode %d", TASK_NAME, __func__,
         buffer, (unsigned)readOffset, (unsigned)readSize, result, *errCode);
 
     return result;
@@ -151,9 +190,11 @@ static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 		W3DN_BufferLock *bufferLock, uint64 writeOffset, uint64 writeSize)
 {
-    const W3DN_ErrorCode result = old_BufferUnlock(self, bufferLock, writeOffset, writeSize);
+    GET_CONTEXT
 
-    logLine("%s: %s: bufferLock %p, writeOffset %u, writeSize %u. Result %d", task_name(), __func__,
+    const W3DN_ErrorCode result = context->old_BufferUnlock(self, bufferLock, writeOffset, writeSize);
+
+    logLine("%s: %s: bufferLock %p, writeOffset %u, writeSize %u. Result %d", TASK_NAME, __func__,
         bufferLock, (unsigned)writeOffset, (unsigned)writeSize, result);
 
     return result;
@@ -163,9 +204,11 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, uint32 attribNum,
 		W3DN_VertexBuffer *buffer, uint32 arrayIdx)
 {
-    const W3DN_ErrorCode result = old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
+    GET_CONTEXT
 
-    logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d", task_name(), __func__,
+    const W3DN_ErrorCode result = context->old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
+
+    logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d", TASK_NAME, __func__,
         renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result);
 
     return result;
@@ -174,9 +217,11 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 base, uint32 count)
 {
-    const W3DN_ErrorCode result = old_DrawArrays(self, renderState, primitive, base, count);
+    GET_CONTEXT
 
-    logLine("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d", task_name(), __func__,
+    const W3DN_ErrorCode result = context->old_DrawArrays(self, renderState, primitive, base, count);
+
+    logLine("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d", TASK_NAME, __func__,
         renderState, primitive, (unsigned)base, (unsigned)count, result);
 
     return result;
@@ -186,23 +231,53 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 baseVertex, uint32 count,
 		W3DN_VertexBuffer *indexBuffer, uint32 arrayIdx)
 {
-    const W3DN_ErrorCode result = old_DrawElements(self, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx);
+    GET_CONTEXT
+
+    const W3DN_ErrorCode result = context->old_DrawElements(self, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx);
 
     logLine("%s: %s: renderState %p, primitive %d, baseVertex %u, count %u, indexBuffer %p, arrayIdx %u. Result %d",
-        task_name(), __func__,
+        TASK_NAME, __func__,
         renderState, primitive, (unsigned)baseVertex, (unsigned)count, indexBuffer, (unsigned)arrayIdx, result);
 
     return result;
 }
 
+static void W3DN_Destroy(struct W3DN_Context_s *self)
+{
+    GET_CONTEXT;
+
+    logLine("%s: %s",
+        TASK_NAME, __func__);
+
+    context->old_Destroy(self);
+
+    size_t i;
+
+    IExec->MutexObtain(mutex);
+
+    for (i = 0; i < MAX_CLIENTS; i++) {
+        if (contexts[i] && contexts[i]->context == self) {
+            IExec->FreeVec(contexts[i]->context);
+            contexts[i]->context = NULL;
+            break;
+        }
+    }
+
+    IExec->MutexRelease(mutex);
+}
+
 #define PATCH_W3DN_CONTEXT(function) \
-old_##function = context->function; \
+nova->old_##function = context->function; \
 context->function = W3DN_##function; \
 logLine("Patched W3DN context function " #function);
 
+#define RESTORE_W3DN_CONTEXT(function) \
+context->function = nova->old_##function; \
+nova->old_##function = NULL;
 
-static void patch_context_functions(W3DN_Context* context)
+static void patch_context_functions(W3DN_Context* context, struct NovaContext* nova)
 {
+    PATCH_W3DN_CONTEXT(Destroy)
     PATCH_W3DN_CONTEXT(CreateVertexBufferObject)
     PATCH_W3DN_CONTEXT(DestroyVertexBufferObject)
     PATCH_W3DN_CONTEXT(VBOSetArray)
@@ -215,39 +290,132 @@ static void patch_context_functions(W3DN_Context* context)
     PATCH_W3DN_CONTEXT(DrawElements)
 }
 
-static W3DN_Context* (*old_W3DN_CreateContext)(struct Warp3DNovaIFace *Self, W3DN_ErrorCode * errCode, struct TagItem * tags);
+// TODO: combine patch and restore
+static void restore_context_functions(struct NovaContext* nova)
+{
+    struct W3DN_Context_s* context = nova->context;
+
+    IExec->Forbid();
+
+    RESTORE_W3DN_CONTEXT(Destroy)
+    RESTORE_W3DN_CONTEXT(CreateVertexBufferObject)
+    RESTORE_W3DN_CONTEXT(DestroyVertexBufferObject)
+    RESTORE_W3DN_CONTEXT(VBOSetArray)
+    RESTORE_W3DN_CONTEXT(VBOGetArray)
+    RESTORE_W3DN_CONTEXT(VBOGetAttr)
+    RESTORE_W3DN_CONTEXT(VBOLock)
+    RESTORE_W3DN_CONTEXT(BufferUnlock)
+    RESTORE_W3DN_CONTEXT(BindVertexAttribArray)
+    RESTORE_W3DN_CONTEXT(DrawArrays)
+    RESTORE_W3DN_CONTEXT(DrawElements)
+
+    IExec->Permit();
+}
+
+struct ContextCreation {
+    W3DN_Context* (*old_W3DN_CreateContext)(struct Warp3DNovaIFace *Self, W3DN_ErrorCode * errCode, struct TagItem * tags);
+};
+
+static struct ContextCreation creation;
 
 static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_ErrorCode * errCode, struct TagItem * tags)
 {
     W3DN_Context* context = NULL;
 
-    if (old_W3DN_CreateContext) {
-        context = old_W3DN_CreateContext(Self, errCode, tags);
+    if (creation.old_W3DN_CreateContext) {
+        context = creation.old_W3DN_CreateContext(Self, errCode, tags);
 
         if (context) {
-            patch_context_functions(context);
+            struct NovaContext * nova = IExec->AllocVecTags(sizeof(struct NovaContext), AVT_ClearValue, 0, TAG_DONE);
+
+            if (nova) {
+                nova->task = IExec->FindTask(NULL);
+                nova->context = context;
+
+                IExec->MutexObtain(mutex);
+
+                size_t i;
+                for (i = 0; i < MAX_CLIENTS; i++) {
+                    if (contexts[i] == NULL) {
+                        contexts[i] = nova;
+                        break;
+                    }
+                }
+
+                IExec->MutexRelease(mutex);
+
+                if (i == MAX_CLIENTS) {
+                    logLine("glSnoop: too many clients, cannot patch");
+                } else {
+                    patch_context_functions(context, nova); // TODO
+                }
+            }
         }
     }
 
     return context;
 }
 
-PATCH_INTERFACE(Warp3DNovaIFace, W3DN_CreateContext, my)
+PATCH_INTERFACE(Warp3DNovaIFace, W3DN_CreateContext, my, ContextCreation)
 
 void warp3dnova_install_patches()
 {
+    mutex = IExec->AllocSysObject(ASOT_MUTEX, TAG_DONE);
+
+    if (!mutex) {
+        logLine("Failed to allocate mutex");
+        return;
+    }
+
     if (open_warp3dnova_library()) {
-        patch_W3DN_CreateContext(TRUE, IWarp3DNova);
+        patch_W3DN_CreateContext(TRUE, IWarp3DNova, &creation);
     }
 }
 
-// FIXME: if glSnoop quits before application, application may crash
-// -> Should restore Nova interface back
-void warp3dnova_remove_patches()
+void warp3dnova_remove_patches(void)
 {
     if (IWarp3DNova) {
-        patch_W3DN_CreateContext(FALSE, IWarp3DNova);
+        patch_W3DN_CreateContext(FALSE, IWarp3DNova, &creation);
+    }
+
+    if (mutex) {
+        size_t i;
+
+        // Remove patches
+        IExec->MutexObtain(mutex);
+
+        for (i = 0; i < MAX_CLIENTS; i++) {
+            if (contexts[i]) {
+                restore_context_functions(contexts[i]);
+            }
+        }
+
+        IExec->MutexRelease(mutex);
     }
 
     close_warp3dnova_library();
+}
+
+void warp3dnova_free(void)
+{
+    logLine("%s", __func__);
+
+    if (mutex) {
+        size_t i;
+
+        // Remove context data
+        IExec->MutexObtain(mutex);
+
+        for (i = 0; i < MAX_CLIENTS; i++) {
+            if (contexts[i]) {
+                IExec->FreeVec(contexts[i]);
+                contexts[i] = NULL;
+            }
+        }
+
+        IExec->MutexRelease(mutex);
+
+        IExec->FreeSysObject(ASOT_MUTEX, mutex);
+        mutex = NULL;
+    }
 }
