@@ -151,7 +151,7 @@ static void EXEC_DropInterface(struct ExecIFace* Self, struct Interface* interfa
 
     for (i = 0; i < MAX_CLIENTS; i++) {
         if (contexts[i] && (struct Interface *)contexts[i]->interface == interface) {
-            logLine("%s: dropping patched interface %p", contexts[i]->name, interface);
+            logLine("%s: dropping patched OGLES2 interface %p", contexts[i]->name, interface);
 
             // No need to remove patches because every OGLES2 applications has its own interface
             IExec->FreeVec(contexts[i]);

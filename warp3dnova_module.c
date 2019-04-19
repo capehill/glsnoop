@@ -276,8 +276,10 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
 
     for (i = 0; i < MAX_CLIENTS; i++) {
         if (contexts[i] && contexts[i]->context == self) {
-            IExec->FreeVec(contexts[i]->context);
-            contexts[i]->context = NULL;
+            logLine("%s: freeing patched Nova context %p", contexts[i]->name, self);
+
+            IExec->FreeVec(contexts[i]);
+            contexts[i] = NULL;
             break;
         }
     }

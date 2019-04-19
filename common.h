@@ -3,7 +3,7 @@
 
 #include <proto/exec.h>
 
-#define NAME_LEN 32
+#define NAME_LEN 64
 #define MAX_CLIENTS 5
 
 void logLine(const char * fmt, ...) __attribute__ ((format (printf, 1, 2)));
