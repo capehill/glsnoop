@@ -14,7 +14,40 @@ struct Params {
     LONG gui;
 };
 
+static const char* portName = "glSnoop port";
 static struct Params params = { 0 };
+
+static struct MsgPort* port;
+
+static BOOL already_running(void)
+{
+    IExec->Forbid();
+    struct MsgPort* p = IExec->FindPort(portName);
+    IExec->Permit();
+
+    return p != NULL;
+}
+
+static void create_port()
+{
+    port = IExec->AllocSysObjectTags(ASOT_PORT,
+        ASOPORT_Name, portName,
+        ASOPORT_Pri, 1,
+        TAG_DONE);
+
+    if (!port) {
+        puts("Failed to create port");
+        // Not a big deal, port is only used to guard against multiple glSnoop instances
+    }
+}
+
+static void remove_port()
+{
+    if (port) {
+        IExec->FreeSysObject(ASOT_PORT, port);
+        port = NULL;
+    }
+}
 
 static void parse_args(void)
 {
@@ -72,6 +105,12 @@ int main(int argc, char* argv[])
 {
     logLine("glSnoop started");
 
+    if (already_running()) {
+        puts("glSnoop is already running");
+        goto out;
+    }
+
+    create_port();
     parse_args();
     install_patches();
 
@@ -84,8 +123,11 @@ int main(int argc, char* argv[])
     }
 
     remove_patches();
+    remove_port();
 
     puts("Patches removed. glSnoop terminating");
+
+out:
     logLine("glSnoop exiting");
 
     return 0;
