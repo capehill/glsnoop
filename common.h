@@ -35,5 +35,31 @@ static void patch_##func(BOOL patching, struct ctxtype * ctx) \
     } \
 } \
 
+#define GENERATE_FILTERED_PATCH(type,func,prefix,ctxtype) \
+static void patch_##func(BOOL patching, struct ctxtype * ctx) \
+{ \
+    IExec->Forbid(); \
+    if (patching) { \
+        if (match(#func)) { \
+            ctx->old_##func = (const void *)IExec->SetMethod((struct Interface *)ctx->interface, offsetof(struct type, func), prefix##_##func); \
+        } \
+    } else { \
+        if (ctx->old_##func) { \
+            IExec->SetMethod((struct Interface *)ctx->interface, offsetof(struct type, func), ctx->old_##func); \
+            ctx->old_##func = NULL; \
+        } \
+    } \
+    IExec->Permit(); \
+    \
+    if (patching) { \
+        if (ctx->old_##func) { \
+            logLine("Patched " #func " %p with %p", ctx->old_##func, prefix##_##func); \
+        } \
+    } else { \
+        logLine("Restored " #func); \
+    } \
+} \
+
+
 #endif
 
