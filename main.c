@@ -2,20 +2,25 @@
 #include "warp3dnova_module.h"
 #include "common.h"
 #include "gui.h"
+#include "filter.h"
 
 #include <proto/exec.h>
 #include <proto/dos.h>
 
 #include <stdio.h>
+#include <string.H>
+#include <stdlib.h>
 
 struct Params {
     LONG ogles2;
     LONG nova;
     LONG gui;
+    char *filter;
 };
 
-static const char* portName = "glSnoop port";
-static struct Params params = { 0, 0, 0 };
+static const char* const portName = "glSnoop port";
+static char* filterFile;
+static struct Params params = { 0, 0, 0, NULL };
 
 static struct MsgPort* port;
 
@@ -51,9 +56,13 @@ static void remove_port()
 
 static void parse_args(void)
 {
-    struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S,GUI/S", (int32 *)&params, NULL);
+    struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S,GUI/S,FILTER/K", (int32 *)&params, NULL);
 
     if (result) {
+        if (params.filter) {
+            filterFile = strdup(params.filter);
+        }
+
         IDOS->FreeArgs(result);
     }
 
@@ -65,6 +74,7 @@ static void parse_args(void)
     printf("OGLES2 tracing: [%s]\n", params.ogles2 ? "enabled" : "disabled");
     printf("WARP3DNOVA tracing: [%s]\n", params.nova ? "enabled" : "disabled");
     printf("GUI: [%s]\n", params.gui ? "enabled" : "disabled");
+    printf("Filter file name: [%s]\n", filterFile ? filterFile : "disabled");
 }
 
 static void install_patches(void)
@@ -112,6 +122,8 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 
     create_port();
     parse_args();
+    load_filters(filterFile);
+
     install_patches();
 
     puts("System patched. Press Control-C to quit...");
@@ -124,6 +136,9 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 
     remove_patches();
     remove_port();
+
+    free_filters();
+    free(filterFile);
 
     puts("Patches removed. glSnoop terminating");
 

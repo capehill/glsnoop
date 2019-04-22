@@ -1,5 +1,6 @@
 #include "ogles2_module.h"
 #include "common.h"
+#include "filter.h"
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>
@@ -504,32 +505,32 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
     }
 }
 
-GENERATE_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glBindBuffer, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glBufferData, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glBufferSubData, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glEnableVertexAttribArray, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glDrawElements, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glActiveTexture, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glBindTexture, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glGenTextures, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glGenerateMipmap, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glTexParameterfv, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glTexParameteri, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glTexParameteriv, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glTexSubImage2D, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
-GENERATE_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBindBuffer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBufferData, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBufferSubData, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glEnableVertexAttribArray, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawElements, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glActiveTexture, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBindTexture, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGenTextures, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGenerateMipmap, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterfv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameteri, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameteriv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glTexSubImage2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
 
 static void (*patches[])(BOOL, struct Ogles2Context *) = {
-    //patch_aglSwapBuffers,
+    patch_aglSwapBuffers,
     patch_glCompileShader,
     patch_glGenBuffers,
     patch_glBindBuffer,
@@ -551,8 +552,7 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glTexParameteriv,
     patch_glTexSubImage2D,
     patch_glTexImage2D,
-    patch_glDeleteTextures,
-    NULL
+    patch_glDeleteTextures
 };
 
 void ogles2_install_patches(void)
@@ -577,9 +577,7 @@ static void patch_ogles2_functions(struct Ogles2Context * ctx)
     if (ctx->interface) {
         size_t i;
         for (i = 0; i < sizeof(patches) / sizeof(patches[0]); i++) {
-            if (patches[i]) {
-                patches[i](TRUE, ctx);
-            }
+            patches[i](TRUE, ctx);
         }
     }
 }
@@ -599,9 +597,7 @@ void ogles2_remove_patches(void)
             if (contexts[i]) {
                 size_t p;
                 for (p = 0; p < sizeof(patches) / sizeof(patches[0]); p++) {
-                    if (patches[p]) {
-                        patches[p](FALSE, contexts[i]);
-                    }
+                    patches[p](FALSE, contexts[i]);
                 }
             }
         }

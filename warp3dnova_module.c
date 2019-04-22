@@ -1,5 +1,6 @@
 #include "warp3dnova_module.h"
 #include "common.h"
+#include "filter.h"
 
 #include <proto/exec.h>
 #include <proto/warp3dnova.h>
@@ -277,12 +278,16 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
 static void patch_##function(BOOL patching, struct NovaContext* nova) \
 { \
     if (patching) { \
-        nova->old_##function = nova->context->function; \
-        nova->context->function = W3DN_##function; \
-        logLine("Patched W3DN context function " #function); \
+        if (match("W3DN_" #function)) { \
+            nova->old_##function = nova->context->function; \
+            nova->context->function = W3DN_##function; \
+            logLine("Patched W3DN context function " #function); \
+        } \
     } else { \
-        nova->context->function = nova->old_##function; \
-        nova->old_##function = NULL; \
+        if (nova->old_##function) { \
+            nova->context->function = nova->old_##function; \
+            nova->old_##function = NULL; \
+        } \
     } \
 }
 

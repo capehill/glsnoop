@@ -1,0 +1,43 @@
+# glSnoop filters
+
+# OGLES2 functions
+
+# aglSwapBuffers
+glCompileShader
+glGenBuffers
+#glBindBuffer
+#glBufferData
+#glBufferSubData
+glDeleteBuffers
+#glEnableVertexAttribArray
+#glVertexAttribPointer
+#glDrawArrays
+#glDrawElements
+glShaderSource
+#glActiveTexture
+#glBindTexture
+glGenTextures
+glGenerateMipmap
+glTexParameterf
+glTexParameterfv
+glTexParameteri
+glTexParameteriv
+#glTexSubImage2D
+#glTexImage2D
+glDeleteTextures
+
+# WARP3D Nova functions
+
+W3DN_Destroy # Keep always active
+W3DN_CreateVertexBufferObject
+W3DN_DestroyVertexBufferObject
+#W3DN_VBOSetArray
+#W3DN_VBOGetArray
+#W3DN_VBOGetAttr
+#W3DN_VBOLock
+#W3DN_BufferUnlock
+#W3DN_BindVertexAttribArray
+#W3DN_DrawArrays
+#W3DN_DrawElements
+
+
