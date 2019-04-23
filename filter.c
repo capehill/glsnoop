@@ -12,14 +12,17 @@ static size_t count;
 
 static void add_filter(const char* const name)
 {
+    if (!name) {
+        logLine("%s: NULL pointer\n", __func__);
+        return;
+    }
+
     if (strlen(name) > 0) {
-        size_t i;
-        for (i = 0; i < MAX_FILTER; i++) {
-            if (filters[i] == NULL) {
-                filters[i] = strdup(name);
-                logLine("Filter[%u] '%s' added", count, filters[i]);
+        if (count < MAX_FILTER) {
+            if (filters[count] == NULL) {
+                filters[count] = strdup(name);
+                logLine("Filter[%u] '%s' added", count, filters[count]);
                 count++;
-                break;
             }
         }
     }
@@ -27,6 +30,11 @@ static void add_filter(const char* const name)
 
 static void strip(char* const buffer)
 {
+    if (!buffer) {
+        logLine("%s: NULL pointer\n", __func__);
+        return;
+    }
+
     size_t i;
     for (i = 0; i < strlen(buffer); i++) {
         switch (buffer[i]) {
@@ -42,36 +50,45 @@ static void strip(char* const buffer)
 
 BOOL load_filters(const char* const fileName)
 {
-    if (fileName) {
-        FILE* file = fopen(fileName, "r");
+    if (!fileName) {
+        // No problem, we don't filter, then
+        return FALSE;
+    }
 
-        if (file) {
-            char buffer[64];
-            while (!feof(file)) {
-                if (fgets(buffer, sizeof(buffer), file) != NULL) {
-                    strip(buffer);
-                    add_filter(buffer);
-                }
-            }
+    FILE* file = fopen(fileName, "r");
 
-            fclose(file);
-            return TRUE;
+    if (!file) {
+        logLine("Failed to open '%s'\n", fileName);
+        return FALSE;
+    }
+
+    char buffer[64];
+    while (!feof(file)) {
+        if (fgets(buffer, sizeof(buffer), file) != NULL) {
+            strip(buffer);
+            add_filter(buffer);
         }
     }
 
-    return FALSE;
+    fclose(file);
+    return TRUE;
 }
 
 BOOL match(const char* const name)
 {
+    if (!name) {
+        logLine("%s: NULL pointer\n", __func__);
+        return FALSE;
+    }
+
     if (count == 0) {
         // No filters in use
         return TRUE;
     }
 
     size_t i;
-    for (i = 0; i < MAX_FILTER; i++) {
-        if (filters[i] && strstr(name, filters[i])) {
+    for (i = 0; i < count; i++) {
+        if (filters[i] && (strcmp(name, filters[i]) == 0)) {
             //logLine("Match '%s' vs '%s'", name, filters[i]);
             return TRUE;
         }
@@ -83,7 +100,7 @@ BOOL match(const char* const name)
 void free_filters(void)
 {
     size_t i;
-    for (i = 0; i < MAX_FILTER; i++) {
+    for (i = 0; i < count; i++) {
         free(filters[i]);
         filters[i] = NULL;
     }
