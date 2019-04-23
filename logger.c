@@ -10,16 +10,21 @@ static BOOL paused = FALSE;
 void logLine(const char * fmt, ...)
 {
     if (!paused) {
-        char buffer[1024];
+        char buffer[16 * 1024];
+        int len;
 
         va_list ap;
         va_start(ap, fmt);
 
-        vsnprintf(buffer, sizeof(buffer), fmt, ap);
+        len = vsnprintf(buffer, sizeof(buffer), fmt, ap);
 
         va_end(ap);
 
         IExec->DebugPrintF("%s\n", buffer);
+
+        if (len >= (int)sizeof(buffer)) {
+            IExec->DebugPrintF("*** Line truncated: %d bytes buffer needed ***\n", len);
+        }
     }
 }
 
