@@ -50,6 +50,30 @@ struct NovaContext {
     W3DN_ErrorCode (*old_DrawElements)(struct W3DN_Context_s *self,
     		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 baseVertex, uint32 count,
     		W3DN_VertexBuffer *indexBuffer, uint32 arrayIdx);
+
+    W3DN_FrameBuffer* (*old_CreateFrameBuffer)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
+
+    void (*old_DestroyFrameBuffer)(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer);
+
+    W3DN_ErrorCode (*old_FBBindBuffer)(struct W3DN_Context_s *self,
+    	W3DN_FrameBuffer *frameBuffer, int32 attachmentPt, struct TagItem *tags);
+
+    struct BitMap* (*old_FBGetBufferBM)(struct W3DN_Context_s *self,
+    	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode);
+
+    W3DN_Texture*  (*old_FBGetBufferTex)(struct W3DN_Context_s *self,
+    	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode);
+
+    W3DN_ErrorCode (*old_FBGetStatus)(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer);
+
+    W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
+    	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
+
+    W3DN_FrameBuffer* (*old_GetRenderTarget)(
+        struct W3DN_Context_s *self, W3DN_RenderState *renderState);
+
+    uint64 (*old_FBGetAttr)(struct W3DN_Context_s *self,
+    	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib);
 };
 
 static struct NovaContext* contexts[MAX_CLIENTS];
@@ -122,8 +146,8 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
     W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
 
-    logLine("%s: %s: size %u, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d", context->name, __func__,
-        (unsigned)size, usage, (unsigned)maxArrays, tags, result, *errCode);
+    logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d", context->name, __func__,
+        size, usage, (unsigned)maxArrays, tags, result, *errCode);
 
     return result;
 }
@@ -144,8 +168,8 @@ static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *ve
 
     const uint64 result = context->old_VBOGetAttr(self, vertexBuffer, attr);
 
-    logLine("%s: %s: vertexBuffer %p, attr %d. Result %u", context->name, __func__,
-        vertexBuffer, attr, (unsigned)result);
+    logLine("%s: %s: vertexBuffer %p, attr %d. Result %llu", context->name, __func__,
+        vertexBuffer, attr, result);
 
     return result;
 }
@@ -158,9 +182,9 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     const W3DN_ErrorCode result = context->old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
-    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %u, stride %u, offset %u, count %u. Result %d",
+    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d",
         context->name, __func__,
-        buffer, (unsigned)arrayIdx, elementType, normalized, (unsigned)numElements, (unsigned)stride, (unsigned)offset, (unsigned)count, result);
+        buffer, (unsigned)arrayIdx, elementType, normalized, numElements, stride, offset, count, result);
 
     return result;
 }
@@ -173,9 +197,9 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     const W3DN_ErrorCode result = context->old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
-    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %u, stride %u, offset %u, count %u. Result %d",
+    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d",
         context->name, __func__,
-        buffer, (unsigned)arrayIdx, *elementType, *normalized, (unsigned)*numElements, (unsigned)*stride, (unsigned)*offset, (unsigned)*count, result);
+        buffer, (unsigned)arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result);
 
     return result;
 }
@@ -187,8 +211,8 @@ static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 
     W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
 
-    logLine("%s: %s: buffer %p, readOffset %u, readSize %u. Lock address %p, errCode %d", context->name, __func__,
-        buffer, (unsigned)readOffset, (unsigned)readSize, result, *errCode);
+    logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u", context->name, __func__,
+        buffer, readOffset, readSize, result, *errCode);
 
     return result;
 }
@@ -200,8 +224,8 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 
     const W3DN_ErrorCode result = context->old_BufferUnlock(self, bufferLock, writeOffset, writeSize);
 
-    logLine("%s: %s: bufferLock %p, writeOffset %u, writeSize %u. Result %d", context->name, __func__,
-        bufferLock, (unsigned)writeOffset, (unsigned)writeSize, result);
+    logLine("%s: %s: bufferLock %p, writeOffset %llu, writeSize %llu. Result %d", context->name, __func__,
+        bufferLock, writeOffset, writeSize, result);
 
     return result;
 }
@@ -250,7 +274,7 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 
 static void W3DN_Destroy(struct W3DN_Context_s *self)
 {
-    GET_CONTEXT;
+    GET_CONTEXT
 
     logLine("%s: %s",
         context->name, __func__);
@@ -272,6 +296,127 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
     }
 
     IExec->MutexRelease(mutex);
+}
+
+static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
+{
+    GET_CONTEXT
+
+    W3DN_FrameBuffer* buffer = context->old_CreateFrameBuffer(self, errCode);
+
+    logLine("%s: %s: Frame buffer address %p. Result %d",
+        context->name, __func__,
+        buffer, *errCode);
+
+    return buffer;
+}
+
+static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: frameBuffer %p",
+        context->name, __func__,
+        frameBuffer);
+
+    context->old_DestroyFrameBuffer(self, frameBuffer);
+}
+
+static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
+	W3DN_FrameBuffer *frameBuffer, int32 attachmentPt, struct TagItem *tags)
+{
+    GET_CONTEXT
+
+    const W3DN_ErrorCode result = context->old_FBBindBuffer(self, frameBuffer, attachmentPt, tags);
+
+    logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p. Result %d",
+        context->name, __func__,
+        frameBuffer, (int)attachmentPt, tags, result);
+
+    return result;
+}
+
+static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
+	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode)
+{
+    GET_CONTEXT
+
+    struct BitMap* bitmap = context->old_FBGetBufferBM(self, frameBuffer, attachmentPt, errCode);
+
+    logLine("%s: %s: frameBuffer %p, attachmentPt %u. Bitmap address %p. Result %d",
+        context->name, __func__,
+        frameBuffer, (unsigned)attachmentPt, bitmap, *errCode);
+
+    return bitmap;
+}
+
+static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
+	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode)
+{
+    GET_CONTEXT
+
+    W3DN_Texture * texture = context->old_FBGetBufferTex(self, frameBuffer, attachmentPt, errCode);
+
+    logLine("%s: %s: frameBuffer %p, attachmentPt %u. Texture address %p. Result %d",
+        context->name, __func__,
+        frameBuffer, (unsigned)attachmentPt, texture, *errCode);
+
+    return texture;
+}
+
+static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
+{
+    GET_CONTEXT
+
+    const W3DN_ErrorCode result = context->old_FBGetStatus(self, frameBuffer);
+
+    logLine("%s: %s: frameBuffer %p. Result %d",
+        context->name, __func__,
+        frameBuffer, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
+	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
+{
+    GET_CONTEXT
+
+    const W3DN_ErrorCode result = context->old_SetRenderTarget(self, renderState, frameBuffer);
+
+    logLine("%s: %s: renderState %p, frameBuffer %p. Result %d",
+        context->name, __func__,
+        renderState, frameBuffer, result);
+
+    return result;
+}
+
+static W3DN_FrameBuffer* W3DN_GetRenderTarget(
+    struct W3DN_Context_s *self, W3DN_RenderState *renderState)
+{
+    GET_CONTEXT
+
+    W3DN_FrameBuffer* buffer = context->old_GetRenderTarget(self, renderState);
+
+    logLine("%s: %s: renderState %p. Frame buffer address %p",
+        context->name, __func__,
+        renderState, buffer);
+
+    return buffer;
+}
+
+static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
+	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib)
+{
+    GET_CONTEXT
+
+    const uint64 result = context->old_FBGetAttr(self, frameBuffer, attrib);
+
+    logLine("%s: %s: frameBuffer %p, attrib %d. Result %llu",
+        context->name, __func__,
+        frameBuffer, attrib, result);
+
+    return result;
 }
 
 #define GENERATE_NOVA_PATCH(function) \
@@ -302,6 +447,15 @@ GENERATE_NOVA_PATCH(BufferUnlock)
 GENERATE_NOVA_PATCH(BindVertexAttribArray)
 GENERATE_NOVA_PATCH(DrawArrays)
 GENERATE_NOVA_PATCH(DrawElements)
+GENERATE_NOVA_PATCH(CreateFrameBuffer)
+GENERATE_NOVA_PATCH(DestroyFrameBuffer)
+GENERATE_NOVA_PATCH(FBBindBuffer)
+GENERATE_NOVA_PATCH(FBGetBufferBM)
+GENERATE_NOVA_PATCH(FBGetBufferTex)
+GENERATE_NOVA_PATCH(FBGetStatus)
+GENERATE_NOVA_PATCH(SetRenderTarget)
+GENERATE_NOVA_PATCH(GetRenderTarget)
+GENERATE_NOVA_PATCH(FBGetAttr)
 
 static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_Destroy,
@@ -314,7 +468,16 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_BufferUnlock,
     patch_BindVertexAttribArray,
     patch_DrawArrays,
-    patch_DrawElements
+    patch_DrawElements,
+    patch_CreateFrameBuffer,
+    patch_DestroyFrameBuffer,
+    patch_FBBindBuffer,
+    patch_FBGetBufferBM,
+    patch_FBGetBufferTex,
+    patch_FBGetStatus,
+    patch_SetRenderTarget,
+    patch_GetRenderTarget,
+    patch_FBGetAttr,
 };
 
 static void patch_context_functions(struct NovaContext* nova)

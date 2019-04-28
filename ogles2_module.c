@@ -45,6 +45,14 @@ struct Ogles2Context
     void (*old_glTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glDeleteTextures)(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures);
+
+    void (*old_glGenFramebuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * framebuffers);
+    void (*old_glBindFramebuffer)(struct OGLES2IFace *Self, GLenum target, GLuint framebuffer);
+    GLenum (*old_glCheckFramebufferStatus)(struct OGLES2IFace *Self, GLenum target);
+    void (*old_glFramebufferRenderbuffer)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+    void (*old_glFramebufferTexture2D)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+    void (*old_glGetFramebufferAttachmentParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params);
+    void (*old_glDeleteFramebuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers);
 };
 
 static struct Ogles2Context* contexts[MAX_CLIENTS];
@@ -194,6 +202,11 @@ static void check_errors(const char* info, struct Ogles2Context * context)
 #define CHECK(x) \
 PRE_CHECK \
 x; \
+POST_CHECK
+
+#define CHECK_STATUS(x) \
+PRE_CHECK \
+status = x; \
 POST_CHECK
 
 // Wrap traced function calls
@@ -505,6 +518,104 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
     }
 }
 
+static void OGLES2_glGenFramebuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * framebuffers)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: n %u, framebuffers %p", context->name, __func__,
+        n, framebuffers);
+
+    if (context->old_glGenFramebuffers) {
+        CHECK(context->old_glGenFramebuffers(Self, n, framebuffers))
+    }
+
+    GLsizei i;
+    for (i = 0; i < n; i++) {
+        logLine("Framebuffer[%u] = %u", i, framebuffers[i]);
+    }
+}
+
+static void OGLES2_glBindFramebuffer(struct OGLES2IFace *Self, GLenum target, GLuint framebuffer)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, framebuffer %u", context->name, __func__,
+        target, framebuffer);
+
+    if (context->old_glBindFramebuffer) {
+        CHECK(context->old_glBindFramebuffer(Self, target, framebuffer))
+    }
+}
+
+static GLenum OGLES2_glCheckFramebufferStatus(struct OGLES2IFace *Self, GLenum target)
+{
+    GET_CONTEXT
+
+    GLenum status = 0;
+
+    if (context->old_glCheckFramebufferStatus) {
+        CHECK_STATUS(context->old_glCheckFramebufferStatus(Self, target))
+    }
+
+    logLine("%s: %s: status %u", context->name, __func__,
+        status);
+
+    return status;
+}
+
+static void OGLES2_glFramebufferRenderbuffer(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, attachment %u, renderbuffertarget %u, renderbuffer %u", context->name, __func__,
+        target, attachment, renderbuffertarget, renderbuffer);
+
+    if (context->old_glFramebufferRenderbuffer) {
+        CHECK(context->old_glFramebufferRenderbuffer(Self, target, attachment, renderbuffertarget, renderbuffer))
+    }
+}
+
+static void OGLES2_glFramebufferTexture2D(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, attachment %u, textarget %u, texture %u, level %d", context->name, __func__,
+        target, attachment, textarget, texture, level);
+
+    if (context->old_glFramebufferTexture2D) {
+        CHECK(context->old_glFramebufferTexture2D(Self, target, attachment, textarget, texture, level))
+    }
+}
+
+static void OGLES2_glGetFramebufferAttachmentParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, attachment %u pname %u, params %p", context->name, __func__,
+        target, attachment, pname, params);
+
+    if (context->old_glGetFramebufferAttachmentParameteriv) {
+        CHECK(context->old_glGetFramebufferAttachmentParameteriv(Self, target, attachment, pname, params))
+    }
+}
+
+static void OGLES2_glDeleteFramebuffers(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: n %u, framebuffers %p", context->name, __func__,
+        n, framebuffers);
+
+    GLsizei i;
+    for (i = 0; i < n; i++) {
+        logLine("Deleting framebuffer[%u] = %u", i, framebuffers[i]);
+    }
+
+    if (context->old_glDeleteFramebuffers) {
+        CHECK(context->old_glDeleteFramebuffers(Self, n, framebuffers))
+    }
+}
+
 GENERATE_FILTERED_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
@@ -528,6 +639,13 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexSubImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGenFramebuffers, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBindFramebuffer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCheckFramebufferStatus, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glFramebufferRenderbuffer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glFramebufferTexture2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFramebufferAttachmentParameteriv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteFramebuffers, OGLES2, Ogles2Context)
 
 static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_aglSwapBuffers,
@@ -552,7 +670,14 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glTexParameteriv,
     patch_glTexSubImage2D,
     patch_glTexImage2D,
-    patch_glDeleteTextures
+    patch_glDeleteTextures,
+    patch_glGenFramebuffers,
+    patch_glBindFramebuffer,
+    patch_glCheckFramebufferStatus,
+    patch_glFramebufferRenderbuffer,
+    patch_glFramebufferTexture2D,
+    patch_glGetFramebufferAttachmentParameteriv,
+    patch_glDeleteFramebuffers,
 };
 
 void ogles2_install_patches(void)

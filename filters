@@ -25,12 +25,19 @@ glTexParameteriv
 #glTexSubImage2D
 #glTexImage2D
 glDeleteTextures
+glGenFramebuffers
+#glBindFramebuffer
+glCheckFramebufferStatus
+glFramebufferRenderbuffer
+glFramebufferTexture2D
+glGetFramebufferAttachmentParameteriv
+glDeleteFramebuffers
 
 # WARP3D Nova functions
 
 W3DN_Destroy # Keep always active
 W3DN_CreateVertexBufferObject
-W3DN_DestroyVertexBufferObject
+#W3DN_DestroyVertexBufferObject
 #W3DN_VBOSetArray
 #W3DN_VBOGetArray
 #W3DN_VBOGetAttr
@@ -39,5 +46,13 @@ W3DN_DestroyVertexBufferObject
 #W3DN_BindVertexAttribArray
 #W3DN_DrawArrays
 #W3DN_DrawElements
-
+W3DN_CreateFrameBuffer
+W3DN_DestroyFrameBuffer
+#W3DN_FBBindBuffer
+#W3DN_FBGetBufferBM
+#W3DN_FBGetBufferTex
+W3DN_FBGetStatus
+#W3DN_SetRenderTarget
+#W3DN_GetRenderTarget
+W3DN_FBGetAttr
 
