@@ -83,6 +83,9 @@ static BOOL open_warp3dnova_library()
 {
     Warp3DNovaBase = IExec->OpenLibrary("Warp3DNova.library", 0);
     if (Warp3DNovaBase) {
+
+        logLine("Warp3DNova.library version %u.%u", Warp3DNovaBase->lib_Version, Warp3DNovaBase->lib_Revision);
+
         IWarp3DNova = IExec->GetInterface(Warp3DNovaBase, "main", 1, NULL);
 
         if (IWarp3DNova) {

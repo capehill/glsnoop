@@ -69,6 +69,7 @@ static BOOL open_ogles2_library(void)
 {
     OGLES2Base = IExec->OpenLibrary("ogles2.library", 0);
     if (OGLES2Base) {
+        logLine("ogles2.library version %u.%u", OGLES2Base->lib_Version, OGLES2Base->lib_Revision);
         return TRUE;
     } else {
         printf("Failed to open ogles2.library\n");
