@@ -9,6 +9,23 @@
 
 struct Library* OGLES2Base;
 
+#define MAP_ENUM(x) case x: return #x;
+
+static const char* mapOgles2Error(const int code)
+{
+    switch (code) {
+        MAP_ENUM(GL_INVALID_ENUM)
+        MAP_ENUM(GL_INVALID_VALUE)
+        MAP_ENUM(GL_INVALID_OPERATION)
+        MAP_ENUM(GL_OUT_OF_MEMORY)
+        MAP_ENUM(GL_INVALID_FRAMEBUFFER_OPERATION)
+    }
+
+    return "Unknown error";
+}
+
+#undef MAP_ENUM
+
 // Store original function pointers so that they can be still called
 struct Ogles2Context
 {
@@ -193,7 +210,7 @@ static void check_errors(const char* info, struct Ogles2Context * context)
 {
     GLenum err;
     while ((err = context->interface->glGetError()) != GL_NO_ERROR) {
-        logLine("%s: GL error %d detected %s call", context->name, err, info);
+        logLine("%s: GL error %d (%s) detected %s call", context->name, err, mapOgles2Error(err), info);
     }
 }
 

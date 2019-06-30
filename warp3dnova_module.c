@@ -10,6 +10,49 @@
 struct Library* Warp3DNovaBase;
 struct Interface* IWarp3DNova;
 
+#define MAP_ENUM(x) case x: return #x;
+
+static const char* mapNovaError(const W3DN_ErrorCode code)
+{
+    switch (code) {
+        MAP_ENUM(W3DNEC_SUCCESS)
+        MAP_ENUM(W3DNEC_ILLEGALINPUT)
+        MAP_ENUM(W3DNEC_UNSUPPORTED)
+        MAP_ENUM(W3DNEC_NOMEMORY)
+        MAP_ENUM(W3DNEC_NOVRAM)
+        MAP_ENUM(W3DNEC_NODRIVER)
+        MAP_ENUM(W3DNEC_ILLEGALBITMAP)
+        MAP_ENUM(W3DNEC_NOBITMAP)
+        MAP_ENUM(W3DNEC_NOTEXTURE)
+        MAP_ENUM(W3DNEC_UNSUPPORTEDFMT)
+        MAP_ENUM(W3DNEC_NOZBUFFER)
+        MAP_ENUM(W3DNEC_NOSTENCILBUFFER)
+        MAP_ENUM(W3DNEC_UNKNOWNERROR)
+        MAP_ENUM(W3DNEC_INCOMPLETEFRAMEBUFFER)
+        MAP_ENUM(W3DNEC_TIMEOUT)
+        MAP_ENUM(W3DNEC_QUEUEEMPTY)
+        MAP_ENUM(W3DNEC_MISSINGVERTEXARRAYS)
+        MAP_ENUM(W3DNEC_FILENOTFOUND)
+        MAP_ENUM(W3DNEC_SHADERSINCOMPATIBLE)
+        MAP_ENUM(W3DNEC_IOERROR)
+        MAP_ENUM(W3DNEC_CORRUPTSHADER)
+        MAP_ENUM(W3DNEC_INCOMPLETESHADERPIPELINE)
+        MAP_ENUM(W3DNEC_NOSHADERPIPELINE)
+        MAP_ENUM(W3DNEC_SHADERERRORS)
+        MAP_ENUM(W3DNEC_MISSINGSHADERDATABUFFERS)
+        MAP_ENUM(W3DNEC_DEPTHSTENCILPRIVATE)
+        MAP_ENUM(W3DNEC_NOTFOUND)
+        MAP_ENUM(W3DNEC_EXCEEDEDMAXVARYING)
+        MAP_ENUM(W3DNEC_EXCEEDEDMAXTEXUNITS)
+        MAP_ENUM(W3DNEC_EXCEEDEDMAXDIM)
+        MAP_ENUM(W3DNEC_MAXERROR)
+    }
+
+    return "Unknown error";
+}
+
+#undef MAP_ENUM
+
 struct NovaContext {
     struct Task* task;
     struct W3DN_Context_s* context;
@@ -149,8 +192,8 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
     W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
 
-    logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d", context->name, __func__,
-        size, usage, (unsigned)maxArrays, tags, result, *errCode);
+    logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
+        size, usage, (unsigned)maxArrays, tags, result, *errCode, mapNovaError(*errCode));
 
     return result;
 }
@@ -185,9 +228,9 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     const W3DN_ErrorCode result = context->old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
-    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d",
+    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
-        buffer, (unsigned)arrayIdx, elementType, normalized, numElements, stride, offset, count, result);
+        buffer, (unsigned)arrayIdx, elementType, normalized, numElements, stride, offset, count, result, mapNovaError(result));
 
     return result;
 }
@@ -200,9 +243,9 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     const W3DN_ErrorCode result = context->old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
-    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d",
+    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
-        buffer, (unsigned)arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result);
+        buffer, (unsigned)arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
 
     return result;
 }
@@ -214,8 +257,8 @@ static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 
     W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
 
-    logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u", context->name, __func__,
-        buffer, readOffset, readSize, result, *errCode);
+    logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u (%s)", context->name, __func__,
+        buffer, readOffset, readSize, result, *errCode, mapNovaError(*errCode));
 
     return result;
 }
@@ -227,8 +270,8 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 
     const W3DN_ErrorCode result = context->old_BufferUnlock(self, bufferLock, writeOffset, writeSize);
 
-    logLine("%s: %s: bufferLock %p, writeOffset %llu, writeSize %llu. Result %d", context->name, __func__,
-        bufferLock, writeOffset, writeSize, result);
+    logLine("%s: %s: bufferLock %p, writeOffset %llu, writeSize %llu. Result %d (%s)", context->name, __func__,
+        bufferLock, writeOffset, writeSize, result, mapNovaError(result));
 
     return result;
 }
@@ -241,8 +284,8 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 
     const W3DN_ErrorCode result = context->old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
 
-    logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d", context->name, __func__,
-        renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result);
+    logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d (%s)", context->name, __func__,
+        renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result, mapNovaError(result));
 
     return result;
 }
@@ -254,8 +297,8 @@ static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 
     const W3DN_ErrorCode result = context->old_DrawArrays(self, renderState, primitive, base, count);
 
-    logLine("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d", context->name, __func__,
-        renderState, primitive, (unsigned)base, (unsigned)count, result);
+    logLine("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d (%s)", context->name, __func__,
+        renderState, primitive, (unsigned)base, (unsigned)count, result, mapNovaError(result));
 
     return result;
 }
@@ -268,9 +311,9 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 
     const W3DN_ErrorCode result = context->old_DrawElements(self, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx);
 
-    logLine("%s: %s: renderState %p, primitive %d, baseVertex %u, count %u, indexBuffer %p, arrayIdx %u. Result %d",
+    logLine("%s: %s: renderState %p, primitive %d, baseVertex %u, count %u, indexBuffer %p, arrayIdx %u. Result %d (%s)",
         context->name, __func__,
-        renderState, primitive, (unsigned)baseVertex, (unsigned)count, indexBuffer, (unsigned)arrayIdx, result);
+        renderState, primitive, (unsigned)baseVertex, (unsigned)count, indexBuffer, (unsigned)arrayIdx, result, mapNovaError(result));
 
     return result;
 }
@@ -307,9 +350,9 @@ static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3D
 
     W3DN_FrameBuffer* buffer = context->old_CreateFrameBuffer(self, errCode);
 
-    logLine("%s: %s: Frame buffer address %p. Result %d",
+    logLine("%s: %s: Frame buffer address %p. Result %d (%s)",
         context->name, __func__,
-        buffer, *errCode);
+        buffer, *errCode, mapNovaError(*errCode));
 
     return buffer;
 }
@@ -332,9 +375,9 @@ static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 
     const W3DN_ErrorCode result = context->old_FBBindBuffer(self, frameBuffer, attachmentPt, tags);
 
-    logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p. Result %d",
+    logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, (int)attachmentPt, tags, result);
+        frameBuffer, (int)attachmentPt, tags, result, mapNovaError(result));
 
     return result;
 }
@@ -346,9 +389,9 @@ static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 
     struct BitMap* bitmap = context->old_FBGetBufferBM(self, frameBuffer, attachmentPt, errCode);
 
-    logLine("%s: %s: frameBuffer %p, attachmentPt %u. Bitmap address %p. Result %d",
+    logLine("%s: %s: frameBuffer %p, attachmentPt %u. Bitmap address %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, (unsigned)attachmentPt, bitmap, *errCode);
+        frameBuffer, (unsigned)attachmentPt, bitmap, *errCode, mapNovaError(*errCode));
 
     return bitmap;
 }
@@ -360,9 +403,9 @@ static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 
     W3DN_Texture * texture = context->old_FBGetBufferTex(self, frameBuffer, attachmentPt, errCode);
 
-    logLine("%s: %s: frameBuffer %p, attachmentPt %u. Texture address %p. Result %d",
+    logLine("%s: %s: frameBuffer %p, attachmentPt %u. Texture address %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, (unsigned)attachmentPt, texture, *errCode);
+        frameBuffer, (unsigned)attachmentPt, texture, *errCode, mapNovaError(*errCode));
 
     return texture;
 }
@@ -373,9 +416,9 @@ static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBu
 
     const W3DN_ErrorCode result = context->old_FBGetStatus(self, frameBuffer);
 
-    logLine("%s: %s: frameBuffer %p. Result %d",
+    logLine("%s: %s: frameBuffer %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, result);
+        frameBuffer, result, mapNovaError(result));
 
     return result;
 }
@@ -387,9 +430,9 @@ static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 
     const W3DN_ErrorCode result = context->old_SetRenderTarget(self, renderState, frameBuffer);
 
-    logLine("%s: %s: renderState %p, frameBuffer %p. Result %d",
+    logLine("%s: %s: renderState %p, frameBuffer %p. Result %d (%s)",
         context->name, __func__,
-        renderState, frameBuffer, result);
+        renderState, frameBuffer, result, mapNovaError(result));
 
     return result;
 }
