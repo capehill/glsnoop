@@ -15,7 +15,7 @@ glSnoop supports partial logging of:
 - OGLES2: enable ogles2.library tracing
 - NOVA: enable Warp3DNova.library tracing
 - GUI: launch the graphical user interface
-- FILTER filename: define subset of patched functions
+- FILTER filename: define a subset of patched functions
 
 ## Tips
 
@@ -28,3 +28,7 @@ Sashimi > RAM:MyLogFile.txt
 
 PUBLIC DOMAIN
 
+## Thanks
+
+Kas1e for ideas and testing.
+Mason for icons.
