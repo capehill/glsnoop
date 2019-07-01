@@ -82,17 +82,25 @@ static void find_process_name(struct Ogles2Context * context)
     find_process_name2((struct Node *)context->task, context->name);
 }
 
+static char versionBuffer[64] = "ogles2.library version unknown";
+
 static BOOL open_ogles2_library(void)
 {
     OGLES2Base = IExec->OpenLibrary("ogles2.library", 0);
     if (OGLES2Base) {
-        logLine("ogles2.library version %u.%u", OGLES2Base->lib_Version, OGLES2Base->lib_Revision);
+        snprintf(versionBuffer, sizeof(versionBuffer), "ogles2.library version %u.%u", OGLES2Base->lib_Version, OGLES2Base->lib_Revision);
+        logLine("%s", versionBuffer);
         return TRUE;
     } else {
         printf("Failed to open ogles2.library\n");
     }
 
     return FALSE;
+}
+
+const char* ogles2_version_string(void)
+{
+    return versionBuffer;
 }
 
 static void close_ogles2_library(void)

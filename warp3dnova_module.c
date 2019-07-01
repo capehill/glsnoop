@@ -122,12 +122,14 @@ struct NovaContext {
 static struct NovaContext* contexts[MAX_CLIENTS];
 static APTR mutex;
 
+static char versionBuffer[64] = "Warp3DNova.library version unknown";
+
 static BOOL open_warp3dnova_library()
 {
     Warp3DNovaBase = IExec->OpenLibrary("Warp3DNova.library", 0);
     if (Warp3DNovaBase) {
-
-        logLine("Warp3DNova.library version %u.%u", Warp3DNovaBase->lib_Version, Warp3DNovaBase->lib_Revision);
+        snprintf(versionBuffer, sizeof(versionBuffer), "Warp3DNova.library version %u.%u", Warp3DNovaBase->lib_Version, Warp3DNovaBase->lib_Revision);
+        logLine("%s", versionBuffer);
 
         IWarp3DNova = IExec->GetInterface(Warp3DNovaBase, "main", 1, NULL);
 
@@ -142,6 +144,11 @@ static BOOL open_warp3dnova_library()
     }
 
     return FALSE;
+}
+
+const char* warp3dnova_version_string(void)
+{
+    return versionBuffer;
 }
 
 static void close_warp3dnova_library()

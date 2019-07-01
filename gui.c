@@ -1,5 +1,7 @@
 #include "gui.h"
 #include "common.h"
+#include "ogles2_module.h"
+#include "warp3dnova_module.h"
 
 #include <proto/intuition.h>
 #include <proto/dos.h>
@@ -42,6 +44,8 @@ static Object* create_gui(void)
         WINDOW_Position, WPOS_CENTERMOUSE,
         WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
             LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
+            LAYOUT_Label, "Control",
+            LAYOUT_BevelStyle, BVS_GROUP,
             LAYOUT_AddChild, objects[OID_Layout] = IIntuition->NewObject(NULL, "layout.gadget",
                 LAYOUT_Orientation, LAYOUT_ORIENT_HORIZ,
                 LAYOUT_AddChild, objects[OID_Trace] = IIntuition->NewObject(NULL, "button.gadget",
@@ -55,9 +59,24 @@ static Object* create_gui(void)
                     GA_ID, GID_Pause,
                     GA_RelVerify, TRUE, // TODO: required or not?
                     TAG_DONE),
-                TAG_DONE),
-            TAG_DONE),
-        TAG_DONE);
+                TAG_DONE), // horizontal layout.gadget
+            LAYOUT_AddChild, IIntuition->NewObject(NULL, "layout.gadget",
+                LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
+                LAYOUT_Label, "Information",
+                LAYOUT_BevelStyle, BVS_GROUP,
+                LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
+                    GA_ReadOnly, TRUE,
+                    GA_Text, ogles2_version_string(),
+                    BUTTON_BevelStyle, BVS_NONE,
+                    TAG_DONE),
+                LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
+                    GA_ReadOnly, TRUE,
+                    GA_Text, warp3dnova_version_string(),
+                    BUTTON_BevelStyle, BVS_NONE,
+                    TAG_DONE),
+                TAG_DONE), // vertical layout.gadget
+            TAG_DONE), // vertical layout.gadget
+        TAG_DONE); // window.class
 }
 
 static void refresh(void)
