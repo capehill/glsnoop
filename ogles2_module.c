@@ -9,7 +9,9 @@
 
 struct Library* OGLES2Base;
 
-#define MAP_ENUM(x) case x: return #x;
+static unsigned errorCount;
+
+#define MAP_ENUM(x) case x: ++errorCount; return #x;
 
 static const char* mapOgles2Error(const int code)
 {
@@ -83,6 +85,7 @@ static void find_process_name(struct Ogles2Context * context)
 }
 
 static char versionBuffer[64] = "ogles2.library version unknown";
+static char errorBuffer[32];
 
 static BOOL open_ogles2_library(void)
 {
@@ -101,6 +104,12 @@ static BOOL open_ogles2_library(void)
 const char* ogles2_version_string(void)
 {
     return versionBuffer;
+}
+
+const char* ogles2_errors_string(void)
+{
+    snprintf(errorBuffer, sizeof(errorBuffer), "OpenGL ES 2 errors: %u", errorCount);
+    return errorBuffer;
 }
 
 static void close_ogles2_library(void)

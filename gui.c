@@ -15,10 +15,12 @@
 
 enum EObject {
     OID_Window,
-    OID_Layout,
+    OID_ControlLayout,
     OID_Trace,
     OID_Pause,
-    OID_Count
+    OID_Ogles2Errors,
+    OID_NovaErrors,
+    OID_Count // KEEP LAST
 };
 
 enum EGadget {
@@ -41,12 +43,13 @@ static Object* create_gui(void)
         WA_SizeGadget, TRUE,
         WA_Width, 200,
         WA_Height, 50,
+        WA_IDCMP, IDCMP_INTUITICKS, // Only triggers for active window
         WINDOW_Position, WPOS_CENTERMOUSE,
         WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
             LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
             LAYOUT_Label, "Control",
             LAYOUT_BevelStyle, BVS_GROUP,
-            LAYOUT_AddChild, objects[OID_Layout] = IIntuition->NewObject(NULL, "layout.gadget",
+            LAYOUT_AddChild, objects[OID_ControlLayout] = IIntuition->NewObject(NULL, "layout.gadget",
                 LAYOUT_Orientation, LAYOUT_ORIENT_HORIZ,
                 LAYOUT_AddChild, objects[OID_Trace] = IIntuition->NewObject(NULL, "button.gadget",
                     GA_Text, "Trace",
@@ -74,14 +77,38 @@ static Object* create_gui(void)
                     GA_Text, warp3dnova_version_string(),
                     BUTTON_BevelStyle, BVS_NONE,
                     TAG_DONE),
+                LAYOUT_AddChild, objects[OID_Ogles2Errors] = IIntuition->NewObject(NULL, "button.gadget",
+                    GA_ReadOnly, TRUE,
+                    GA_Text, ogles2_errors_string(),
+                    BUTTON_BevelStyle, BVS_NONE,
+                    TAG_DONE),
+                LAYOUT_AddChild, objects[OID_NovaErrors] = IIntuition->NewObject(NULL, "button.gadget",
+                    GA_ReadOnly, TRUE,
+                    GA_Text, warp3dnova_errors_string(),
+                    BUTTON_BevelStyle, BVS_NONE,
+                    TAG_DONE),
                 TAG_DONE), // vertical layout.gadget
             TAG_DONE), // vertical layout.gadget
         TAG_DONE); // window.class
 }
 
-static void refresh(void)
+static void refresh_object(Object * object)
 {
-    IIntuition->RefreshGList((struct Gadget *)objects[OID_Layout], window, NULL, -1);
+    IIntuition->RefreshGList((struct Gadget *)object, window, NULL, -1);
+}
+
+static void refresh_buttons(void)
+{
+    refresh_object(objects[OID_ControlLayout]);
+}
+
+static void update_errors(void)
+{
+    IIntuition->SetAttrs(objects[OID_Ogles2Errors], GA_Text, ogles2_errors_string(), TAG_DONE);
+    IIntuition->SetAttrs(objects[OID_NovaErrors], GA_Text, warp3dnova_errors_string(), TAG_DONE);
+
+    refresh_object(objects[OID_Ogles2Errors]);
+    refresh_object(objects[OID_NovaErrors]);
 }
 
 static void on_trace(void)
@@ -89,7 +116,7 @@ static void on_trace(void)
     IIntuition->SetAttrs(objects[OID_Trace], GA_Disabled, TRUE, TAG_DONE);
     IIntuition->SetAttrs(objects[OID_Pause], GA_Disabled, FALSE, TAG_DONE);
 
-    refresh();
+    refresh_buttons();
     resume_log();
 }
 
@@ -98,7 +125,7 @@ static void on_pause()
     IIntuition->SetAttrs(objects[OID_Trace], GA_Disabled, FALSE, TAG_DONE);
     IIntuition->SetAttrs(objects[OID_Pause], GA_Disabled, TRUE, TAG_DONE);
 
-    refresh();
+    refresh_buttons();
     pause_log();
 }
 
@@ -113,6 +140,15 @@ static void handle_gadgets(int id)
         case GID_Pause:
             on_pause();
             break;
+    }
+}
+
+static void handle_tick(void)
+{
+    static unsigned counter = 0;
+
+    if ((++counter % 10) == 0) {
+        update_errors();
     }
 }
 
@@ -143,6 +179,9 @@ static void handle_events(void)
                         break;
                     case WMHI_GADGETUP:
                         handle_gadgets(result & WMHI_GADGETMASK);
+                        break;
+                    case WMHI_INTUITICK:
+                        handle_tick();
                         break;
                 }
             }

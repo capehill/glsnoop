@@ -10,10 +10,16 @@
 struct Library* Warp3DNovaBase;
 struct Interface* IWarp3DNova;
 
+static unsigned errorCount;
+
 #define MAP_ENUM(x) case x: return #x;
 
 static const char* mapNovaError(const W3DN_ErrorCode code)
 {
+    if (code != W3DNEC_SUCCESS) {
+        ++errorCount;
+    }
+
     switch (code) {
         MAP_ENUM(W3DNEC_SUCCESS)
         MAP_ENUM(W3DNEC_ILLEGALINPUT)
@@ -123,6 +129,7 @@ static struct NovaContext* contexts[MAX_CLIENTS];
 static APTR mutex;
 
 static char versionBuffer[64] = "Warp3DNova.library version unknown";
+static char errorBuffer[32];
 
 static BOOL open_warp3dnova_library()
 {
@@ -149,6 +156,13 @@ static BOOL open_warp3dnova_library()
 const char* warp3dnova_version_string(void)
 {
     return versionBuffer;
+}
+
+
+const char* warp3dnova_errors_string(void)
+{
+    snprintf(errorBuffer, sizeof(errorBuffer), "Warp3D Nova errors: %u", errorCount);
+    return errorBuffer;
 }
 
 static void close_warp3dnova_library()
