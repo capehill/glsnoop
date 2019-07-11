@@ -57,6 +57,25 @@ static const char* mapNovaError(const W3DN_ErrorCode code)
     return "Unknown error";
 }
 
+static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
+{
+    if (pointer) {
+        return mapNovaError(*pointer);
+    }
+
+    return "ignored (NULL pointer)";
+}
+
+static W3DN_ErrorCode mapNovaErrorPointerToCode(const W3DN_ErrorCode* const pointer)
+{
+    if (pointer) {
+        return *pointer;
+    }
+
+    return W3DNEC_SUCCESS;
+}
+
+
 #undef MAP_ENUM
 
 struct NovaContext {
@@ -214,7 +233,7 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
     W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
 
     logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
-        size, usage, (unsigned)maxArrays, tags, result, *errCode, mapNovaError(*errCode));
+        size, usage, (unsigned)maxArrays, tags, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
     return result;
 }
@@ -279,7 +298,7 @@ static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
     W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
 
     logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u (%s)", context->name, __func__,
-        buffer, readOffset, readSize, result, *errCode, mapNovaError(*errCode));
+        buffer, readOffset, readSize, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
     return result;
 }
@@ -373,7 +392,7 @@ static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3D
 
     logLine("%s: %s: Frame buffer address %p. Result %d (%s)",
         context->name, __func__,
-        buffer, *errCode, mapNovaError(*errCode));
+        buffer, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
     return buffer;
 }
@@ -412,7 +431,7 @@ static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 
     logLine("%s: %s: frameBuffer %p, attachmentPt %u. Bitmap address %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, (unsigned)attachmentPt, bitmap, *errCode, mapNovaError(*errCode));
+        frameBuffer, (unsigned)attachmentPt, bitmap, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
     return bitmap;
 }
@@ -426,7 +445,7 @@ static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 
     logLine("%s: %s: frameBuffer %p, attachmentPt %u. Texture address %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, (unsigned)attachmentPt, texture, *errCode, mapNovaError(*errCode));
+        frameBuffer, (unsigned)attachmentPt, texture, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
     return texture;
 }
