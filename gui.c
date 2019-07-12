@@ -31,6 +31,7 @@ enum EGadget {
 
 static Object* objects[OID_Count];
 static struct Window* window;
+static struct MsgPort* port;
 
 static Object* create_gui(void)
 {
@@ -45,6 +46,8 @@ static Object* create_gui(void)
         WA_Width, 200,
         WA_Height, 50,
         WINDOW_Position, WPOS_CENTERMOUSE,
+        WINDOW_IconifyGadget, TRUE,
+        WINDOW_AppPort, port, // Iconification needs it
         WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
             LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
             LAYOUT_Label, "Control",
@@ -143,6 +146,17 @@ static void handle_gadgets(int id)
     }
 }
 
+static void handle_iconify(void)
+{
+    window = NULL;
+    IIntuition->IDoMethod(objects[OID_Window], WM_ICONIFY);
+}
+
+static void handle_uniconify(void)
+{
+    window = (struct Window *)IIntuition->IDoMethod(objects[OID_Window], WM_OPEN);
+}
+
 static void handle_events(void)
 {
     uint32 signal = 0;
@@ -173,13 +187,21 @@ static void handle_events(void)
                     case WMHI_GADGETUP:
                         handle_gadgets(result & WMHI_GADGETMASK);
                         break;
+                    case WMHI_ICONIFY:
+                        handle_iconify();
+                        break;
+                    case WMHI_UNICONIFY:
+                        handle_uniconify();
+                        break;
                 }
             }
         }
 
         if (wait & timerSignal) {
             timer_handle_events();
-            refresh_errors();
+            if (window) {
+                refresh_errors();
+            }
         }
     }
 }
@@ -189,6 +211,10 @@ void run_gui(void)
     if (!timer_init()) {
         return;
     }
+
+	port = IExec->AllocSysObjectTags(ASOT_PORT,
+		ASOPORT_Name, "app_port",
+		TAG_DONE);
 
     objects[OID_Window] = create_gui();
 
@@ -205,6 +231,10 @@ void run_gui(void)
         IIntuition->DisposeObject(objects[OID_Window]);
     } else {
         puts("Failed to create window");
+    }
+
+    if (port) {
+        IExec->FreeSysObject(ASOT_PORT, port);
     }
 
     timer_quit();
