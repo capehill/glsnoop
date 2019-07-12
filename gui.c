@@ -2,6 +2,7 @@
 #include "common.h"
 #include "ogles2_module.h"
 #include "warp3dnova_module.h"
+#include "timer.h"
 
 #include <proto/intuition.h>
 #include <proto/dos.h>
@@ -43,7 +44,6 @@ static Object* create_gui(void)
         WA_SizeGadget, TRUE,
         WA_Width, 200,
         WA_Height, 50,
-        WA_IDCMP, IDCMP_INTUITICKS, // Only triggers for active window
         WINDOW_Position, WPOS_CENTERMOUSE,
         WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
             LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
@@ -102,7 +102,7 @@ static void refresh_buttons(void)
     refresh_object(objects[OID_ControlLayout]);
 }
 
-static void update_errors(void)
+static void refresh_errors(void)
 {
     IIntuition->SetAttrs(objects[OID_Ogles2Errors], GA_Text, ogles2_errors_string(), TAG_DONE);
     IIntuition->SetAttrs(objects[OID_NovaErrors], GA_Text, warp3dnova_errors_string(), TAG_DONE);
@@ -143,24 +143,17 @@ static void handle_gadgets(int id)
     }
 }
 
-static void handle_tick(void)
-{
-    static unsigned counter = 0;
-
-    if ((++counter % 10) == 0) {
-        update_errors();
-    }
-}
-
 static void handle_events(void)
 {
     uint32 signal = 0;
     IIntuition->GetAttr(WINDOW_SigMask, objects[OID_Window], &signal);
 
+    const uint32 timerSignal = timer_signal();
+
     BOOL running = TRUE;
 
     while (running) {
-        uint32 wait = IExec->Wait(signal | SIGBREAKF_CTRL_C);
+        uint32 wait = IExec->Wait(signal | SIGBREAKF_CTRL_C | timerSignal);
 
         if (wait & SIGBREAKF_CTRL_C) {
             puts("*** Break ***");
@@ -180,28 +173,39 @@ static void handle_events(void)
                     case WMHI_GADGETUP:
                         handle_gadgets(result & WMHI_GADGETMASK);
                         break;
-                    case WMHI_INTUITICK:
-                        handle_tick();
-                        break;
                 }
             }
+        }
+
+        if (wait & timerSignal) {
+            timer_handle_events();
+            refresh_errors();
         }
     }
 }
 
 void run_gui(void)
 {
+    if (!timer_init()) {
+        return;
+    }
+
     objects[OID_Window] = create_gui();
 
     if (objects[OID_Window]) {
         if ((window = (struct Window *)IIntuition->IDoMethod(objects[OID_Window], WM_OPEN))) {
+            timer_start();
             handle_events();
         } else {
             puts("Failed to open window");
         }
 
+        timer_stop();
+
         IIntuition->DisposeObject(objects[OID_Window]);
     } else {
         puts("Failed to create window");
     }
+
+    timer_quit();
 }
