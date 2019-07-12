@@ -7,9 +7,15 @@ else
 endif
 
 OBJS = main.o ogles2_module.o warp3dnova_module.o logger.o gui.o common.o filter.o timer.o
+DEPS = $(OBJS:.o=.d)
+
 CFLAGS = -Wall -Wextra -O3 -gstabs
 
-%.o : %.c makefile
+# Dependencies
+%.d : %.c
+	$(CC) -MM -MP -MT $(@:.d=.o) -o $@ $< $(CFLAGS)
+
+%.o : %.c
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 glSnoop: $(OBJS) makefile
@@ -17,3 +23,7 @@ glSnoop: $(OBJS) makefile
 
 clean:
 	$(DELETE) $(OBJS)
+
+ifneq ($(MAKECMDGOALS),clean)
+-include $(DEPS)
+endif
