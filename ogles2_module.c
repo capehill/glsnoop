@@ -1,9 +1,11 @@
 #include "ogles2_module.h"
 #include "common.h"
 #include "filter.h"
+#include "timer.h"
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>
+#include <proto/timer.h>
 
 #include <stdio.h>
 
@@ -11,10 +13,88 @@ struct Library* OGLES2Base;
 
 static unsigned errorCount;
 
-#define MAP_ENUM(x) case x: ++errorCount; return #x;
+typedef enum Ogles2Function {
+    SwapBuffers,
+    CompileShader,
+    GenBuffers,
+    BindBuffer,
+    BufferData,
+    BufferSubData,
+    DeleteBuffers,
+    EnableVertexAttribArray,
+    VertexAttribPointer,
+    DrawArrays,
+    DrawElements,
+    ShaderSource,
+    ActiveTexture,
+    BindTexture,
+    GenTextures,
+    GenerateMipmap,
+    TexParameterf,
+    TexParameterfv,
+    TexParameteri,
+    TexParameteriv,
+    TexSubImage2D,
+    TexImage2D,
+    DeleteTextures,
+    GenFramebuffers,
+    BindFramebuffer,
+    CheckFramebufferStatus,
+    FramebufferRenderbuffer,
+    FramebufferTexture2D,
+    GetFramebufferAttachmentParameteriv,
+    DeleteFramebuffers,
+    // Keep last
+    Ogles2FunctionCount
+} Ogles2Function;
+
+static const char* mapOgles2Function(const Ogles2Function func)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (func) {
+        MAP_ENUM(SwapBuffers)
+        MAP_ENUM(CompileShader)
+        MAP_ENUM(GenBuffers)
+        MAP_ENUM(BindBuffer)
+        MAP_ENUM(BufferData)
+        MAP_ENUM(BufferSubData)
+        MAP_ENUM(DeleteBuffers)
+        MAP_ENUM(EnableVertexAttribArray)
+        MAP_ENUM(VertexAttribPointer)
+        MAP_ENUM(DrawArrays)
+        MAP_ENUM(DrawElements)
+        MAP_ENUM(ShaderSource)
+        MAP_ENUM(ActiveTexture)
+        MAP_ENUM(BindTexture)
+        MAP_ENUM(GenTextures)
+        MAP_ENUM(GenerateMipmap)
+        MAP_ENUM(TexParameterf)
+        MAP_ENUM(TexParameterfv)
+        MAP_ENUM(TexParameteri)
+        MAP_ENUM(TexParameteriv)
+        MAP_ENUM(TexSubImage2D)
+        MAP_ENUM(TexImage2D)
+        MAP_ENUM(DeleteTextures)
+        MAP_ENUM(GenFramebuffers)
+        MAP_ENUM(BindFramebuffer)
+        MAP_ENUM(CheckFramebufferStatus)
+        MAP_ENUM(FramebufferRenderbuffer)
+        MAP_ENUM(FramebufferTexture2D)
+        MAP_ENUM(GetFramebufferAttachmentParameteriv)
+        MAP_ENUM(DeleteFramebuffers)
+        case Ogles2FunctionCount: break;
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown";
+}
 
 static const char* mapOgles2Error(const int code)
 {
+    #define MAP_ENUM(x) case x: ++errorCount; return #x;
+
     switch (code) {
         MAP_ENUM(GL_INVALID_ENUM)
         MAP_ENUM(GL_INVALID_VALUE)
@@ -23,10 +103,16 @@ static const char* mapOgles2Error(const int code)
         MAP_ENUM(GL_INVALID_FRAMEBUFFER_OPERATION)
     }
 
+    #undef MAP_ENUM
+
     return "Unknown error";
 }
 
-#undef MAP_ENUM
+typedef struct Ogles2ProfilingItem
+{
+    uint64 ticks;
+    uint64 callCount;
+} Ogles2ProfilingItem;
 
 // Store original function pointers so that they can be still called
 struct Ogles2Context
@@ -34,6 +120,9 @@ struct Ogles2Context
     struct OGLES2IFace* interface;
     struct Task* task;
     char name[NAME_LEN];
+
+    uint64 totalTicks;
+    Ogles2ProfilingItem profiling[Ogles2FunctionCount];
 
     void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
     void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
@@ -120,6 +209,43 @@ static void close_ogles2_library(void)
     }
 }
 
+struct MyClock {
+    union {
+        uint64 ticks;
+        struct EClockVal clockVal;
+    };
+};
+
+#define PROF_START \
+    struct MyClock start, finish; \
+    ITimer->ReadEClock(&start.clockVal);
+
+#define PROF_FINISH(func) \
+    ITimer->ReadEClock(&finish.clockVal); \
+    const uint64 duration = finish.ticks - start.ticks; \
+    context->totalTicks += duration; \
+    context->profiling[func].ticks += duration; \
+    context->profiling[func].callCount++;
+
+static void profileResults(const struct Ogles2Context* const context)
+{
+    logLine("OpenGL ES 2.0 profiling results:");
+    logLine("--------------------------------");
+
+    for (int i = 0; i < Ogles2FunctionCount; i++) {
+        if (context->profiling[i].callCount > 0) {
+            logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of total",
+                mapOgles2Function(i),
+                context->profiling[i].callCount,
+                (double)context->profiling[i].ticks / timer_frequency_ms(),
+                (double)context->profiling[i].ticks * 100 / context->totalTicks);
+        }
+    }
+
+    logLine("Total recorded duration %.6f ms", (double)context->totalTicks / timer_frequency_ms());
+    logLine("--------------------------------");
+}
+
 // We patch IExec->GetInterface to be able to patch later IOGLES2 interface.
 
 struct ExecContext {
@@ -181,6 +307,8 @@ static void EXEC_DropInterface(struct ExecIFace* Self, struct Interface* interfa
 
     for (i = 0; i < MAX_CLIENTS; i++) {
         if (contexts[i] && (struct Interface *)contexts[i]->interface == interface) {
+            profileResults(contexts[i]);
+
             logLine("%s: dropping patched OGLES2 interface %p", contexts[i]->name, interface);
 
             // No need to remove patches because every OGLES2 applications has its own interface
@@ -253,7 +381,11 @@ static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
     logLine("%s: %s", context->name, __func__);
 
     if (context->old_aglSwapBuffers) {
+        PROF_START
+
         CHECK(context->old_aglSwapBuffers(Self))
+
+        PROF_FINISH(SwapBuffers)
     }
 }
 
@@ -265,7 +397,11 @@ static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
         shader);
 
     if (context->old_glCompileShader) {
+        PROF_START
+
         CHECK(context->old_glCompileShader(Self, shader))
+
+        PROF_FINISH(CompileShader)
     }
 }
 
@@ -277,7 +413,11 @@ static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * bu
         n, buffers);
 
     if (context->old_glGenBuffers) {
+        PROF_START
+
         CHECK(context->old_glGenBuffers(Self, n, buffers))
+
+        PROF_FINISH(GenBuffers)
     }
 
     ssize_t i;
@@ -294,7 +434,11 @@ static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint 
         target, buffer);
 
     if (context->old_glBindBuffer) {
+        PROF_START
+
         CHECK(context->old_glBindBuffer(Self, target, buffer))
+
+        PROF_FINISH(BindBuffer)
     }
 }
 
@@ -306,7 +450,11 @@ static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizei
         target, size, data, usage);
 
     if (context->old_glBufferData) {
+        PROF_START
+
         CHECK(context->old_glBufferData(Self, target, size, data, usage))
+
+        PROF_FINISH(BufferData)
     }
 }
 
@@ -318,7 +466,11 @@ static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLin
         target, offset, size, data);
 
     if (context->old_glBufferSubData) {
+        PROF_START
+
         CHECK(context->old_glBufferSubData(Self, target, offset, size, data))
+
+        PROF_FINISH(BufferSubData)
     }
 }
 
@@ -335,7 +487,11 @@ static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint *
     }
 
     if (context->old_glDeleteBuffers) {
+        PROF_START
+
         CHECK(context->old_glDeleteBuffers(Self, n, buffers))
+
+        PROF_FINISH(DeleteBuffers)
     }
 }
 
@@ -347,7 +503,11 @@ static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint in
         index);
 
     if (context->old_glEnableVertexAttribArray) {
+        PROF_START
+
         CHECK(context->old_glEnableVertexAttribArray(Self, index))
+
+        PROF_FINISH(EnableVertexAttribArray)
     }
 }
 
@@ -359,7 +519,11 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
         index, size, type, normalized, stride, pointer);
 
     if (context->old_glVertexAttribPointer) {
+        PROF_START
+
         CHECK(context->old_glVertexAttribPointer(Self, index, size, type, normalized, stride, pointer))
+
+        PROF_FINISH(VertexAttribPointer)
     }
 }
 
@@ -371,7 +535,11 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
         mode, first, count);
 
     if (context->old_glDrawArrays) {
+        PROF_START
+
         CHECK(context->old_glDrawArrays(Self, mode, first, count))
+
+        PROF_FINISH(DrawArrays)
     }
 }
 
@@ -383,7 +551,11 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
         mode, count, type, indices);
 
     if (context->old_glDrawElements) {
+        PROF_START
+
         CHECK(context->old_glDrawElements(Self, mode, count, type, indices))
+
+        PROF_FINISH(DrawElements)
     }
 }
 
@@ -407,7 +579,11 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
     }
 
     if (context->old_glShaderSource) {
+        PROF_START
+
         CHECK(context->old_glShaderSource(Self, shader, count, string, length))
+
+        PROF_FINISH(ShaderSource)
     }
 }
 
@@ -419,7 +595,11 @@ static void OGLES2_glActiveTexture(struct OGLES2IFace *Self, GLenum texture)
         texture);
 
     if (context->old_glActiveTexture) {
+        PROF_START
+
         CHECK(context->old_glActiveTexture(Self, texture))
+
+        PROF_FINISH(ActiveTexture)
     }
 }
 
@@ -431,7 +611,11 @@ static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint
         target, texture);
 
     if (context->old_glBindTexture) {
+        PROF_START
+
         CHECK(context->old_glBindTexture(Self, target, texture))
+
+        PROF_FINISH(BindTexture)
     }
 }
 
@@ -443,7 +627,11 @@ static void OGLES2_glGenTextures(struct OGLES2IFace *Self, GLsizei n, GLuint * t
         n, textures);
 
     if (context->old_glGenTextures) {
+        PROF_START
+
         CHECK(context->old_glGenTextures(Self, n, textures))
+
+        PROF_FINISH(GenTextures)
     }
 
     GLsizei i;
@@ -460,7 +648,11 @@ static void OGLES2_glGenerateMipmap(struct OGLES2IFace *Self, GLenum target)
         target);
 
     if (context->old_glGenerateMipmap) {
+        PROF_START
+
         CHECK(context->old_glGenerateMipmap(Self, target))
+
+        PROF_FINISH(GenerateMipmap)
     }
 }
 
@@ -472,7 +664,11 @@ static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLen
         target, pname, param);
 
     if (context->old_glTexParameterf) {
+        PROF_START
+
         CHECK(context->old_glTexParameterf(Self, target, pname, param))
+
+        PROF_FINISH(TexParameterf)
     }
 }
 
@@ -484,7 +680,11 @@ static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLe
         target, pname, params);
 
     if (context->old_glTexParameterfv) {
+        PROF_START
+
         CHECK(context->old_glTexParameterfv(Self, target, pname, params))
+
+        PROF_FINISH(TexParameterfv)
     }
 }
 
@@ -496,7 +696,11 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
         target, pname, param);
 
     if (context->old_glTexParameteri) {
+        PROF_START
+
         CHECK(context->old_glTexParameteri(Self, target, pname, param))
+
+        PROF_FINISH(TexParameteri)
     }
 }
 
@@ -508,7 +712,11 @@ static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLe
         target, pname, params);
 
     if (context->old_glTexParameteriv) {
+        PROF_START
+
         CHECK(context->old_glTexParameteriv(Self, target, pname, params))
+
+        PROF_FINISH(TexParameteriv)
     }
 }
 
@@ -520,7 +728,11 @@ static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLin
         target, level, xoffset, yoffset, width, height, format, type, pixels);
 
     if (context->old_glTexSubImage2D) {
+        PROF_START
+
         CHECK(context->old_glTexSubImage2D(Self, target, level, xoffset, yoffset, width, height, format, type, pixels))
+
+        PROF_FINISH(TexSubImage2D)
     }
 }
 
@@ -532,7 +744,11 @@ static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint l
         target, level, internalformat, width, height, border, format, type, pixels);
 
     if (context->old_glTexImage2D) {
+        PROF_START
+
         CHECK(context->old_glTexImage2D(Self, target, level, internalformat, width, height, border, format, type, pixels))
+
+        PROF_FINISH(TexImage2D)
     }
 }
 
@@ -549,7 +765,11 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
     }
 
     if (context->old_glDeleteTextures) {
+        PROF_START
+
         CHECK(context->old_glDeleteTextures(Self, n, textures))
+
+        PROF_FINISH(DeleteTextures)
     }
 }
 
@@ -561,7 +781,11 @@ static void OGLES2_glGenFramebuffers(struct OGLES2IFace *Self, GLsizei n, GLuint
         n, framebuffers);
 
     if (context->old_glGenFramebuffers) {
+        PROF_START
+
         CHECK(context->old_glGenFramebuffers(Self, n, framebuffers))
+
+        PROF_FINISH(GenFramebuffers)
     }
 
     GLsizei i;
@@ -578,7 +802,11 @@ static void OGLES2_glBindFramebuffer(struct OGLES2IFace *Self, GLenum target, GL
         target, framebuffer);
 
     if (context->old_glBindFramebuffer) {
+        PROF_START
+
         CHECK(context->old_glBindFramebuffer(Self, target, framebuffer))
+
+        PROF_FINISH(BindFramebuffer)
     }
 }
 
@@ -589,7 +817,11 @@ static GLenum OGLES2_glCheckFramebufferStatus(struct OGLES2IFace *Self, GLenum t
     GLenum status = 0;
 
     if (context->old_glCheckFramebufferStatus) {
+        PROF_START
+
         CHECK_STATUS(context->old_glCheckFramebufferStatus(Self, target))
+
+        PROF_FINISH(CheckFramebufferStatus)
     }
 
     logLine("%s: %s: status %u", context->name, __func__,
@@ -606,7 +838,11 @@ static void OGLES2_glFramebufferRenderbuffer(struct OGLES2IFace *Self, GLenum ta
         target, attachment, renderbuffertarget, renderbuffer);
 
     if (context->old_glFramebufferRenderbuffer) {
+        PROF_START
+
         CHECK(context->old_glFramebufferRenderbuffer(Self, target, attachment, renderbuffertarget, renderbuffer))
+
+        PROF_FINISH(FramebufferRenderbuffer)
     }
 }
 
@@ -618,7 +854,11 @@ static void OGLES2_glFramebufferTexture2D(struct OGLES2IFace *Self, GLenum targe
         target, attachment, textarget, texture, level);
 
     if (context->old_glFramebufferTexture2D) {
+        PROF_START
+
         CHECK(context->old_glFramebufferTexture2D(Self, target, attachment, textarget, texture, level))
+
+        PROF_FINISH(FramebufferTexture2D)
     }
 }
 
@@ -630,7 +870,11 @@ static void OGLES2_glGetFramebufferAttachmentParameteriv(struct OGLES2IFace *Sel
         target, attachment, pname, params);
 
     if (context->old_glGetFramebufferAttachmentParameteriv) {
+        PROF_START
+
         CHECK(context->old_glGetFramebufferAttachmentParameteriv(Self, target, attachment, pname, params))
+
+        PROF_FINISH(GetFramebufferAttachmentParameteriv)
     }
 }
 
@@ -647,7 +891,11 @@ static void OGLES2_glDeleteFramebuffers(struct OGLES2IFace *Self, GLsizei n, con
     }
 
     if (context->old_glDeleteFramebuffers) {
+        PROF_START
+
         CHECK(context->old_glDeleteFramebuffers(Self, n, framebuffers))
+
+        PROF_FINISH(DeleteFramebuffers)
     }
 }
 
