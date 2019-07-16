@@ -1,21 +1,86 @@
 #include "warp3dnova_module.h"
 #include "common.h"
 #include "filter.h"
+#include "timer.h"
 
 #include <proto/exec.h>
 #include <proto/warp3dnova.h>
+#include <proto/timer.h>
 
 #include <stdio.h>
+
+typedef enum NovaFunction {
+    Destroy,
+    CreateVertexBufferObject,
+    DestroyVertexBufferObject,
+    VBOSetArray,
+    VBOGetArray,
+    VBOGetAttr,
+    VBOLock,
+    BufferUnlock,
+    BindVertexAttribArray,
+    DrawArrays,
+    DrawElements,
+    CreateFrameBuffer,
+    DestroyFrameBuffer,
+    FBBindBuffer,
+    FBGetBufferBM,
+    FBGetBufferTex,
+    FBGetStatus,
+    SetRenderTarget,
+    GetRenderTarget,
+    FBGetAttr,
+    // Keep last
+    NovaFunctionCount
+} NovaFunction;
+
+static const char* mapNovaFunction(const NovaFunction func)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (func) {
+        MAP_ENUM(Destroy)
+        MAP_ENUM(CreateVertexBufferObject)
+        MAP_ENUM(DestroyVertexBufferObject)
+        MAP_ENUM(VBOSetArray)
+        MAP_ENUM(VBOGetArray)
+        MAP_ENUM(VBOGetAttr)
+        MAP_ENUM(VBOLock)
+        MAP_ENUM(BufferUnlock)
+        MAP_ENUM(BindVertexAttribArray)
+        MAP_ENUM(DrawArrays)
+        MAP_ENUM(DrawElements)
+        MAP_ENUM(CreateFrameBuffer)
+        MAP_ENUM(DestroyFrameBuffer)
+        MAP_ENUM(FBBindBuffer)
+        MAP_ENUM(FBGetBufferBM)
+        MAP_ENUM(FBGetBufferTex)
+        MAP_ENUM(FBGetStatus)
+        MAP_ENUM(SetRenderTarget)
+        MAP_ENUM(GetRenderTarget)
+        MAP_ENUM(FBGetAttr)
+        case NovaFunctionCount: break;
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown";
+}
+
+typedef struct NovaProfilingItem {
+    uint64 callCount;
+    uint64 ticks;
+} NovaProfilingItem;
 
 struct Library* Warp3DNovaBase;
 struct Interface* IWarp3DNova;
 
 static unsigned errorCount;
 
-#define MAP_ENUM(x) case x: return #x;
-
 static const char* mapNovaError(const W3DN_ErrorCode code)
 {
+    #define MAP_ENUM(x) case x: return #x;
+
     if (code != W3DNEC_SUCCESS) {
         ++errorCount;
     }
@@ -54,6 +119,8 @@ static const char* mapNovaError(const W3DN_ErrorCode code)
         MAP_ENUM(W3DNEC_MAXERROR)
     }
 
+    #undef MAP_ENUM
+
     return "Unknown error";
 }
 
@@ -75,13 +142,13 @@ static W3DN_ErrorCode mapNovaErrorPointerToCode(const W3DN_ErrorCode* const poin
     return W3DNEC_SUCCESS;
 }
 
-
-#undef MAP_ENUM
-
 struct NovaContext {
     struct Task* task;
     struct W3DN_Context_s* context;
     char name[NAME_LEN];
+
+    uint64 totalTicks;
+    NovaProfilingItem profiling[NovaFunctionCount];
 
     // Store original function pointers so that they can be still called
 
@@ -143,6 +210,43 @@ struct NovaContext {
     uint64 (*old_FBGetAttr)(struct W3DN_Context_s *self,
     	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib);
 };
+
+struct MyClock {
+    union {
+        uint64 ticks;
+        struct EClockVal clockVal;
+    };
+};
+
+#define PROF_START \
+    struct MyClock start, finish; \
+    ITimer->ReadEClock(&start.clockVal);
+
+#define PROF_FINISH(func) \
+    ITimer->ReadEClock(&finish.clockVal); \
+    const uint64 duration = finish.ticks - start.ticks; \
+    context->totalTicks += duration; \
+    context->profiling[func].ticks += duration; \
+    context->profiling[func].callCount++;
+
+static void profileResults(const struct NovaContext* const context)
+{
+    logLine("Warp3D Nova profiling results:");
+    logLine("------------------------------");
+
+    for (int i = 0; i < NovaFunctionCount; i++) {
+        if (context->profiling[i].callCount > 0) {
+            logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of total",
+                mapNovaFunction(i),
+                context->profiling[i].callCount,
+                (double)context->profiling[i].ticks / timer_frequency_ms(),
+                (double)context->profiling[i].ticks * 100 / context->totalTicks);
+        }
+    }
+
+    logLine("Total recorded duration %.6f ms", (double)context->totalTicks / timer_frequency_ms());
+    logLine("------------------------------");
+}
 
 static struct NovaContext* contexts[MAX_CLIENTS];
 static APTR mutex;
@@ -230,7 +334,11 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 {
     GET_CONTEXT
 
+    PROF_START
+
     W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
+
+    PROF_FINISH(CreateVertexBufferObject)
 
     logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
         size, usage, (unsigned)maxArrays, tags, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
@@ -245,14 +353,22 @@ static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_Ver
     logLine("%s: %s: vertexBuffer %p", context->name, __func__,
         vertexBuffer);
 
+    PROF_START
+
     context->old_DestroyVertexBufferObject(self, vertexBuffer);
+
+    PROF_FINISH(DestroyVertexBufferObject)
 }
 
 static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr)
 {
     GET_CONTEXT
 
+    PROF_START
+
     const uint64 result = context->old_VBOGetAttr(self, vertexBuffer, attr);
+
+    PROF_FINISH(VBOGetAttr)
 
     logLine("%s: %s: vertexBuffer %p, attr %d. Result %llu", context->name, __func__,
         vertexBuffer, attr, result);
@@ -266,7 +382,11 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
+
+    PROF_FINISH(VBOSetArray)
 
     logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
@@ -281,7 +401,11 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
+
+    PROF_FINISH(VBOGetArray)
 
     logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
@@ -295,7 +419,11 @@ static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 {
     GET_CONTEXT
 
+    PROF_START
+
     W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
+
+    PROF_FINISH(VBOLock)
 
     logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u (%s)", context->name, __func__,
         buffer, readOffset, readSize, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
@@ -308,7 +436,11 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_BufferUnlock(self, bufferLock, writeOffset, writeSize);
+
+    PROF_FINISH(BufferUnlock)
 
     logLine("%s: %s: bufferLock %p, writeOffset %llu, writeSize %llu. Result %d (%s)", context->name, __func__,
         bufferLock, writeOffset, writeSize, result, mapNovaError(result));
@@ -322,7 +454,11 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
+
+    PROF_FINISH(BindVertexAttribArray)
 
     logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d (%s)", context->name, __func__,
         renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result, mapNovaError(result));
@@ -335,7 +471,11 @@ static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_DrawArrays(self, renderState, primitive, base, count);
+
+    PROF_FINISH(DrawArrays)
 
     logLine("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d (%s)", context->name, __func__,
         renderState, primitive, (unsigned)base, (unsigned)count, result, mapNovaError(result));
@@ -349,7 +489,11 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_DrawElements(self, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx);
+
+    PROF_FINISH(DrawElements)
 
     logLine("%s: %s: renderState %p, primitive %d, baseVertex %u, count %u, indexBuffer %p, arrayIdx %u. Result %d (%s)",
         context->name, __func__,
@@ -365,7 +509,11 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
     logLine("%s: %s",
         context->name, __func__);
 
+    PROF_START
+
     context->old_Destroy(self);
+
+    PROF_FINISH(Destroy)
 
     size_t i;
 
@@ -373,6 +521,8 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
 
     for (i = 0; i < MAX_CLIENTS; i++) {
         if (contexts[i] && contexts[i]->context == self) {
+            profileResults(contexts[i]);
+
             logLine("%s: freeing patched Nova context %p", contexts[i]->name, self);
 
             IExec->FreeVec(contexts[i]);
@@ -388,7 +538,11 @@ static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3D
 {
     GET_CONTEXT
 
+    PROF_START
+
     W3DN_FrameBuffer* buffer = context->old_CreateFrameBuffer(self, errCode);
+
+    PROF_FINISH(CreateFrameBuffer)
 
     logLine("%s: %s: Frame buffer address %p. Result %d (%s)",
         context->name, __func__,
@@ -405,7 +559,11 @@ static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffe
         context->name, __func__,
         frameBuffer);
 
+    PROF_START
+
     context->old_DestroyFrameBuffer(self, frameBuffer);
+
+    PROF_FINISH(DestroyFrameBuffer);
 }
 
 static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
@@ -413,7 +571,11 @@ static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_FBBindBuffer(self, frameBuffer, attachmentPt, tags);
+
+    PROF_FINISH(FBBindBuffer)
 
     logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -427,7 +589,11 @@ static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     struct BitMap* bitmap = context->old_FBGetBufferBM(self, frameBuffer, attachmentPt, errCode);
+
+    PROF_FINISH(FBGetBufferBM)
 
     logLine("%s: %s: frameBuffer %p, attachmentPt %u. Bitmap address %p. Result %d (%s)",
         context->name, __func__,
@@ -441,7 +607,11 @@ static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     W3DN_Texture * texture = context->old_FBGetBufferTex(self, frameBuffer, attachmentPt, errCode);
+
+    PROF_FINISH(FBGetBufferTex)
 
     logLine("%s: %s: frameBuffer %p, attachmentPt %u. Texture address %p. Result %d (%s)",
         context->name, __func__,
@@ -454,7 +624,11 @@ static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBu
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_FBGetStatus(self, frameBuffer);
+
+    PROF_FINISH(FBGetStatus)
 
     logLine("%s: %s: frameBuffer %p. Result %d (%s)",
         context->name, __func__,
@@ -468,7 +642,11 @@ static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     const W3DN_ErrorCode result = context->old_SetRenderTarget(self, renderState, frameBuffer);
+
+    PROF_FINISH(SetRenderTarget)
 
     logLine("%s: %s: renderState %p, frameBuffer %p. Result %d (%s)",
         context->name, __func__,
@@ -482,7 +660,11 @@ static W3DN_FrameBuffer* W3DN_GetRenderTarget(
 {
     GET_CONTEXT
 
+    PROF_START
+
     W3DN_FrameBuffer* buffer = context->old_GetRenderTarget(self, renderState);
+
+    PROF_FINISH(GetRenderTarget)
 
     logLine("%s: %s: renderState %p. Frame buffer address %p",
         context->name, __func__,
@@ -496,7 +678,11 @@ static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
 {
     GET_CONTEXT
 
+    PROF_START
+
     const uint64 result = context->old_FBGetAttr(self, frameBuffer, attrib);
+
+    PROF_FINISH(FBGetAttr)
 
     logLine("%s: %s: frameBuffer %p, attrib %d. Result %llu",
         context->name, __func__,

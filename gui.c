@@ -208,10 +208,6 @@ static void handle_events(void)
 
 void run_gui(void)
 {
-    if (!timer_init()) {
-        return;
-    }
-
 	port = IExec->AllocSysObjectTags(ASOT_PORT,
 		ASOPORT_Name, "app_port",
 		TAG_DONE);
@@ -236,6 +232,4 @@ void run_gui(void)
     if (port) {
         IExec->FreeSysObject(ASOT_PORT, port);
     }
-
-    timer_quit();
 }

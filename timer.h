@@ -12,4 +12,6 @@ void timer_start(void);
 void timer_stop(void);
 void timer_handle_events(void);
 
+ULONG timer_frequency_ms(void);
+
 #endif

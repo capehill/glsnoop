@@ -1,4 +1,5 @@
 #include "timer.h"
+#include "common.h"
 
 #include <proto/exec.h>
 #include <proto/timer.h>
@@ -8,6 +9,15 @@
 static struct MsgPort* port = NULL;
 static struct TimeRequest* request = NULL;
 static BYTE device = -1;
+static ULONG frequency = 0;
+
+static void read_frequency(void)
+{
+    struct EClockVal clockVal;
+    frequency = ITimer->ReadEClock(&clockVal);
+
+    logLine("Timer frequency %lu ticks / second", frequency);
+}
 
 BOOL timer_init(void)
 {
@@ -45,6 +55,8 @@ BOOL timer_init(void)
 		puts("Couldn't get Timer interface");
 		goto out;
 	}
+
+    read_frequency();
 
     return TRUE;
 
@@ -122,4 +134,9 @@ void timer_stop(void)
 		IExec->AbortIO((struct IORequest *) request);
 		IExec->WaitIO((struct IORequest *) request);
 	}
+}
+
+ULONG timer_frequency_ms(void)
+{
+    return frequency / 1000;
 }

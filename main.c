@@ -3,6 +3,7 @@
 #include "common.h"
 #include "gui.h"
 #include "filter.h"
+#include "timer.h"
 
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -120,6 +121,10 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
         goto out;
     }
 
+    if (!timer_init()) {
+        goto out;
+    }
+
     create_port();
     parse_args();
     load_filters(filterFile);
@@ -139,6 +144,8 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 
     free_filters();
     free(filterFile);
+
+    timer_quit();
 
     puts("Patches removed. glSnoop terminating");
 
