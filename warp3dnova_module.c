@@ -9,6 +9,7 @@
 #include <proto/warp3dnova.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef enum NovaFunction {
     Destroy,
@@ -208,9 +209,16 @@ struct NovaContext {
     	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib);
 };
 
-static void profileResults(const struct NovaContext* const context)
+static void sort(struct NovaContext* const context)
+{
+    qsort(context->profiling, NovaFunctionCount, sizeof(ProfilingItem), tickComparison);
+}
+
+static void profileResults(struct NovaContext* const context)
 {
     PROF_FINISH_CONTEXT
+
+    sort(context);
 
     logLine("Warp3D Nova profiling results:");
     logLine("------------------------------");
@@ -218,7 +226,7 @@ static void profileResults(const struct NovaContext* const context)
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
             logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of total",
-                mapNovaFunction(i),
+                mapNovaFunction(context->profiling[i].index),
                 context->profiling[i].callCount,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
                 (double)context->profiling[i].ticks * 100.0 / context->totalTicks);
@@ -793,7 +801,7 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                     IExec->FreeVec(nova);
                 } else {
                     patch_context_functions(nova);
-                    PROF_INIT(nova)
+                    PROF_INIT(nova, NovaFunctionCount)
                 }
             }
         }

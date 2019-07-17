@@ -9,6 +9,7 @@
 #include <proto/ogles2.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 struct Library* OGLES2Base;
 
@@ -205,9 +206,16 @@ static void close_ogles2_library(void)
     }
 }
 
-static void profileResults(const struct Ogles2Context* const context)
+static void sort(struct Ogles2Context* const context)
+{
+    qsort(context->profiling, Ogles2FunctionCount, sizeof(ProfilingItem), tickComparison);
+}
+
+static void profileResults(struct Ogles2Context* const context)
 {
     PROF_FINISH_CONTEXT
+
+    sort(context);
 
     logLine("OpenGL ES 2.0 profiling results:");
     logLine("--------------------------------");
@@ -215,7 +223,7 @@ static void profileResults(const struct Ogles2Context* const context)
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
             logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of total",
-                mapOgles2Function(i),
+                mapOgles2Function(context->profiling[i].index),
                 context->profiling[i].callCount,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
                 (double)context->profiling[i].ticks * 100.0 / context->totalTicks);
@@ -269,7 +277,7 @@ static struct Interface* EXEC_GetInterface(struct ExecIFace* Self, struct Librar
                     IExec->FreeVec(context);
                 } else {
                     patch_ogles2_functions(context);
-                    PROF_INIT(context)
+                    PROF_INIT(context, Ogles2FunctionCount)
                 }
             } else {
                 logLine("Cannot allocate memory for OGLES2 context data: cannot patch");

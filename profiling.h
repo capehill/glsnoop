@@ -7,6 +7,7 @@ typedef struct ProfilingItem
 {
     uint64 ticks;
     uint64 callCount;
+    int index; // Only for qsorting
 } ProfilingItem;
 
 typedef struct MyClock {
@@ -16,7 +17,11 @@ typedef struct MyClock {
     };
 } MyClock;
 
-#define PROF_INIT(context) ITimer->ReadEClock(&context->start.clockVal);
+#define PROF_INIT(context, LAST_INDEX) \
+    ITimer->ReadEClock(&context->start.clockVal); \
+    for (int i = 0; i < LAST_INDEX; i++) { \
+        context->profiling[i].index = i; \
+    }
 
 #define PROF_START \
     struct MyClock start, finish; \
@@ -40,6 +45,8 @@ typedef struct MyClock {
         (double)context->totalTicks * 100.0 / totalDuration, \
         (double)totalDuration / timer_frequency_ms()); \
     logLine("--------------------------------------------------------");
+
+int tickComparison(const void* first, const void* second);
 
 #endif
 

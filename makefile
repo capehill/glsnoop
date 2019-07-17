@@ -6,7 +6,7 @@ else
 	DELETE		= delete
 endif
 
-OBJS = main.o ogles2_module.o warp3dnova_module.o logger.o gui.o common.o filter.o timer.o
+OBJS = main.o ogles2_module.o warp3dnova_module.o logger.o gui.o common.o filter.o timer.o profiling.o
 DEPS = $(OBJS:.o=.d)
 
 CFLAGS = -Wall -Wextra -O3 -gstabs
