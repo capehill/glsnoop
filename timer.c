@@ -1,5 +1,5 @@
 #include "timer.h"
-#include "common.h"
+#include "logger.h"
 
 #include <proto/exec.h>
 #include <proto/timer.h>

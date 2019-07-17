@@ -1,6 +1,6 @@
 #include "ogles2_module.h"
 #include "warp3dnova_module.h"
-#include "common.h"
+#include "logger.h"
 #include "gui.h"
 #include "filter.h"
 #include "timer.h"

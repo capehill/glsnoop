@@ -3,6 +3,7 @@
 #include "filter.h"
 #include "timer.h"
 #include "profiling.h"
+#include "logger.h"
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>

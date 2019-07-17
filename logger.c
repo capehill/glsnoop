@@ -1,4 +1,4 @@
-#include "common.h"
+#include "logger.h"
 
 #include <proto/exec.h>
 

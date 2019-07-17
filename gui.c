@@ -1,5 +1,5 @@
 #include "gui.h"
-#include "common.h"
+#include "logger.h"
 #include "ogles2_module.h"
 #include "warp3dnova_module.h"
 #include "timer.h"
