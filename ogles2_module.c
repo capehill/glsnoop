@@ -2,10 +2,10 @@
 #include "common.h"
 #include "filter.h"
 #include "timer.h"
+#include "profiling.h"
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>
-#include <proto/timer.h>
 
 #include <stdio.h>
 
@@ -108,12 +108,6 @@ static const char* mapOgles2Error(const int code)
     return "Unknown error";
 }
 
-typedef struct Ogles2ProfilingItem
-{
-    uint64 ticks;
-    uint64 callCount;
-} Ogles2ProfilingItem;
-
 // Store original function pointers so that they can be still called
 struct Ogles2Context
 {
@@ -121,8 +115,9 @@ struct Ogles2Context
     struct Task* task;
     char name[NAME_LEN];
 
+    MyClock start;
     uint64 totalTicks;
-    Ogles2ProfilingItem profiling[Ogles2FunctionCount];
+    ProfilingItem profiling[Ogles2FunctionCount];
 
     void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
     void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
@@ -209,26 +204,10 @@ static void close_ogles2_library(void)
     }
 }
 
-struct MyClock {
-    union {
-        uint64 ticks;
-        struct EClockVal clockVal;
-    };
-};
-
-#define PROF_START \
-    struct MyClock start, finish; \
-    ITimer->ReadEClock(&start.clockVal);
-
-#define PROF_FINISH(func) \
-    ITimer->ReadEClock(&finish.clockVal); \
-    const uint64 duration = finish.ticks - start.ticks; \
-    context->totalTicks += duration; \
-    context->profiling[func].ticks += duration; \
-    context->profiling[func].callCount++;
-
 static void profileResults(const struct Ogles2Context* const context)
 {
+    PROF_FINISH_CONTEXT
+
     logLine("OpenGL ES 2.0 profiling results:");
     logLine("--------------------------------");
 
@@ -238,12 +217,11 @@ static void profileResults(const struct Ogles2Context* const context)
                 mapOgles2Function(i),
                 context->profiling[i].callCount,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
-                (double)context->profiling[i].ticks * 100 / context->totalTicks);
+                (double)context->profiling[i].ticks * 100.0 / context->totalTicks);
         }
     }
 
-    logLine("Total recorded duration %.6f ms", (double)context->totalTicks / timer_frequency_ms());
-    logLine("--------------------------------");
+    PROF_PRINT_TOTAL
 }
 
 // We patch IExec->GetInterface to be able to patch later IOGLES2 interface.
@@ -287,8 +265,10 @@ static struct Interface* EXEC_GetInterface(struct ExecIFace* Self, struct Librar
 
                 if (i == MAX_CLIENTS) {
                     logLine("glSnoop: too many clients, cannot patch");
+                    IExec->FreeVec(context);
                 } else {
                     patch_ogles2_functions(context);
+                    PROF_INIT(context)
                 }
             } else {
                 logLine("Cannot allocate memory for OGLES2 context data: cannot patch");

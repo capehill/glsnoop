@@ -2,10 +2,10 @@
 #include "common.h"
 #include "filter.h"
 #include "timer.h"
+#include "profiling.h"
 
 #include <proto/exec.h>
 #include <proto/warp3dnova.h>
-#include <proto/timer.h>
 
 #include <stdio.h>
 
@@ -66,11 +66,6 @@ static const char* mapNovaFunction(const NovaFunction func)
 
     return "Unknown";
 }
-
-typedef struct NovaProfilingItem {
-    uint64 callCount;
-    uint64 ticks;
-} NovaProfilingItem;
 
 struct Library* Warp3DNovaBase;
 struct Interface* IWarp3DNova;
@@ -147,8 +142,9 @@ struct NovaContext {
     struct W3DN_Context_s* context;
     char name[NAME_LEN];
 
+    MyClock start;
     uint64 totalTicks;
-    NovaProfilingItem profiling[NovaFunctionCount];
+    ProfilingItem profiling[NovaFunctionCount];
 
     // Store original function pointers so that they can be still called
 
@@ -211,26 +207,10 @@ struct NovaContext {
     	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib);
 };
 
-struct MyClock {
-    union {
-        uint64 ticks;
-        struct EClockVal clockVal;
-    };
-};
-
-#define PROF_START \
-    struct MyClock start, finish; \
-    ITimer->ReadEClock(&start.clockVal);
-
-#define PROF_FINISH(func) \
-    ITimer->ReadEClock(&finish.clockVal); \
-    const uint64 duration = finish.ticks - start.ticks; \
-    context->totalTicks += duration; \
-    context->profiling[func].ticks += duration; \
-    context->profiling[func].callCount++;
-
 static void profileResults(const struct NovaContext* const context)
 {
+    PROF_FINISH_CONTEXT
+
     logLine("Warp3D Nova profiling results:");
     logLine("------------------------------");
 
@@ -240,12 +220,11 @@ static void profileResults(const struct NovaContext* const context)
                 mapNovaFunction(i),
                 context->profiling[i].callCount,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
-                (double)context->profiling[i].ticks * 100 / context->totalTicks);
+                (double)context->profiling[i].ticks * 100.0 / context->totalTicks);
         }
     }
 
-    logLine("Total recorded duration %.6f ms", (double)context->totalTicks / timer_frequency_ms());
-    logLine("------------------------------");
+    PROF_PRINT_TOTAL
 }
 
 static struct NovaContext* contexts[MAX_CLIENTS];
@@ -810,8 +789,10 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
 
                 if (i == MAX_CLIENTS) {
                     logLine("glSnoop: too many clients, cannot patch");
+                    IExec->FreeVec(nova);
                 } else {
                     patch_context_functions(nova);
+                    PROF_INIT(nova)
                 }
             }
         }
