@@ -36,6 +36,7 @@ profiling currently.
 - OGLES2: enable ogles2.library tracing
 - NOVA: enable Warp3DNova.library tracing
 - GUI: launch the graphical user interface
+- PROFILE: disable function tracing in serial logs
 - FILTER filename: define a subset of patched functions
 
 ## Tips

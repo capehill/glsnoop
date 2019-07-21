@@ -223,6 +223,8 @@ static void profileResults(struct Ogles2Context* const context)
 
     sort(context);
 
+    resume_log();
+
     logLine("OpenGL ES 2.0 profiling results for %s:", context->name);
     logLine("--------------------------------------------------------");
 

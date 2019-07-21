@@ -16,12 +16,13 @@ struct Params {
     LONG ogles2;
     LONG nova;
     LONG gui;
+    LONG profiling;
     char *filter;
 };
 
 static const char* const portName = "glSnoop port";
 static char* filterFile;
-static struct Params params = { 0, 0, 0, NULL };
+static struct Params params = { 0, 0, 0, 0, NULL };
 
 static struct MsgPort* port;
 
@@ -57,7 +58,10 @@ static void remove_port()
 
 static void parse_args(void)
 {
-    struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S,GUI/S,FILTER/K", (int32 *)&params, NULL);
+    const char* const enabled = "enabled";
+    const char* const disabled = "disabled";
+
+    struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S,GUI/S,PROFILE/S,FILTER/K", (int32 *)&params, NULL);
 
     if (result) {
         if (params.filter) {
@@ -72,10 +76,11 @@ static void parse_args(void)
         params.ogles2 = params.nova = TRUE;
     }
 
-    printf("OGLES2 tracing: [%s]\n", params.ogles2 ? "enabled" : "disabled");
-    printf("WARP3DNOVA tracing: [%s]\n", params.nova ? "enabled" : "disabled");
-    printf("GUI: [%s]\n", params.gui ? "enabled" : "disabled");
-    printf("Filter file name: [%s]\n", filterFile ? filterFile : "disabled");
+    printf("OGLES2 tracing: [%s]\n", params.ogles2 ? enabled : disabled);
+    printf("WARP3DNOVA tracing: [%s]\n", params.nova ? enabled : disabled);
+    printf("GUI: [%s]\n", params.gui ? enabled : disabled);
+    printf("Profiling mode: [%s]\n", params.profiling ? enabled : disabled);
+    printf("Filter file name: [%s]\n", filterFile ? filterFile : disabled);
 }
 
 static void install_patches(void)
@@ -130,6 +135,11 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
     load_filters(filterFile);
 
     install_patches();
+
+    if (params.profiling) {
+        puts("Profiling mode - disabling most serial logging...");
+        pause_log();
+    }
 
     puts("System patched. Press Control-C to quit...");
 

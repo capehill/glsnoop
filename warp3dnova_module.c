@@ -244,6 +244,8 @@ static void profileResults(struct NovaContext* const context)
 
     sort(context);
 
+    resume_log();
+
     logLine("Warp3D Nova profiling results for %s:", context->name);
     logLine("--------------------------------------------------------");
 
