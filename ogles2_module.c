@@ -217,8 +217,8 @@ static void profileResults(struct Ogles2Context* const context)
 
     sort(context);
 
-    logLine("OpenGL ES 2.0 profiling results:");
-    logLine("--------------------------------");
+    logLine("OpenGL ES 2.0 profiling results for %s:", context->name);
+    logLine("--------------------------------------------------------");
 
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
@@ -992,6 +992,8 @@ void ogles2_remove_patches(void)
 
         for (i = 0; i < MAX_CLIENTS; i++) {
             if (contexts[i]) {
+                profileResults(contexts[i]);
+
                 size_t p;
                 for (p = 0; p < sizeof(patches) / sizeof(patches[0]); p++) {
                     patches[p](FALSE, contexts[i]);

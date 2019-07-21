@@ -220,8 +220,8 @@ static void profileResults(struct NovaContext* const context)
 
     sort(context);
 
-    logLine("Warp3D Nova profiling results:");
-    logLine("------------------------------");
+    logLine("Warp3D Nova profiling results for %s:", context->name);
+    logLine("--------------------------------------------------------");
 
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
@@ -842,6 +842,7 @@ void warp3dnova_remove_patches(void)
 
         for (i = 0; i < MAX_CLIENTS; i++) {
             if (contexts[i]) {
+                profileResults(contexts[i]);
                 restore_context_functions(contexts[i]);
             }
         }
