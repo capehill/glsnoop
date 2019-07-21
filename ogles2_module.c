@@ -46,6 +46,7 @@ typedef enum Ogles2Function {
     FramebufferTexture2D,
     GetFramebufferAttachmentParameteriv,
     DeleteFramebuffers,
+    Clear,
     // Keep last
     Ogles2FunctionCount
 } Ogles2Function;
@@ -85,6 +86,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(FramebufferTexture2D)
         MAP_ENUM(GetFramebufferAttachmentParameteriv)
         MAP_ENUM(DeleteFramebuffers)
+        MAP_ENUM(Clear)
         case Ogles2FunctionCount: break;
     }
 
@@ -158,6 +160,7 @@ struct Ogles2Context
     void (*old_glFramebufferTexture2D)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
     void (*old_glGetFramebufferAttachmentParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params);
     void (*old_glDeleteFramebuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers);
+    void (*old_glClear)(struct OGLES2IFace *Self, GLbitfield mask);
 };
 
 static struct Ogles2Context* contexts[MAX_CLIENTS];
@@ -888,6 +891,21 @@ static void OGLES2_glDeleteFramebuffers(struct OGLES2IFace *Self, GLsizei n, con
     }
 }
 
+static void OGLES2_glClear(struct OGLES2IFace *Self, GLbitfield mask)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s mask 0x%X", context->name, __func__, mask);
+
+    if (context->old_glClear) {
+        PROF_START
+
+        CHECK(context->old_glClear(Self, mask))
+
+        PROF_FINISH(Clear)
+    }
+}
+
 GENERATE_FILTERED_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
@@ -918,6 +936,7 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glFramebufferRenderbuffer, OGLES2, Ogles2Co
 GENERATE_FILTERED_PATCH(OGLES2IFace, glFramebufferTexture2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFramebufferAttachmentParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteFramebuffers, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glClear, OGLES2, Ogles2Context)
 
 static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_aglSwapBuffers,
@@ -950,6 +969,7 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glFramebufferTexture2D,
     patch_glGetFramebufferAttachmentParameteriv,
     patch_glDeleteFramebuffers,
+    patch_glClear
 };
 
 void ogles2_install_patches(void)
