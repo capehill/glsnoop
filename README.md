@@ -10,6 +10,27 @@ glSnoop supports partial logging of:
 - ogles2.library
 - Warp3DNova.library
 
+## Profiling
+
+glSnoop records the callcount and duration of known OGLES2
+and Warp3D Nova functions. Profiling summaries are logged when
+contexts are being destroyed.
+
+Time spent inside OGLES2 functions includes also time spent
+inside Warp3D Nova functions.
+
+## Filtering
+
+Filtering can be used to patch only a subset of OGLES2/NOVA
+functions. This produces less logs and is faster. Filtering
+impacts also profiling, because non-patched functions
+cannot be profiled either.
+
+## Pausing
+
+Pausing stops the serial logging until resumed. It doesn't impact
+profiling currently.
+
 ## Command-line parameters
 
 - OGLES2: enable ogles2.library tracing
