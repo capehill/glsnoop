@@ -32,6 +32,8 @@ typedef enum NovaFunction {
     SetRenderTarget,
     GetRenderTarget,
     FBGetAttr,
+    CompileShader,
+    Clear,
     // Keep last
     NovaFunctionCount
 } NovaFunction;
@@ -61,6 +63,8 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(GetRenderTarget)
         MAP_ENUM(FBGetAttr)
+        MAP_ENUM(CompileShader)
+        MAP_ENUM(Clear)
         case NovaFunctionCount: break;
     }
 
@@ -207,6 +211,12 @@ struct NovaContext {
 
     uint64 (*old_FBGetAttr)(struct W3DN_Context_s *self,
     	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib);
+
+    W3DN_Shader* (*old_CompileShader)(struct W3DN_Context_s *self,
+        W3DN_ErrorCode *errCode, struct TagItem *tags);
+
+    W3DN_ErrorCode (*old_Clear)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        const float *colour, const double *depth, const uint32* stencil);
 };
 
 static void sort(struct NovaContext* const context)
@@ -679,6 +689,45 @@ static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
     return result;
 }
 
+static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
+    W3DN_ErrorCode *errCode, struct TagItem *tags)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_Shader *shader = context->old_CompileShader(self, errCode, tags);
+
+    PROF_FINISH(CompileShader)
+
+    logLine("%s: %s: errCode %d (%s), tags %p. Shader address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        tags,
+        shader);
+
+    return shader;
+}
+
+static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    const float *colour, const double *depth, const uint32* stencil)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_Clear(self, renderState, colour, depth, stencil);
+
+    PROF_FINISH(Clear)
+
+    logLine("%s: %s: renderState %p, colour %p, depth %p, stencil %p. Result %d (%s)",
+        context->name, __func__,
+        renderState, colour, depth, stencil, result, mapNovaError(result));
+
+    return result;
+}
+
 #define GENERATE_NOVA_PATCH(function) \
 static void patch_##function(BOOL patching, struct NovaContext* nova) \
 { \
@@ -716,6 +765,8 @@ GENERATE_NOVA_PATCH(FBGetStatus)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(GetRenderTarget)
 GENERATE_NOVA_PATCH(FBGetAttr)
+GENERATE_NOVA_PATCH(CompileShader)
+GENERATE_NOVA_PATCH(Clear)
 
 static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_Destroy,
@@ -738,6 +789,8 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_SetRenderTarget,
     patch_GetRenderTarget,
     patch_FBGetAttr,
+    patch_CompileShader,
+    patch_Clear
 };
 
 static void patch_context_functions(struct NovaContext* nova)
