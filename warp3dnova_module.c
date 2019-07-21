@@ -34,6 +34,9 @@ typedef enum NovaFunction {
     FBGetAttr,
     CompileShader,
     Clear,
+    BindTexture,
+    Submit,
+    SetShaderPipeline,
     // Keep last
     NovaFunctionCount
 } NovaFunction;
@@ -65,6 +68,9 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(FBGetAttr)
         MAP_ENUM(CompileShader)
         MAP_ENUM(Clear)
+        MAP_ENUM(BindTexture)
+        MAP_ENUM(Submit)
+        MAP_ENUM(SetShaderPipeline)
         case NovaFunctionCount: break;
     }
 
@@ -217,6 +223,14 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_Clear)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         const float *colour, const double *depth, const uint32* stencil);
+
+    W3DN_ErrorCode (*old_BindTexture)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler);
+
+    uint32 (*old_Submit)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
+
+    W3DN_ErrorCode (*old_SetShaderPipeline)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_ShaderPipeline *shaderPipeline);
 };
 
 static void sort(struct NovaContext* const context)
@@ -728,6 +742,61 @@ static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *
     return result;
 }
 
+static W3DN_ErrorCode W3DN_BindTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_BindTexture(self, renderState, texUnit, texture, texSampler);
+
+    PROF_FINISH(BindTexture)
+
+    logLine("%s: %s: renderState %p, texUnit %lu, texture %p, texSample %p. Result %d (%s)",
+        context->name, __func__,
+        renderState, texUnit, texture, texSampler, result, mapNovaError(result));
+
+    return result;
+}
+
+static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const uint32 result = context->old_Submit(self, errCode);
+
+    PROF_FINISH(Submit)
+
+    logLine("%s: %s: errCode %d (%s). Submit ID %lu",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_ShaderPipeline *shaderPipeline)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_SetShaderPipeline(self, renderState, shaderPipeline);
+
+    PROF_FINISH(SetShaderPipeline)
+
+    logLine("%s: %s: renderState %p, shaderPipeline %p. Result %d (%s)",
+        context->name, __func__,
+        renderState, shaderPipeline, result, mapNovaError(result));
+
+    return result;
+}
+
 #define GENERATE_NOVA_PATCH(function) \
 static void patch_##function(BOOL patching, struct NovaContext* nova) \
 { \
@@ -767,6 +836,9 @@ GENERATE_NOVA_PATCH(GetRenderTarget)
 GENERATE_NOVA_PATCH(FBGetAttr)
 GENERATE_NOVA_PATCH(CompileShader)
 GENERATE_NOVA_PATCH(Clear)
+GENERATE_NOVA_PATCH(BindTexture)
+GENERATE_NOVA_PATCH(Submit)
+GENERATE_NOVA_PATCH(SetShaderPipeline)
 
 static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_Destroy,
@@ -790,7 +862,10 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_GetRenderTarget,
     patch_FBGetAttr,
     patch_CompileShader,
-    patch_Clear
+    patch_Clear,
+    patch_BindTexture,
+    patch_Submit,
+    patch_SetShaderPipeline
 };
 
 static void patch_context_functions(struct NovaContext* nova)
