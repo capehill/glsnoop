@@ -236,9 +236,12 @@ static void profileResults(struct Ogles2Context* const context)
     logLine("Draw calls (glDraw*) per frame %.6f. Draw calls per second %.6f", drawcalls / swaps, drawcalls / seconds);
     logLine("Frames (buffer swaps) per second %.6f", swaps / seconds);
 
+    logLine("%30s | %10s | %20s | %20s | %30s",
+        "function", "call count", "duration (ms)", "% of recorded time", "% of total context life-time");
+
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of recorded time (%.2f %% of total context life-time)",
+            logLine("%30s | %10llu | %20.6f | %20.2f | %30.2f",
                 mapOgles2Function(context->profiling[i].index),
                 context->profiling[i].callCount,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
