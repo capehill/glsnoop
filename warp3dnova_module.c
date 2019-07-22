@@ -37,6 +37,8 @@ typedef enum NovaFunction {
     BindTexture,
     Submit,
     SetShaderPipeline,
+    WaitDone,
+    WaitIdle,
     // Keep last
     NovaFunctionCount
 } NovaFunction;
@@ -71,6 +73,8 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(BindTexture)
         MAP_ENUM(Submit)
         MAP_ENUM(SetShaderPipeline)
+        MAP_ENUM(WaitDone)
+        MAP_ENUM(WaitIdle)
         case NovaFunctionCount: break;
     }
 
@@ -233,6 +237,10 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_SetShaderPipeline)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         W3DN_ShaderPipeline *shaderPipeline);
+
+    W3DN_ErrorCode (*old_WaitDone)(struct W3DN_Context_s *self, uint32 submitID, uint32 timeout);
+
+    W3DN_ErrorCode (*old_WaitIdle)(struct W3DN_Context_s *self, uint32 timeout);
 };
 
 static void sort(struct NovaContext* const context)
@@ -847,6 +855,41 @@ static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_R
     return result;
 }
 
+W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID, uint32 timeout)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_WaitDone(self, submitID, timeout);
+
+    PROF_FINISH(WaitDone)
+
+    logLine("%s: %s: submitID %lu, timeout %lu. Result %d (%s)",
+        context->name, __func__,
+        submitID, timeout, result, mapNovaError(result));
+
+    return result;
+}
+
+W3DN_ErrorCode W3DN_WaitIdle(struct W3DN_Context_s *self, uint32 timeout)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_WaitIdle(self, timeout);
+
+    PROF_FINISH(WaitIdle)
+
+    logLine("%s: %s: timeout %lu. Result %d (%s)",
+        context->name, __func__,
+        timeout, result, mapNovaError(result));
+
+    return result;
+}
+
+
 #define GENERATE_NOVA_PATCH(function) \
 static void patch_##function(BOOL patching, struct NovaContext* nova) \
 { \
@@ -889,6 +932,8 @@ GENERATE_NOVA_PATCH(Clear)
 GENERATE_NOVA_PATCH(BindTexture)
 GENERATE_NOVA_PATCH(Submit)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
+GENERATE_NOVA_PATCH(WaitDone)
+GENERATE_NOVA_PATCH(WaitIdle)
 
 static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_Destroy,
@@ -915,7 +960,9 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_Clear,
     patch_BindTexture,
     patch_Submit,
-    patch_SetShaderPipeline
+    patch_SetShaderPipeline,
+    patch_WaitDone,
+    patch_WaitIdle
 };
 
 static void patch_context_functions(struct NovaContext* nova)
