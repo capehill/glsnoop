@@ -33,11 +33,11 @@ static Object* objects[OID_Count];
 static struct Window* window;
 static struct MsgPort* port;
 
-static Object* create_gui(void)
+static Object* create_gui(LONG profiling)
 {
     return IIntuition->NewObject(NULL, "window.class",
         WA_ScreenTitle, "glSnoop",
-        WA_Title, "glSnoop",
+        WA_Title, profiling ? "glSnoop profiling" : "glSnoop tracing",
         WA_Activate, TRUE,
         WA_DragBar, TRUE,
         WA_CloseGadget, TRUE,
@@ -64,6 +64,7 @@ static Object* create_gui(void)
                     GA_Text, "Pause",
                     GA_ID, GID_Pause,
                     GA_RelVerify, TRUE, // TODO: required or not?
+                    GA_Disabled, profiling ? TRUE : FALSE,
                     TAG_DONE),
                 TAG_DONE), // horizontal layout.gadget
             LAYOUT_AddChild, IIntuition->NewObject(NULL, "layout.gadget",
@@ -206,13 +207,14 @@ static void handle_events(void)
     }
 }
 
-void run_gui(void)
+// When profiling, Pause/Resume buttons are disabled
+void run_gui(LONG profiling)
 {
 	port = IExec->AllocSysObjectTags(ASOT_PORT,
 		ASOPORT_Name, "app_port",
 		TAG_DONE);
 
-    objects[OID_Window] = create_gui();
+    objects[OID_Window] = create_gui(profiling);
 
     if (objects[OID_Window]) {
         if ((window = (struct Window *)IIntuition->IDoMethod(objects[OID_Window], WM_OPEN))) {

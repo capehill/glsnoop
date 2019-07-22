@@ -84,7 +84,7 @@ static BOOL parse_args(void)
     printf("  OGLES2 tracing: [%s]\n", params.ogles2 ? enabled : disabled);
     printf("  WARP3DNOVA tracing: [%s]\n", params.nova ? enabled : disabled);
     printf("  GUI: [%s]\n", params.gui ? enabled : disabled);
-    printf("  Profiling mode: [%s]\n", params.profiling ? enabled : disabled);
+    printf("  Tracing mode: [%s]\n", params.profiling ? disabled : enabled);
     printf("  Filter file name: [%s]\n", filterFile ? filterFile : disabled);
     puts("---------------------");
 
@@ -128,7 +128,7 @@ static void remove_patches(void)
 static void run(void)
 {
     if (params.gui) {
-        run_gui();
+        run_gui(params.profiling);
     } else {
         IExec->Wait(SIGBREAKF_CTRL_C);
     }

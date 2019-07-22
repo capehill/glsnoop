@@ -1,7 +1,9 @@
 #ifndef GUI_H
 #define GUI_H
 
-void run_gui(void);
+#include <exec/types.h>
+
+void run_gui(LONG profiling);
 
 #endif
 
