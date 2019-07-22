@@ -155,7 +155,7 @@ struct NovaContext {
     char name[NAME_LEN];
 
     MyClock start;
-    uint64 totalTicks;
+    uint64 ticks;
     ProfilingItem profiling[NovaFunctionCount];
 
     // Store original function pointers so that they can be still called
@@ -249,17 +249,20 @@ static void profileResults(struct NovaContext* const context)
     logLine("Warp3D Nova profiling results for %s:", context->name);
     logLine("--------------------------------------------------------");
 
+    PROF_PRINT_TOTAL
+
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of total",
+            logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of recorded time (%.2f %% of total context life-time)",
                 mapNovaFunction(context->profiling[i].index),
                 context->profiling[i].callCount,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
-                (double)context->profiling[i].ticks * 100.0 / context->totalTicks);
+                (double)context->profiling[i].ticks * 100.0 / context->ticks,
+                (double)context->profiling[i].ticks * 100.0 / totalTicks);
         }
     }
 
-    PROF_PRINT_TOTAL
+    logLine("--------------------------------------------------------");
 }
 
 static struct NovaContext* contexts[MAX_CLIENTS];

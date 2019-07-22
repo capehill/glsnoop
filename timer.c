@@ -140,3 +140,9 @@ ULONG timer_frequency_ms(void)
 {
     return frequency / 1000;
 }
+
+ULONG timer_frequency(void)
+{
+    return frequency;
+}
+

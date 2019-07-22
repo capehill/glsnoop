@@ -30,21 +30,20 @@ typedef struct MyClock {
 #define PROF_FINISH(func) \
     ITimer->ReadEClock(&finish.clockVal); \
     const uint64 duration = finish.ticks - start.ticks; \
-    context->totalTicks += duration; \
+    context->ticks += duration; \
     context->profiling[func].ticks += duration; \
     context->profiling[func].callCount++;
 
 #define PROF_FINISH_CONTEXT \
     MyClock finish; \
     ITimer->ReadEClock(&finish.clockVal); \
-    const uint64 totalDuration = finish.ticks - context->start.ticks;
+    const uint64 totalTicks = finish.ticks - context->start.ticks;
 
 #define PROF_PRINT_TOTAL \
-    logLine("Total recorded duration %.6f ms, %.2f %% of total %.6f ms", \
-        (double)context->totalTicks / timer_frequency_ms(), \
-        (double)context->totalTicks * 100.0 / totalDuration, \
-        (double)totalDuration / timer_frequency_ms()); \
-    logLine("--------------------------------------------------------");
+    logLine("Total recorded duration %.6f ms, %.2f %% of total context life-time %.6f ms", \
+        (double)context->ticks / timer_frequency_ms(), \
+        (double)context->ticks * 100.0 / totalTicks, \
+        (double)totalTicks / timer_frequency_ms()); \
 
 int tickComparison(const void* first, const void* second);
 

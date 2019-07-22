@@ -122,7 +122,7 @@ struct Ogles2Context
     char name[NAME_LEN];
 
     MyClock start;
-    uint64 totalTicks;
+    uint64 ticks;
     ProfilingItem profiling[Ogles2FunctionCount];
 
     void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
@@ -221,6 +221,9 @@ static void profileResults(struct Ogles2Context* const context)
 {
     PROF_FINISH_CONTEXT
 
+    const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
+    const double swaps = context->profiling[SwapBuffers].callCount;
+
     sort(context);
 
     resume_log();
@@ -228,17 +231,23 @@ static void profileResults(struct Ogles2Context* const context)
     logLine("OpenGL ES 2.0 profiling results for %s:", context->name);
     logLine("--------------------------------------------------------");
 
+    PROF_PRINT_TOTAL
+
+    logLine("Drawcalls (glDraw*) per frame %.6f", drawcalls / swaps);
+    logLine("Frames (buffer swaps) per second %.6f", swaps / (totalTicks / timer_frequency()));
+
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of total",
+            logLine("-> %s callcount %llu, duration %.6f milliseconds, %.2f %% of recorded time (%.2f %% of total context life-time)",
                 mapOgles2Function(context->profiling[i].index),
                 context->profiling[i].callCount,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
-                (double)context->profiling[i].ticks * 100.0 / context->totalTicks);
+                (double)context->profiling[i].ticks * 100.0 / context->ticks,
+                (double)context->profiling[i].ticks * 100.0 / totalTicks);
         }
     }
 
-    PROF_PRINT_TOTAL
+    logLine("--------------------------------------------------------");
 }
 
 // We patch IExec->GetInterface to be able to patch later IOGLES2 interface.
