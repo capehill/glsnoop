@@ -12,7 +12,7 @@ glSnoop supports partial logging of:
 
 ## Profiling
 
-glSnoop records the callcount and duration of known OGLES2
+glSnoop records the call count and duration of known OGLES2
 and Warp3D Nova functions. Profiling summaries are logged when
 contexts are being destroyed.
 
@@ -54,3 +54,6 @@ PUBLIC DOMAIN
 
 Kas1e for ideas and testing.
 Mason for icons.
+samo79 for ideas.
+Hans for ideas.
+
