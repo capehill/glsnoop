@@ -37,7 +37,8 @@ typedef struct MyClock {
 #define PROF_FINISH_CONTEXT \
     MyClock finish; \
     ITimer->ReadEClock(&finish.clockVal); \
-    const uint64 totalTicks = finish.ticks - context->start.ticks;
+    const uint64 totalTicks = finish.ticks - context->start.ticks; \
+    const double seconds = (double)totalTicks / timer_frequency();
 
 #define PROF_PRINT_TOTAL \
     logLine("Total recorded duration %.6f ms, %.2f %% of total context life-time %.6f ms", \

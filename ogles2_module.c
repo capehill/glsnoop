@@ -233,8 +233,8 @@ static void profileResults(struct Ogles2Context* const context)
 
     PROF_PRINT_TOTAL
 
-    logLine("Drawcalls (glDraw*) per frame %.6f", drawcalls / swaps);
-    logLine("Frames (buffer swaps) per second %.6f", swaps / (totalTicks / timer_frequency()));
+    logLine("Draw calls (glDraw*) per frame %.6f. Draw calls per second %.6f", drawcalls / swaps, drawcalls / seconds);
+    logLine("Frames (buffer swaps) per second %.6f", swaps / seconds);
 
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {

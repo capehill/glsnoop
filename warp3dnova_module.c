@@ -242,6 +242,8 @@ static void profileResults(struct NovaContext* const context)
 {
     PROF_FINISH_CONTEXT
 
+    const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
+
     sort(context);
 
     resume_log();
@@ -250,6 +252,8 @@ static void profileResults(struct NovaContext* const context)
     logLine("--------------------------------------------------------");
 
     PROF_PRINT_TOTAL
+
+    logLine("Draw calls per second %.6f", drawcalls / seconds);
 
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
