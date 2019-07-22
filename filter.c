@@ -52,13 +52,13 @@ BOOL load_filters(const char* const fileName)
 {
     if (!fileName) {
         // No problem, we don't filter, then
-        return FALSE;
+        return TRUE;
     }
 
     FILE* file = fopen(fileName, "r");
 
     if (!file) {
-        logLine("Failed to open '%s'\n", fileName);
+        printf("Failed to open filter file '%s'\n", fileName);
         return FALSE;
     }
 
@@ -104,5 +104,7 @@ void free_filters(void)
         free(filters[i]);
         filters[i] = NULL;
     }
+
+    count = 0;
 }
 

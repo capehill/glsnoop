@@ -56,12 +56,13 @@ static void remove_port()
     }
 }
 
-static void parse_args(void)
+static BOOL parse_args(void)
 {
     const char* const enabled = "enabled";
     const char* const disabled = "disabled";
+    const char* const pattern = "OGLES2/S,NOVA/S,GUI/S,PROFILE/S,FILTER/K";
 
-    struct RDArgs *result = IDOS->ReadArgs("OGLES2/S,NOVA/S,GUI/S,PROFILE/S,FILTER/K", (int32 *)&params, NULL);
+    struct RDArgs *result = IDOS->ReadArgs(pattern, (int32 *)&params, NULL);
 
     if (result) {
         if (params.filter) {
@@ -69,6 +70,9 @@ static void parse_args(void)
         }
 
         IDOS->FreeArgs(result);
+    } else {
+        printf("Error when reading command-line arguments. Known parameters are: %s\n", pattern);
+        return FALSE;
     }
 
     if (!params.ogles2 && !params.nova) {
@@ -76,11 +80,15 @@ static void parse_args(void)
         params.ogles2 = params.nova = TRUE;
     }
 
-    printf("OGLES2 tracing: [%s]\n", params.ogles2 ? enabled : disabled);
-    printf("WARP3DNOVA tracing: [%s]\n", params.nova ? enabled : disabled);
-    printf("GUI: [%s]\n", params.gui ? enabled : disabled);
-    printf("Profiling mode: [%s]\n", params.profiling ? enabled : disabled);
-    printf("Filter file name: [%s]\n", filterFile ? filterFile : disabled);
+    puts("--- Configuration ---");
+    printf("  OGLES2 tracing: [%s]\n", params.ogles2 ? enabled : disabled);
+    printf("  WARP3DNOVA tracing: [%s]\n", params.nova ? enabled : disabled);
+    printf("  GUI: [%s]\n", params.gui ? enabled : disabled);
+    printf("  Profiling mode: [%s]\n", params.profiling ? enabled : disabled);
+    printf("  Filter file name: [%s]\n", filterFile ? filterFile : disabled);
+    puts("---------------------");
+
+    return TRUE;
 }
 
 static void install_patches(void)
@@ -117,11 +125,22 @@ static void remove_patches(void)
     ogles2_free();
 }
 
+static void run(void)
+{
+    if (params.gui) {
+        run_gui();
+    } else {
+        IExec->Wait(SIGBREAKF_CTRL_C);
+    }
+}
+
 int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 {
     logLine("*** glSnoop started. Built date: %s ***", __DATE__);
 
-    parse_args();
+    if (!parse_args()) {
+        goto out;
+    }
 
     if (already_running()) {
         puts("glSnoop is already running");
@@ -133,7 +152,10 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
     }
 
     create_port();
-    load_filters(filterFile);
+
+    if (!load_filters(filterFile)) {
+        goto out;
+    }
 
     install_patches();
 
@@ -144,13 +166,13 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 
     puts("System patched. Press Control-C to quit...");
 
-    if (params.gui) {
-        run_gui();
-    } else {
-        IExec->Wait(SIGBREAKF_CTRL_C);
-    }
+    run();
 
     remove_patches();
+
+    puts("Patches removed. glSnoop terminating");
+
+out:
     remove_port();
 
     free_filters();
@@ -158,9 +180,6 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 
     timer_quit();
 
-    puts("Patches removed. glSnoop terminating");
-
-out:
     logLine("glSnoop exiting");
 
     return 0;
