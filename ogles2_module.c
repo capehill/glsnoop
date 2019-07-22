@@ -125,6 +125,8 @@ struct Ogles2Context
     uint64 ticks;
     ProfilingItem profiling[Ogles2FunctionCount];
 
+    PrimitiveCounter counter;
+
     void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
     void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
 
@@ -249,6 +251,8 @@ static void profileResults(struct Ogles2Context* const context)
                 (double)context->profiling[i].ticks * 100.0 / totalTicks);
         }
     }
+
+    primitiveStats(&context->counter, seconds, drawcalls);
 
     logLine("--------------------------------------------------------");
 }
@@ -536,6 +540,37 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
     }
 }
 
+static void countPrimitive(PrimitiveCounter * counter, const GLenum type, const size_t count)
+{
+    switch (type) {
+        case GL_TRIANGLES:
+            counter->triangles += count;
+            break;
+        case GL_TRIANGLE_STRIP:
+            counter->triangleStrips += count;
+            break;
+        case GL_TRIANGLE_FAN:
+            counter->triangleFans += count;
+            break;
+        case GL_LINES:
+            counter->lines += count;
+            break;
+        case GL_LINE_STRIP:
+            counter->lineStrips += count;
+            break;
+        case GL_LINE_LOOP:
+            counter->lineLoops += count;
+            break;
+        case GL_POINTS:
+            counter->points += count;
+            break;
+
+        default:
+            logLine("Error - unknown primitive type %d passed to OGLES2", type);
+            break;
+    }
+}
+
 static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count)
 {
     GET_CONTEXT
@@ -549,6 +584,8 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
         CHECK(context->old_glDrawArrays(Self, mode, first, count))
 
         PROF_FINISH(DrawArrays)
+
+        countPrimitive(&context->counter, mode, count);
     }
 }
 
@@ -565,6 +602,8 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
         CHECK(context->old_glDrawElements(Self, mode, count, type, indices))
 
         PROF_FINISH(DrawElements)
+
+        countPrimitive(&context->counter, mode, count);
     }
 }
 

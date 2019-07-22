@@ -158,6 +158,8 @@ struct NovaContext {
     uint64 ticks;
     ProfilingItem profiling[NovaFunctionCount];
 
+    PrimitiveCounter counter;
+
     // Store original function pointers so that they can be still called
 
     void (*old_Destroy)(struct W3DN_Context_s *self);
@@ -268,6 +270,8 @@ static void profileResults(struct NovaContext* const context)
                 (double)context->profiling[i].ticks * 100.0 / totalTicks);
         }
     }
+
+    primitiveStats(&context->counter, seconds, drawcalls);
 
     logLine("--------------------------------------------------------");
 }
@@ -490,6 +494,36 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
     return result;
 }
 
+static void countPrimitive(PrimitiveCounter * counter, const W3DN_Primitive primitive, const uint32 count)
+{
+    switch (primitive) {
+        case W3DN_PRIM_TRIANGLES:
+            counter->triangles += count;
+            break;
+        case W3DN_PRIM_TRISTRIP:
+            counter->triangleStrips += count;
+            break;
+        case W3DN_PRIM_TRIFAN:
+            counter->triangleFans += count;
+            break;
+        case W3DN_PRIM_LINES:
+            counter->lines += count;
+            break;
+        case W3DN_PRIM_LINESTRIP:
+            counter->lineStrips += count;
+            break;
+        case W3DN_PRIM_LINELOOP:
+            counter->lineLoops += count;
+            break;
+        case W3DN_PRIM_POINTS:
+            counter->points += count;
+            break;
+        default:
+            logLine("Error - unknown primitive type %d passed to Nova", primitive);
+            break;
+    }
+}
+
 static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 base, uint32 count)
 {
@@ -503,6 +537,8 @@ static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 
     logLine("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d (%s)", context->name, __func__,
         renderState, primitive, (unsigned)base, (unsigned)count, result, mapNovaError(result));
+
+    countPrimitive(&context->counter, primitive, count);
 
     return result;
 }
@@ -522,6 +558,8 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
     logLine("%s: %s: renderState %p, primitive %d, baseVertex %u, count %u, indexBuffer %p, arrayIdx %u. Result %d (%s)",
         context->name, __func__,
         renderState, primitive, (unsigned)baseVertex, (unsigned)count, indexBuffer, (unsigned)arrayIdx, result, mapNovaError(result));
+
+    countPrimitive(&context->counter, primitive, count);
 
     return result;
 }

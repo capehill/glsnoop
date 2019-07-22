@@ -17,6 +17,16 @@ typedef struct MyClock {
     };
 } MyClock;
 
+typedef struct PrimitiveCounter {
+    uint64 triangles;
+    uint64 triangleStrips;
+    uint64 triangleFans;
+    uint64 lines;
+    uint64 lineStrips;
+    uint64 lineLoops;
+    uint64 points;
+} PrimitiveCounter;
+
 #define PROF_INIT(context, LAST_INDEX) \
     ITimer->ReadEClock(&context->start.clockVal); \
     for (int i = 0; i < LAST_INDEX; i++) { \
@@ -47,6 +57,7 @@ typedef struct MyClock {
         (double)totalTicks / timer_frequency_ms()); \
 
 int tickComparison(const void* first, const void* second);
+void primitiveStats(const PrimitiveCounter* const counter, const double seconds, const double drawcalls);
 
 #endif
 
