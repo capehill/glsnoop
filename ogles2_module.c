@@ -239,7 +239,7 @@ static void profileResults(struct Ogles2Context* const context)
     logLine("Frames (buffer swaps) per second %.6f", swaps / seconds);
 
     logLine("%30s | %10s | %20s | %20s | %30s",
-        "function", "call count", "duration (ms)", "% of recorded time", "% of total context life-time");
+        "function", "call count", "duration (ms)", "% of combined time", "% of CPU time (incl. driver)");
 
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {

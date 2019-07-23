@@ -266,7 +266,7 @@ static void profileResults(struct NovaContext* const context)
     logLine("Draw calls per second %.6f", drawcalls / seconds);
 
     logLine("%30s | %10s | %20s | %20s | %30s",
-        "function", "call count", "duration (ms)", "% of recorded time", "% of total context life-time");
+        "function", "call count", "duration (ms)", "% of combined time", "% of CPU time");
 
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {

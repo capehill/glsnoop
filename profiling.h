@@ -51,7 +51,7 @@ typedef struct PrimitiveCounter {
     const double seconds = (double)totalTicks / timer_frequency();
 
 #define PROF_PRINT_TOTAL \
-    logLine("Total recorded duration %.6f ms, %.2f %% of total context life-time %.6f ms", \
+    logLine("Function calls used %.6f ms, %.2f %% of context life-time %.6f ms", \
         (double)context->ticks / timer_frequency_ms(), \
         (double)context->ticks * 100.0 / totalTicks, \
         (double)totalTicks / timer_frequency_ms()); \
