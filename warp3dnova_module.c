@@ -92,10 +92,6 @@ static const char* mapNovaError(const W3DN_ErrorCode code)
 {
     #define MAP_ENUM(x) case x: return #x;
 
-    if (code != W3DNEC_SUCCESS) {
-        ++errorCount;
-    }
-
     switch (code) {
         MAP_ENUM(W3DNEC_SUCCESS)
         MAP_ENUM(W3DNEC_ILLEGALINPUT)
@@ -265,14 +261,15 @@ static void profileResults(struct NovaContext* const context)
 
     logLine("Draw calls per second %.6f", drawcalls / seconds);
 
-    logLine("%30s | %10s | %20s | %20s | %30s",
-        "function", "call count", "duration (ms)", "% of combined time", "% of CPU time");
+    logLine("%30s | %10s | %10s | %20s | %20s | %30s",
+        "function", "call count", "errors", "duration (ms)", "% of combined time", "% of CPU time");
 
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logLine("%30s | %10llu | %20.6f | %20.2f | %30.2f",
+            logLine("%30s | %10llu | %10llu | %20.6f | %20.2f | %30.2f",
                 mapNovaFunction(context->profiling[i].index),
                 context->profiling[i].callCount,
+                context->profiling[i].errors,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
                 (double)context->profiling[i].ticks * 100.0 / context->ticks,
                 (double)context->profiling[i].ticks * 100.0 / totalTicks);
@@ -361,6 +358,24 @@ static struct NovaContext* find_context(struct W3DN_Context_s* context)
     return result;
 }
 
+static void checkPointer(struct NovaContext* context, const NovaFunction id, const void* ptr)
+{
+    if (!ptr) {
+        logLine("%s: Warning: NULL pointer detected", context->name);
+        context->profiling[id].errors++;
+        errorCount++;
+    }
+}
+
+static void checkSuccess(struct NovaContext* context, const NovaFunction id, const W3DN_ErrorCode code)
+{
+    if (code != W3DNEC_SUCCESS) {
+        logLine("%s: Warning: unsuccessful operation detected", context->name);
+        context->profiling[id].errors++;
+        errorCount++;
+    }
+}
+
 #define GET_CONTEXT struct NovaContext* context = find_context(self);
 
 // Wrap traced calls
@@ -378,6 +393,9 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
     logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
         size, usage, (unsigned)maxArrays, tags, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+
+    checkPointer(context, CreateVertexBufferObject, result);
+    checkSuccess(context, CreateVertexBufferObject, mapNovaErrorPointerToCode(errCode));
 
     return result;
 }
@@ -428,6 +446,8 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
         context->name, __func__,
         buffer, (unsigned)arrayIdx, elementType, normalized, numElements, stride, offset, count, result, mapNovaError(result));
 
+    checkSuccess(context, VBOSetArray, result);
+
     return result;
 }
 
@@ -447,6 +467,8 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
         context->name, __func__,
         buffer, (unsigned)arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
 
+    checkSuccess(context, VBOGetArray, result);
+
     return result;
 }
 
@@ -463,6 +485,9 @@ static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 
     logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u (%s)", context->name, __func__,
         buffer, readOffset, readSize, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+
+    checkPointer(context, VBOLock, result);
+    checkSuccess(context, VBOLock, mapNovaErrorPointerToCode(errCode));
 
     return result;
 }
@@ -481,6 +506,8 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
     logLine("%s: %s: bufferLock %p, writeOffset %llu, writeSize %llu. Result %d (%s)", context->name, __func__,
         bufferLock, writeOffset, writeSize, result, mapNovaError(result));
 
+    checkSuccess(context, BufferUnlock, result);
+
     return result;
 }
 
@@ -498,6 +525,8 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 
     logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d (%s)", context->name, __func__,
         renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result, mapNovaError(result));
+
+    checkSuccess(context, BindVertexAttribArray, result);
 
     return result;
 }
@@ -547,6 +576,7 @@ static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
         renderState, primitive, (unsigned)base, (unsigned)count, result, mapNovaError(result));
 
     countPrimitive(&context->counter, primitive, count);
+    checkSuccess(context, DrawArrays, result);
 
     return result;
 }
@@ -568,6 +598,7 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
         renderState, primitive, (unsigned)baseVertex, (unsigned)count, indexBuffer, (unsigned)arrayIdx, result, mapNovaError(result));
 
     countPrimitive(&context->counter, primitive, count);
+    checkSuccess(context, DrawElements, result);
 
     return result;
 }
@@ -618,6 +649,9 @@ static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3D
         context->name, __func__,
         buffer, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
+    checkPointer(context, CreateFrameBuffer, buffer);
+    checkSuccess(context, CreateFrameBuffer, mapNovaErrorPointerToCode(errCode));
+
     return buffer;
 }
 
@@ -651,6 +685,8 @@ static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
         context->name, __func__,
         frameBuffer, (int)attachmentPt, tags, result, mapNovaError(result));
 
+    checkSuccess(context, FBBindBuffer, result);
+
     return result;
 }
 
@@ -668,6 +704,9 @@ static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
     logLine("%s: %s: frameBuffer %p, attachmentPt %u. Bitmap address %p. Result %d (%s)",
         context->name, __func__,
         frameBuffer, (unsigned)attachmentPt, bitmap, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+
+    checkPointer(context, FBGetBufferBM, bitmap);
+    checkSuccess(context, FBGetBufferBM, mapNovaErrorPointerToCode(errCode));
 
     return bitmap;
 }
@@ -687,6 +726,9 @@ static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
         context->name, __func__,
         frameBuffer, (unsigned)attachmentPt, texture, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
+    checkPointer(context, FBGetBufferTex, texture);
+    checkSuccess(context, FBGetBufferTex, mapNovaErrorPointerToCode(errCode));
+
     return texture;
 }
 
@@ -703,6 +745,8 @@ static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBu
     logLine("%s: %s: frameBuffer %p. Result %d (%s)",
         context->name, __func__,
         frameBuffer, result, mapNovaError(result));
+
+    checkSuccess(context, FBGetStatus, result);
 
     return result;
 }
@@ -722,6 +766,8 @@ static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
         context->name, __func__,
         renderState, frameBuffer, result, mapNovaError(result));
 
+    checkSuccess(context, SetRenderTarget, result);
+
     return result;
 }
 
@@ -739,6 +785,8 @@ static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     logLine("%s: %s: renderState %p. Frame buffer address %p",
         context->name, __func__,
         renderState, buffer);
+
+    checkPointer(context, GetRenderTarget, buffer);
 
     return buffer;
 }
@@ -779,6 +827,9 @@ static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
         tags,
         shader);
 
+    checkPointer(context, CompileShader, shader);
+    checkSuccess(context, CompileShader, mapNovaErrorPointerToCode(errCode));
+
     return shader;
 }
 
@@ -797,6 +848,8 @@ static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *
         context->name, __func__,
         renderState, colour, depth, stencil, result, mapNovaError(result));
 
+    checkSuccess(context, Clear, result);
+
     return result;
 }
 
@@ -814,6 +867,8 @@ static W3DN_ErrorCode W3DN_BindTexture(struct W3DN_Context_s *self, W3DN_RenderS
     logLine("%s: %s: renderState %p, texUnit %lu, texture %p, texSample %p. Result %d (%s)",
         context->name, __func__,
         renderState, texUnit, texture, texSampler, result, mapNovaError(result));
+
+    checkSuccess(context, BindTexture, result);
 
     return result;
 }
@@ -834,6 +889,14 @@ static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
         mapNovaErrorPointerToString(errCode),
         result);
 
+    checkSuccess(context, Submit, mapNovaErrorPointerToCode(errCode));
+
+    if (result == 0) {
+        logLine("%s: Warning: W3DN_Submit() returned zero", context->name);
+        context->profiling[Submit].errors++;
+        errorCount++;
+    }
+
     return result;
 }
 
@@ -852,6 +915,8 @@ static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_R
         context->name, __func__,
         renderState, shaderPipeline, result, mapNovaError(result));
 
+    checkSuccess(context, SetShaderPipeline, result);
+
     return result;
 }
 
@@ -869,6 +934,8 @@ W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID, uint3
         context->name, __func__,
         submitID, timeout, result, mapNovaError(result));
 
+    checkSuccess(context, WaitDone, result);
+
     return result;
 }
 
@@ -885,6 +952,8 @@ W3DN_ErrorCode W3DN_WaitIdle(struct W3DN_Context_s *self, uint32 timeout)
     logLine("%s: %s: timeout %lu. Result %d (%s)",
         context->name, __func__,
         timeout, result, mapNovaError(result));
+
+    checkSuccess(context, WaitIdle, result);
 
     return result;
 }

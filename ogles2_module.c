@@ -238,14 +238,15 @@ static void profileResults(struct Ogles2Context* const context)
     logLine("Draw calls (glDraw*) per frame %.6f. Draw calls per second %.6f", drawcalls / swaps, drawcalls / seconds);
     logLine("Frames (buffer swaps) per second %.6f", swaps / seconds);
 
-    logLine("%30s | %10s | %20s | %20s | %30s",
-        "function", "call count", "duration (ms)", "% of combined time", "% of CPU time (incl. driver)");
+    logLine("%30s | %10s | %10s | %20s | %20s | %30s",
+        "function", "call count", "errors", "duration (ms)", "% of combined time", "% of CPU time (incl. driver)");
 
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logLine("%30s | %10llu | %20.6f | %20.2f | %30.2f",
+            logLine("%30s | %10llu | %10llu | %20.6f | %20.2f | %30.2f",
                 mapOgles2Function(context->profiling[i].index),
                 context->profiling[i].callCount,
+                context->profiling[i].errors,
                 (double)context->profiling[i].ticks / timer_frequency_ms(),
                 (double)context->profiling[i].ticks * 100.0 / context->ticks,
                 (double)context->profiling[i].ticks * 100.0 / totalTicks);
@@ -364,26 +365,26 @@ static struct Ogles2Context* find_context(struct OGLES2IFace *interface)
 
 // Error checking helpers
 
-static void check_errors(const char* info, struct Ogles2Context * context)
+static void checkErrors(struct Ogles2Context * context, const Ogles2Function id)
 {
     GLenum err;
     while ((err = context->interface->glGetError()) != GL_NO_ERROR) {
-        logLine("%s: GL error %d (%s) detected %s call", context->name, err, mapOgles2Error(err), info);
+        logLine("%s: GL error %d (%s) detected", context->name, err, mapOgles2Error(err));
+        context->profiling[id].errors++;
     }
 }
 
-#define PRE_CHECK check_errors("before", context);
-#define POST_CHECK check_errors("after", context);
-
-#define CHECK(x) \
-PRE_CHECK \
+#define CHECK(x, id) \
+PROF_START \
 x; \
-POST_CHECK
+PROF_FINISH(id) \
+checkErrors(context, id);
 
-#define CHECK_STATUS(x) \
-PRE_CHECK \
+#define CHECK_STATUS(x, id) \
+PROF_START \
 status = x; \
-POST_CHECK
+PROF_FINISH(id) \
+checkErrors(context, id);
 
 // Wrap traced function calls
 
@@ -394,11 +395,7 @@ static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
     logLine("%s: %s", context->name, __func__);
 
     if (context->old_aglSwapBuffers) {
-        PROF_START
-
-        CHECK(context->old_aglSwapBuffers(Self))
-
-        PROF_FINISH(SwapBuffers)
+        CHECK(context->old_aglSwapBuffers(Self), SwapBuffers)
     }
 }
 
@@ -410,11 +407,7 @@ static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
         shader);
 
     if (context->old_glCompileShader) {
-        PROF_START
-
-        CHECK(context->old_glCompileShader(Self, shader))
-
-        PROF_FINISH(CompileShader)
+        CHECK(context->old_glCompileShader(Self, shader), CompileShader)
     }
 }
 
@@ -426,11 +419,7 @@ static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * bu
         n, buffers);
 
     if (context->old_glGenBuffers) {
-        PROF_START
-
-        CHECK(context->old_glGenBuffers(Self, n, buffers))
-
-        PROF_FINISH(GenBuffers)
+        CHECK(context->old_glGenBuffers(Self, n, buffers), GenBuffers)
     }
 
     ssize_t i;
@@ -447,11 +436,7 @@ static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint 
         target, buffer);
 
     if (context->old_glBindBuffer) {
-        PROF_START
-
-        CHECK(context->old_glBindBuffer(Self, target, buffer))
-
-        PROF_FINISH(BindBuffer)
+        CHECK(context->old_glBindBuffer(Self, target, buffer), BindBuffer)
     }
 }
 
@@ -463,11 +448,7 @@ static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizei
         target, size, data, usage);
 
     if (context->old_glBufferData) {
-        PROF_START
-
-        CHECK(context->old_glBufferData(Self, target, size, data, usage))
-
-        PROF_FINISH(BufferData)
+        CHECK(context->old_glBufferData(Self, target, size, data, usage), BufferData)
     }
 }
 
@@ -479,11 +460,7 @@ static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLin
         target, offset, size, data);
 
     if (context->old_glBufferSubData) {
-        PROF_START
-
-        CHECK(context->old_glBufferSubData(Self, target, offset, size, data))
-
-        PROF_FINISH(BufferSubData)
+        CHECK(context->old_glBufferSubData(Self, target, offset, size, data), BufferSubData)
     }
 }
 
@@ -500,11 +477,7 @@ static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint *
     }
 
     if (context->old_glDeleteBuffers) {
-        PROF_START
-
-        CHECK(context->old_glDeleteBuffers(Self, n, buffers))
-
-        PROF_FINISH(DeleteBuffers)
+        CHECK(context->old_glDeleteBuffers(Self, n, buffers), DeleteBuffers)
     }
 }
 
@@ -516,11 +489,7 @@ static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint in
         index);
 
     if (context->old_glEnableVertexAttribArray) {
-        PROF_START
-
-        CHECK(context->old_glEnableVertexAttribArray(Self, index))
-
-        PROF_FINISH(EnableVertexAttribArray)
+        CHECK(context->old_glEnableVertexAttribArray(Self, index), EnableVertexAttribArray)
     }
 }
 
@@ -532,11 +501,7 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
         index, size, type, normalized, stride, pointer);
 
     if (context->old_glVertexAttribPointer) {
-        PROF_START
-
-        CHECK(context->old_glVertexAttribPointer(Self, index, size, type, normalized, stride, pointer))
-
-        PROF_FINISH(VertexAttribPointer)
+        CHECK(context->old_glVertexAttribPointer(Self, index, size, type, normalized, stride, pointer), VertexAttribPointer)
     }
 }
 
@@ -579,11 +544,7 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
         mode, first, count);
 
     if (context->old_glDrawArrays) {
-        PROF_START
-
-        CHECK(context->old_glDrawArrays(Self, mode, first, count))
-
-        PROF_FINISH(DrawArrays)
+        CHECK(context->old_glDrawArrays(Self, mode, first, count), DrawArrays)
 
         countPrimitive(&context->counter, mode, count);
     }
@@ -597,11 +558,7 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
         mode, count, type, indices);
 
     if (context->old_glDrawElements) {
-        PROF_START
-
-        CHECK(context->old_glDrawElements(Self, mode, count, type, indices))
-
-        PROF_FINISH(DrawElements)
+        CHECK(context->old_glDrawElements(Self, mode, count, type, indices), DrawElements)
 
         countPrimitive(&context->counter, mode, count);
     }
@@ -627,11 +584,7 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
     }
 
     if (context->old_glShaderSource) {
-        PROF_START
-
-        CHECK(context->old_glShaderSource(Self, shader, count, string, length))
-
-        PROF_FINISH(ShaderSource)
+        CHECK(context->old_glShaderSource(Self, shader, count, string, length), ShaderSource)
     }
 }
 
@@ -643,11 +596,7 @@ static void OGLES2_glActiveTexture(struct OGLES2IFace *Self, GLenum texture)
         texture);
 
     if (context->old_glActiveTexture) {
-        PROF_START
-
-        CHECK(context->old_glActiveTexture(Self, texture))
-
-        PROF_FINISH(ActiveTexture)
+        CHECK(context->old_glActiveTexture(Self, texture), ActiveTexture)
     }
 }
 
@@ -659,11 +608,7 @@ static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint
         target, texture);
 
     if (context->old_glBindTexture) {
-        PROF_START
-
-        CHECK(context->old_glBindTexture(Self, target, texture))
-
-        PROF_FINISH(BindTexture)
+        CHECK(context->old_glBindTexture(Self, target, texture), BindTexture)
     }
 }
 
@@ -675,11 +620,7 @@ static void OGLES2_glGenTextures(struct OGLES2IFace *Self, GLsizei n, GLuint * t
         n, textures);
 
     if (context->old_glGenTextures) {
-        PROF_START
-
-        CHECK(context->old_glGenTextures(Self, n, textures))
-
-        PROF_FINISH(GenTextures)
+        CHECK(context->old_glGenTextures(Self, n, textures), GenTextures)
     }
 
     GLsizei i;
@@ -696,11 +637,7 @@ static void OGLES2_glGenerateMipmap(struct OGLES2IFace *Self, GLenum target)
         target);
 
     if (context->old_glGenerateMipmap) {
-        PROF_START
-
-        CHECK(context->old_glGenerateMipmap(Self, target))
-
-        PROF_FINISH(GenerateMipmap)
+        CHECK(context->old_glGenerateMipmap(Self, target), GenerateMipmap)
     }
 }
 
@@ -712,11 +649,7 @@ static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLen
         target, pname, param);
 
     if (context->old_glTexParameterf) {
-        PROF_START
-
-        CHECK(context->old_glTexParameterf(Self, target, pname, param))
-
-        PROF_FINISH(TexParameterf)
+        CHECK(context->old_glTexParameterf(Self, target, pname, param), TexParameterf)
     }
 }
 
@@ -728,11 +661,7 @@ static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLe
         target, pname, params);
 
     if (context->old_glTexParameterfv) {
-        PROF_START
-
-        CHECK(context->old_glTexParameterfv(Self, target, pname, params))
-
-        PROF_FINISH(TexParameterfv)
+        CHECK(context->old_glTexParameterfv(Self, target, pname, params), TexParameterfv)
     }
 }
 
@@ -744,11 +673,7 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
         target, pname, param);
 
     if (context->old_glTexParameteri) {
-        PROF_START
-
-        CHECK(context->old_glTexParameteri(Self, target, pname, param))
-
-        PROF_FINISH(TexParameteri)
+        CHECK(context->old_glTexParameteri(Self, target, pname, param), TexParameteri)
     }
 }
 
@@ -760,11 +685,7 @@ static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLe
         target, pname, params);
 
     if (context->old_glTexParameteriv) {
-        PROF_START
-
-        CHECK(context->old_glTexParameteriv(Self, target, pname, params))
-
-        PROF_FINISH(TexParameteriv)
+        CHECK(context->old_glTexParameteriv(Self, target, pname, params), TexParameteriv)
     }
 }
 
@@ -776,11 +697,7 @@ static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLin
         target, level, xoffset, yoffset, width, height, format, type, pixels);
 
     if (context->old_glTexSubImage2D) {
-        PROF_START
-
-        CHECK(context->old_glTexSubImage2D(Self, target, level, xoffset, yoffset, width, height, format, type, pixels))
-
-        PROF_FINISH(TexSubImage2D)
+        CHECK(context->old_glTexSubImage2D(Self, target, level, xoffset, yoffset, width, height, format, type, pixels), TexSubImage2D)
     }
 }
 
@@ -792,11 +709,7 @@ static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint l
         target, level, internalformat, width, height, border, format, type, pixels);
 
     if (context->old_glTexImage2D) {
-        PROF_START
-
-        CHECK(context->old_glTexImage2D(Self, target, level, internalformat, width, height, border, format, type, pixels))
-
-        PROF_FINISH(TexImage2D)
+        CHECK(context->old_glTexImage2D(Self, target, level, internalformat, width, height, border, format, type, pixels), TexImage2D)
     }
 }
 
@@ -813,11 +726,7 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
     }
 
     if (context->old_glDeleteTextures) {
-        PROF_START
-
-        CHECK(context->old_glDeleteTextures(Self, n, textures))
-
-        PROF_FINISH(DeleteTextures)
+        CHECK(context->old_glDeleteTextures(Self, n, textures), DeleteTextures)
     }
 }
 
@@ -829,11 +738,7 @@ static void OGLES2_glGenFramebuffers(struct OGLES2IFace *Self, GLsizei n, GLuint
         n, framebuffers);
 
     if (context->old_glGenFramebuffers) {
-        PROF_START
-
-        CHECK(context->old_glGenFramebuffers(Self, n, framebuffers))
-
-        PROF_FINISH(GenFramebuffers)
+        CHECK(context->old_glGenFramebuffers(Self, n, framebuffers), GenFramebuffers)
     }
 
     GLsizei i;
@@ -850,11 +755,7 @@ static void OGLES2_glBindFramebuffer(struct OGLES2IFace *Self, GLenum target, GL
         target, framebuffer);
 
     if (context->old_glBindFramebuffer) {
-        PROF_START
-
-        CHECK(context->old_glBindFramebuffer(Self, target, framebuffer))
-
-        PROF_FINISH(BindFramebuffer)
+        CHECK(context->old_glBindFramebuffer(Self, target, framebuffer), BindFramebuffer)
     }
 }
 
@@ -865,11 +766,7 @@ static GLenum OGLES2_glCheckFramebufferStatus(struct OGLES2IFace *Self, GLenum t
     GLenum status = 0;
 
     if (context->old_glCheckFramebufferStatus) {
-        PROF_START
-
-        CHECK_STATUS(context->old_glCheckFramebufferStatus(Self, target))
-
-        PROF_FINISH(CheckFramebufferStatus)
+        CHECK_STATUS(context->old_glCheckFramebufferStatus(Self, target), CheckFramebufferStatus)
     }
 
     logLine("%s: %s: status %u", context->name, __func__,
@@ -886,11 +783,7 @@ static void OGLES2_glFramebufferRenderbuffer(struct OGLES2IFace *Self, GLenum ta
         target, attachment, renderbuffertarget, renderbuffer);
 
     if (context->old_glFramebufferRenderbuffer) {
-        PROF_START
-
-        CHECK(context->old_glFramebufferRenderbuffer(Self, target, attachment, renderbuffertarget, renderbuffer))
-
-        PROF_FINISH(FramebufferRenderbuffer)
+        CHECK(context->old_glFramebufferRenderbuffer(Self, target, attachment, renderbuffertarget, renderbuffer), FramebufferRenderbuffer)
     }
 }
 
@@ -902,11 +795,7 @@ static void OGLES2_glFramebufferTexture2D(struct OGLES2IFace *Self, GLenum targe
         target, attachment, textarget, texture, level);
 
     if (context->old_glFramebufferTexture2D) {
-        PROF_START
-
-        CHECK(context->old_glFramebufferTexture2D(Self, target, attachment, textarget, texture, level))
-
-        PROF_FINISH(FramebufferTexture2D)
+        CHECK(context->old_glFramebufferTexture2D(Self, target, attachment, textarget, texture, level), FramebufferTexture2D)
     }
 }
 
@@ -918,11 +807,7 @@ static void OGLES2_glGetFramebufferAttachmentParameteriv(struct OGLES2IFace *Sel
         target, attachment, pname, params);
 
     if (context->old_glGetFramebufferAttachmentParameteriv) {
-        PROF_START
-
-        CHECK(context->old_glGetFramebufferAttachmentParameteriv(Self, target, attachment, pname, params))
-
-        PROF_FINISH(GetFramebufferAttachmentParameteriv)
+        CHECK(context->old_glGetFramebufferAttachmentParameteriv(Self, target, attachment, pname, params), GetFramebufferAttachmentParameteriv)
     }
 }
 
@@ -939,11 +824,7 @@ static void OGLES2_glDeleteFramebuffers(struct OGLES2IFace *Self, GLsizei n, con
     }
 
     if (context->old_glDeleteFramebuffers) {
-        PROF_START
-
-        CHECK(context->old_glDeleteFramebuffers(Self, n, framebuffers))
-
-        PROF_FINISH(DeleteFramebuffers)
+        CHECK(context->old_glDeleteFramebuffers(Self, n, framebuffers), DeleteFramebuffers)
     }
 }
 
@@ -954,11 +835,7 @@ static void OGLES2_glClear(struct OGLES2IFace *Self, GLbitfield mask)
     logLine("%s: %s mask 0x%X", context->name, __func__, mask);
 
     if (context->old_glClear) {
-        PROF_START
-
-        CHECK(context->old_glClear(Self, mask))
-
-        PROF_FINISH(Clear)
+        CHECK(context->old_glClear(Self, mask), Clear)
     }
 }
 
@@ -968,11 +845,7 @@ static void OGLES2_glUseProgram(struct OGLES2IFace *Self, GLuint program)
 
     logLine("%s: %s program %u", context->name, __func__, program);
 
-    PROF_START
-
-    CHECK(context->old_glUseProgram(Self, program))
-
-    PROF_FINISH(UseProgram)
+    CHECK(context->old_glUseProgram(Self, program), UseProgram)
 }
 
 GENERATE_FILTERED_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)

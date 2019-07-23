@@ -7,6 +7,7 @@ typedef struct ProfilingItem
 {
     uint64 ticks;
     uint64 callCount;
+    uint64 errors;
     int index; // Only for qsorting
 } ProfilingItem;
 
