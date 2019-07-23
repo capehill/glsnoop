@@ -14,7 +14,12 @@ int tickComparison(const void* first, const void* second)
 
 void primitiveStats(const PrimitiveCounter* const counter, const double seconds, const double drawcalls)
 {
-    logLine("Primitive statistics (raw vertex counts):");
+    logLine("Primitive statistics (in vertices):");
+
+    const uint64 total = counter->triangles + counter->triangleStrips + counter->triangleFans +
+        counter->lines + counter->lineStrips + counter->lineLoops + counter->points;
+
+    logLine("  Total vertices %llu, per second %.6f, per draw call %.6f", total, total / seconds, total / drawcalls);
 
     if (counter->triangles) {
         logLine("  Triangles %llu, per second %.6f, per draw call %.6f", counter->triangles,
