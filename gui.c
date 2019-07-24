@@ -166,10 +166,14 @@ static void pause(void)
 
 static void start_profiling(void)
 {
+    static unsigned counter = 0;
+
     IIntuition->SetAttrs(objects[OID_StartProfiling], GA_Disabled, TRUE, TAG_DONE);
     IIntuition->SetAttrs(objects[OID_FinishProfiling], GA_Disabled, FALSE, TAG_DONE);
 
     refresh_profiling_buttons();
+
+    logAlways("Start profiling counter %u", ++counter);
 
     ogles2_start_profiling();
     warp3dnova_start_profiling();
@@ -177,10 +181,14 @@ static void start_profiling(void)
 
 static void finish_profiling(void)
 {
+    static unsigned counter = 0;
+
     IIntuition->SetAttrs(objects[OID_StartProfiling], GA_Disabled, FALSE, TAG_DONE);
     IIntuition->SetAttrs(objects[OID_FinishProfiling], GA_Disabled, TRUE, TAG_DONE);
 
     refresh_profiling_buttons();
+
+    logAlways("Finish profiling counter %u", ++counter);
 
     warp3dnova_finish_profiling();
     ogles2_finish_profiling();
