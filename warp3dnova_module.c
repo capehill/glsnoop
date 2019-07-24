@@ -918,8 +918,8 @@ static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 
     logLine("%s: %s: errCode %d (%s). Submit ID %lu",
         context->name, __func__,
-        mapNovaErrorPointerToCode(&myErrCode),
-        mapNovaErrorPointerToString(&myErrCode),
+        myErrCode,
+        mapNovaError(myErrCode),
         result);
 
     if (result == 0 && myErrCode != W3DNEC_QUEUEEMPTY) {
