@@ -239,6 +239,9 @@ struct NovaContext {
     W3DN_ErrorCode (*old_WaitIdle)(struct W3DN_Context_s *self, uint32 timeout);
 };
 
+static struct NovaContext* contexts[MAX_CLIENTS];
+static APTR mutex;
+
 static void sort(struct NovaContext* const context)
 {
     qsort(context->profiling, NovaFunctionCount, sizeof(ProfilingItem), tickComparison);
@@ -252,21 +255,18 @@ static void profileResults(struct NovaContext* const context)
 
     sort(context);
 
-    resume_log();
-
-    logLine("Warp3D Nova profiling results for %s:", context->name);
-    logLine("--------------------------------------------------------");
+    logAlways("\nWarp3D Nova profiling results for %s:", context->name);
 
     PROF_PRINT_TOTAL
 
-    logLine("Draw calls per second %.6f", drawcalls / seconds);
+    logAlways("  Draw calls per second %.6f", drawcalls / seconds);
 
-    logLine("%30s | %10s | %10s | %20s | %20s | %30s",
-        "function", "call count", "errors", "duration (ms)", "% of combined time", "% of CPU time");
+    logAlways("%30s | %10s | %10s | %20s | %30s | %30s",
+        "function", "call count", "errors", "duration (ms)", timeUsedBuffer, "% of CPU time");
 
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logLine("%30s | %10llu | %10llu | %20.6f | %20.2f | %30.2f",
+            logAlways("%30s | %10llu | %10llu | %20.6f | %30.2f | %30.2f",
                 mapNovaFunction(context->profiling[i].index),
                 context->profiling[i].callCount,
                 context->profiling[i].errors,
@@ -277,15 +277,44 @@ static void profileResults(struct NovaContext* const context)
     }
 
     primitiveStats(&context->counter, seconds, drawcalls);
-
-    logLine("--------------------------------------------------------");
 }
 
-static struct NovaContext* contexts[MAX_CLIENTS];
-static APTR mutex;
+void warp3dnova_start_profiling(void)
+{
+    logAlways("Warp3D Nova profiler context started by user");
+
+    if (mutex) {
+        IExec->MutexObtain(mutex);
+
+        for (size_t c = 0; c < MAX_CLIENTS; c++) {
+            if (contexts[c]) {
+                // TODO: concurrency issues?
+                PROF_INIT(contexts[c], NovaFunctionCount)
+            }
+        }
+
+        IExec->MutexRelease(mutex);
+    }
+}
+
+void warp3dnova_finish_profiling(void)
+{
+    logAlways("Warp3D Nova profiler context finished by user");
+
+    if (mutex) {
+        IExec->MutexObtain(mutex);
+
+        for (size_t c = 0; c < MAX_CLIENTS; c++) {
+            if (contexts[c]) {
+                profileResults(contexts[c]);
+            }
+        }
+
+        IExec->MutexRelease(mutex);
+    }
+}
 
 static char versionBuffer[64] = "Warp3DNova.library version unknown";
-static char errorBuffer[32];
 
 static BOOL open_warp3dnova_library()
 {
@@ -317,6 +346,8 @@ const char* warp3dnova_version_string(void)
 
 const char* warp3dnova_errors_string(void)
 {
+    static char errorBuffer[32];
+
     snprintf(errorBuffer, sizeof(errorBuffer), "Warp3D Nova errors: %u", errorCount);
     return errorBuffer;
 }
@@ -879,22 +910,26 @@ static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 
     PROF_START
 
-    const uint32 result = context->old_Submit(self, errCode);
+    W3DN_ErrorCode myErrCode = 0;
+
+    const uint32 result = context->old_Submit(self, &myErrCode);
 
     PROF_FINISH(Submit)
 
     logLine("%s: %s: errCode %d (%s). Submit ID %lu",
         context->name, __func__,
-        mapNovaErrorPointerToCode(errCode),
-        mapNovaErrorPointerToString(errCode),
+        mapNovaErrorPointerToCode(&myErrCode),
+        mapNovaErrorPointerToString(&myErrCode),
         result);
 
-    checkSuccess(context, Submit, mapNovaErrorPointerToCode(errCode));
-
-    if (result == 0) {
+    if (result == 0 && myErrCode != W3DNEC_QUEUEEMPTY) {
         logLine("%s: Warning: W3DN_Submit() returned zero", context->name);
         context->profiling[Submit].errors++;
         errorCount++;
+    }
+
+    if (errCode) {
+        *errCode = myErrCode;
     }
 
     return result;

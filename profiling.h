@@ -30,8 +30,13 @@ typedef struct PrimitiveCounter {
 
 #define PROF_INIT(context, LAST_INDEX) \
     ITimer->ReadEClock(&context->start.clockVal); \
-    for (int i = 0; i < LAST_INDEX; i++) { \
-        context->profiling[i].index = i; \
+    context->ticks = 0; \
+    for (int item = 0; item < LAST_INDEX; item++) { \
+        ProfilingItem *pi = &context->profiling[item]; \
+        pi->ticks = 0; \
+        pi->callCount = 0; \
+        pi->errors = 0; \
+        pi->index = item; \
     }
 
 #define PROF_START \
@@ -52,8 +57,11 @@ typedef struct PrimitiveCounter {
     const double seconds = (double)totalTicks / timer_frequency();
 
 #define PROF_PRINT_TOTAL \
-    logLine("Function calls used %.6f ms, %.2f %% of context life-time %.6f ms", \
-        (double)context->ticks / timer_frequency_ms(), \
+    const double timeUsed = (double)context->ticks / timer_frequency_ms(); \
+    char timeUsedBuffer[32]; \
+    snprintf(timeUsedBuffer, sizeof(timeUsedBuffer), "%% of %.6f ms", timeUsed); \
+    logAlways("  Function calls used %.6f ms, %.2f %% of context life-time %.6f ms", \
+        timeUsed, \
         (double)context->ticks * 100.0 / totalTicks, \
         (double)totalTicks / timer_frequency_ms()); \
 

@@ -7,25 +7,39 @@
 
 static BOOL paused = FALSE;
 
+static void logLineImpl(const char * fmt, va_list ap)
+{
+    char buffer[16 * 1024];
+    const int len = vsnprintf(buffer, sizeof(buffer), fmt, ap);
+
+    IExec->DebugPrintF("%s\n", buffer);
+
+    if (len >= (int)sizeof(buffer)) {
+        IExec->DebugPrintF("*** Line truncated: %d bytes buffer needed ***\n", len);
+    }
+
+}
+
 void logLine(const char * fmt, ...)
 {
     if (!paused) {
-        char buffer[16 * 1024];
-        int len;
-
         va_list ap;
         va_start(ap, fmt);
 
-        len = vsnprintf(buffer, sizeof(buffer), fmt, ap);
+        logLineImpl(fmt, ap);
 
         va_end(ap);
-
-        IExec->DebugPrintF("%s\n", buffer);
-
-        if (len >= (int)sizeof(buffer)) {
-            IExec->DebugPrintF("*** Line truncated: %d bytes buffer needed ***\n", len);
-        }
     }
+}
+
+void logAlways(const char * fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+
+    logLineImpl(fmt, ap);
+
+    va_end(ap);
 }
 
 void pause_log(void)

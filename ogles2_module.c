@@ -179,7 +179,6 @@ static void find_process_name(struct Ogles2Context * context)
 }
 
 static char versionBuffer[64] = "ogles2.library version unknown";
-static char errorBuffer[32];
 
 static BOOL open_ogles2_library(void)
 {
@@ -202,6 +201,8 @@ const char* ogles2_version_string(void)
 
 const char* ogles2_errors_string(void)
 {
+    static char errorBuffer[32];
+
     snprintf(errorBuffer, sizeof(errorBuffer), "OpenGL ES 2 errors: %u", errorCount);
     return errorBuffer;
 }
@@ -224,26 +225,26 @@ static void profileResults(struct Ogles2Context* const context)
     PROF_FINISH_CONTEXT
 
     const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
-    const double swaps = context->profiling[SwapBuffers].callCount;
+    const uint64 swaps = context->profiling[SwapBuffers].callCount;
 
     sort(context);
 
-    resume_log();
-
-    logLine("OpenGL ES 2.0 profiling results for %s:", context->name);
-    logLine("--------------------------------------------------------");
+    logAlways("\nOpenGL ES 2.0 profiling results for %s:", context->name);
 
     PROF_PRINT_TOTAL
 
-    logLine("Draw calls (glDraw*) per frame %.6f. Draw calls per second %.6f", drawcalls / swaps, drawcalls / seconds);
-    logLine("Frames (buffer swaps) per second %.6f", swaps / seconds);
+    if (swaps > 0) {
+        logAlways("  Draw calls (glDraw*) per frame %.6f. Draw calls per second %.6f", drawcalls / swaps, drawcalls / seconds);
+    }
 
-    logLine("%30s | %10s | %10s | %20s | %20s | %30s",
-        "function", "call count", "errors", "duration (ms)", "% of combined time", "% of CPU time (incl. driver)");
+    logAlways("  Frames (buffer swaps) per second %.6f", swaps / seconds);
+
+    logAlways("%30s | %10s | %10s | %20s | %30s | %30s",
+        "function", "call count", "errors", "duration (ms)", timeUsedBuffer, "% of CPU time (incl. driver)");
 
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logLine("%30s | %10llu | %10llu | %20.6f | %20.2f | %30.2f",
+            logAlways("%30s | %10llu | %10llu | %20.6f | %30.2f | %30.2f",
                 mapOgles2Function(context->profiling[i].index),
                 context->profiling[i].callCount,
                 context->profiling[i].errors,
@@ -254,8 +255,41 @@ static void profileResults(struct Ogles2Context* const context)
     }
 
     primitiveStats(&context->counter, seconds, drawcalls);
+}
 
-    logLine("--------------------------------------------------------");
+void ogles2_start_profiling(void)
+{
+    logAlways("OGLES2 profiler context started by user");
+
+    if (mutex) {
+        IExec->MutexObtain(mutex);
+
+        for (size_t c = 0; c < MAX_CLIENTS; c++) {
+            if (contexts[c]) {
+                // TODO: concurrency issues?
+                PROF_INIT(contexts[c], Ogles2FunctionCount)
+            }
+        }
+
+        IExec->MutexRelease(mutex);
+    }
+}
+
+void ogles2_finish_profiling(void)
+{
+    logAlways("OGLES2 profiler context finished by user");
+
+    if (mutex) {
+        IExec->MutexObtain(mutex);
+
+        for (size_t c = 0; c < MAX_CLIENTS; c++) {
+            if (contexts[c]) {
+                profileResults(contexts[c]);
+            }
+        }
+
+        IExec->MutexRelease(mutex);
+    }
 }
 
 // We patch IExec->GetInterface to be able to patch later IOGLES2 interface.

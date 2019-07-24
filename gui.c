@@ -16,9 +16,12 @@
 
 enum EObject {
     OID_Window,
-    OID_ControlLayout,
+    OID_TracingLayout,
     OID_Trace,
     OID_Pause,
+    OID_ProfilingLayout,
+    OID_StartProfiling,
+    OID_FinishProfiling,
     OID_Ogles2Errors,
     OID_NovaErrors,
     OID_Count // KEEP LAST
@@ -26,7 +29,9 @@ enum EObject {
 
 enum EGadget {
     GID_Trace,
-    GID_Pause
+    GID_Pause,
+    GID_StartProfiling,
+    GID_FinishProfiling
 };
 
 static Object* objects[OID_Count];
@@ -50,10 +55,11 @@ static Object* create_gui(LONG profiling)
         WINDOW_AppPort, port, // Iconification needs it
         WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
             LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
-            LAYOUT_Label, "Control",
-            LAYOUT_BevelStyle, BVS_GROUP,
-            LAYOUT_AddChild, objects[OID_ControlLayout] = IIntuition->NewObject(NULL, "layout.gadget",
+
+            LAYOUT_AddChild, objects[OID_TracingLayout] = IIntuition->NewObject(NULL, "layout.gadget",
                 LAYOUT_Orientation, LAYOUT_ORIENT_HORIZ,
+                LAYOUT_Label, "Tracing",
+                LAYOUT_BevelStyle, BVS_GROUP,
                 LAYOUT_AddChild, objects[OID_Trace] = IIntuition->NewObject(NULL, "button.gadget",
                     GA_Text, "Trace",
                     GA_ID, GID_Trace,
@@ -67,6 +73,25 @@ static Object* create_gui(LONG profiling)
                     GA_Disabled, profiling ? TRUE : FALSE,
                     TAG_DONE),
                 TAG_DONE), // horizontal layout.gadget
+
+            LAYOUT_AddChild, objects[OID_ProfilingLayout] = IIntuition->NewObject(NULL, "layout.gadget",
+                LAYOUT_Orientation, LAYOUT_ORIENT_HORIZ,
+                LAYOUT_Label, "Profiling",
+                LAYOUT_BevelStyle, BVS_GROUP,
+                LAYOUT_AddChild, objects[OID_StartProfiling] = IIntuition->NewObject(NULL, "button.gadget",
+                    GA_Text, "Start",
+                    GA_ID, GID_StartProfiling,
+                    GA_RelVerify, TRUE,
+                    GA_Disabled, TRUE,
+                    TAG_DONE),
+                LAYOUT_AddChild, objects[OID_FinishProfiling] = IIntuition->NewObject(NULL, "button.gadget",
+                    GA_Text, "Finish",
+                    GA_ID, GID_FinishProfiling,
+                    GA_RelVerify, TRUE,
+                    GA_Disabled, FALSE,
+                    TAG_DONE),
+                TAG_DONE), // horizontal layout.gadget
+
             LAYOUT_AddChild, IIntuition->NewObject(NULL, "layout.gadget",
                 LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
                 LAYOUT_Label, "Information",
@@ -92,6 +117,7 @@ static Object* create_gui(LONG profiling)
                     BUTTON_BevelStyle, BVS_NONE,
                     TAG_DONE),
                 TAG_DONE), // vertical layout.gadget
+
             TAG_DONE), // vertical layout.gadget
         TAG_DONE); // window.class
 }
@@ -101,9 +127,14 @@ static void refresh_object(Object * object)
     IIntuition->RefreshGList((struct Gadget *)object, window, NULL, -1);
 }
 
-static void refresh_buttons(void)
+static void refresh_tracing_buttons(void)
 {
-    refresh_object(objects[OID_ControlLayout]);
+    refresh_object(objects[OID_TracingLayout]);
+}
+
+static void refresh_profiling_buttons(void)
+{
+    refresh_object(objects[OID_ProfilingLayout]);
 }
 
 static void refresh_errors(void)
@@ -115,22 +146,44 @@ static void refresh_errors(void)
     refresh_object(objects[OID_NovaErrors]);
 }
 
-static void on_trace(void)
+static void trace(void)
 {
     IIntuition->SetAttrs(objects[OID_Trace], GA_Disabled, TRUE, TAG_DONE);
     IIntuition->SetAttrs(objects[OID_Pause], GA_Disabled, FALSE, TAG_DONE);
 
-    refresh_buttons();
+    refresh_tracing_buttons();
     resume_log();
 }
 
-static void on_pause()
+static void pause(void)
 {
     IIntuition->SetAttrs(objects[OID_Trace], GA_Disabled, FALSE, TAG_DONE);
     IIntuition->SetAttrs(objects[OID_Pause], GA_Disabled, TRUE, TAG_DONE);
 
-    refresh_buttons();
+    refresh_tracing_buttons();
     pause_log();
+}
+
+static void start_profiling(void)
+{
+    IIntuition->SetAttrs(objects[OID_StartProfiling], GA_Disabled, TRUE, TAG_DONE);
+    IIntuition->SetAttrs(objects[OID_FinishProfiling], GA_Disabled, FALSE, TAG_DONE);
+
+    refresh_profiling_buttons();
+
+    ogles2_start_profiling();
+    warp3dnova_start_profiling();
+}
+
+static void finish_profiling(void)
+{
+    IIntuition->SetAttrs(objects[OID_StartProfiling], GA_Disabled, FALSE, TAG_DONE);
+    IIntuition->SetAttrs(objects[OID_FinishProfiling], GA_Disabled, TRUE, TAG_DONE);
+
+    refresh_profiling_buttons();
+
+    warp3dnova_finish_profiling();
+    ogles2_finish_profiling();
 }
 
 static void handle_gadgets(int id)
@@ -139,10 +192,16 @@ static void handle_gadgets(int id)
 
     switch (id) {
         case GID_Trace:
-            on_trace();
+            trace();
             break;
         case GID_Pause:
-            on_pause();
+            pause();
+            break;
+        case GID_StartProfiling:
+            start_profiling();
+            break;
+        case GID_FinishProfiling:
+            finish_profiling();
             break;
     }
 }

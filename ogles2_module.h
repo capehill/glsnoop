@@ -8,4 +8,7 @@ void ogles2_free(void);
 const char* ogles2_version_string(void);
 const char* ogles2_errors_string(void);
 
+void ogles2_start_profiling(void);
+void ogles2_finish_profiling(void);
+
 #endif
