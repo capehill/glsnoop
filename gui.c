@@ -82,13 +82,13 @@ static Object* create_gui(LONG profiling)
                     GA_Text, "Start",
                     GA_ID, GID_StartProfiling,
                     GA_RelVerify, TRUE,
-                    GA_Disabled, TRUE,
+                    GA_Disabled, FALSE,
                     TAG_DONE),
                 LAYOUT_AddChild, objects[OID_FinishProfiling] = IIntuition->NewObject(NULL, "button.gadget",
                     GA_Text, "Finish",
                     GA_ID, GID_FinishProfiling,
                     GA_RelVerify, TRUE,
-                    GA_Disabled, FALSE,
+                    GA_Disabled, TRUE,
                     TAG_DONE),
                 TAG_DONE), // horizontal layout.gadget
 
@@ -173,7 +173,7 @@ static void start_profiling(void)
 
     refresh_profiling_buttons();
 
-    logAlways("Start profiling counter %u", ++counter);
+    logAlways("Start profiling counter %u - clearing statistics", ++counter);
 
     ogles2_start_profiling();
     warp3dnova_start_profiling();
@@ -188,7 +188,7 @@ static void finish_profiling(void)
 
     refresh_profiling_buttons();
 
-    logAlways("Finish profiling counter %u", ++counter);
+    logAlways("Finish profiling counter %u - displaying statistics", ++counter);
 
     warp3dnova_finish_profiling();
     ogles2_finish_profiling();
