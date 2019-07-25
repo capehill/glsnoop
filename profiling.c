@@ -1,6 +1,8 @@
 #include "profiling.h"
 #include "logger.h"
 
+#include <stdlib.h>
+
 int tickComparison(const void* first, const void* second)
 {
     const ProfilingItem* a = first;
@@ -10,6 +12,11 @@ int tickComparison(const void* first, const void* second)
     if (a->ticks < b->ticks) return 1;
 
     return 0;
+}
+
+void sort(ProfilingItem* items, const unsigned count)
+{
+    qsort(items, count, sizeof(ProfilingItem), tickComparison);
 }
 
 void primitiveStats(const PrimitiveCounter* const counter, const double seconds, const double drawcalls)

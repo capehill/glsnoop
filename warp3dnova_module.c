@@ -9,7 +9,7 @@
 #include <proto/warp3dnova.h>
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 
 typedef enum NovaFunction {
     Destroy,
@@ -242,18 +242,17 @@ struct NovaContext {
 static struct NovaContext* contexts[MAX_CLIENTS];
 static APTR mutex;
 
-static void sort(struct NovaContext* const context)
-{
-    qsort(context->profiling, NovaFunctionCount, sizeof(ProfilingItem), tickComparison);
-}
-
 static void profileResults(struct NovaContext* const context)
 {
     PROF_FINISH_CONTEXT
 
     const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
 
-    sort(context);
+    // Copy items, otherwise sorthing will ruin the further profiling
+    ProfilingItem stats[NovaFunctionCount];
+    memcpy(stats, context->profiling, NovaFunctionCount * sizeof(ProfilingItem));
+
+    sort(stats, NovaFunctionCount);
 
     logAlways("\nWarp3D Nova profiling results for %s:", context->name);
 
@@ -265,15 +264,15 @@ static void profileResults(struct NovaContext* const context)
         "function", "call count", "errors", "duration (ms)", "avg. call dur. (us)", timeUsedBuffer, "% of CPU time");
 
     for (int i = 0; i < NovaFunctionCount; i++) {
-        if (context->profiling[i].callCount > 0) {
+        if (stats[i].callCount > 0) {
             logAlways("%30s | %10llu | %10llu | %20.6f | %20.3f | %24.2f | %20.2f",
-                mapNovaFunction(context->profiling[i].index),
-                context->profiling[i].callCount,
-                context->profiling[i].errors,
-                timer_ticks_to_ms(context->profiling[i].ticks),
-                timer_ticks_to_us(context->profiling[i].ticks) / context->profiling[i].callCount,
-                (double)context->profiling[i].ticks * 100.0 / context->ticks,
-                (double)context->profiling[i].ticks * 100.0 / totalTicks);
+                mapNovaFunction(stats[i].index),
+                stats[i].callCount,
+                stats[i].errors,
+                timer_ticks_to_ms(stats[i].ticks),
+                timer_ticks_to_us(stats[i].ticks) / stats[i].callCount,
+                (double)stats[i].ticks * 100.0 / context->ticks,
+                (double)stats[i].ticks * 100.0 / totalTicks);
         }
     }
 

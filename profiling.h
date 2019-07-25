@@ -66,6 +66,8 @@ typedef struct PrimitiveCounter {
         timer_ticks_to_ms(totalTicks));
 
 int tickComparison(const void* first, const void* second);
+void sort(ProfilingItem* items, const unsigned count);
+
 void primitiveStats(const PrimitiveCounter* const counter, const double seconds, const double drawcalls);
 
 #endif

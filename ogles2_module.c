@@ -9,7 +9,7 @@
 #include <proto/ogles2.h>
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 
 struct Library* OGLES2Base;
 
@@ -215,11 +215,6 @@ static void close_ogles2_library(void)
     }
 }
 
-static void sort(struct Ogles2Context* const context)
-{
-    qsort(context->profiling, Ogles2FunctionCount, sizeof(ProfilingItem), tickComparison);
-}
-
 static void profileResults(struct Ogles2Context* const context)
 {
     PROF_FINISH_CONTEXT
@@ -227,7 +222,11 @@ static void profileResults(struct Ogles2Context* const context)
     const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
     const uint64 swaps = context->profiling[SwapBuffers].callCount;
 
-    sort(context);
+    // Copy items, otherwise sorthing will ruin the further profiling
+    ProfilingItem stats[Ogles2FunctionCount];
+    memcpy(stats, context->profiling, Ogles2FunctionCount * sizeof(ProfilingItem));
+
+    sort(stats, Ogles2FunctionCount);
 
     logAlways("\nOpenGL ES 2.0 profiling results for %s:", context->name);
 
@@ -243,15 +242,15 @@ static void profileResults(struct Ogles2Context* const context)
         "function", "call count", "errors", "duration (ms)", "avg. call dur. (us)", timeUsedBuffer, "% of CPU time");
 
     for (int i = 0; i < Ogles2FunctionCount; i++) {
-        if (context->profiling[i].callCount > 0) {
+        if (stats[i].callCount > 0) {
             logAlways("%30s | %10llu | %10llu | %20.6f | %20.3f | %24.2f | %20.2f",
-                mapOgles2Function(context->profiling[i].index),
-                context->profiling[i].callCount,
-                context->profiling[i].errors,
-                timer_ticks_to_ms(context->profiling[i].ticks),
-                timer_ticks_to_us(context->profiling[i].ticks) / context->profiling[i].callCount,
-                (double)context->profiling[i].ticks * 100.0 / context->ticks,
-                (double)context->profiling[i].ticks * 100.0 / totalTicks);
+                mapOgles2Function(stats[i].index),
+                stats[i].callCount,
+                stats[i].errors,
+                timer_ticks_to_ms(stats[i].ticks),
+                timer_ticks_to_us(stats[i].ticks) / stats[i].callCount,
+                (double)stats[i].ticks * 100.0 / context->ticks,
+                (double)stats[i].ticks * 100.0 / totalTicks);
         }
     }
 
