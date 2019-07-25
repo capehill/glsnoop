@@ -1,0 +1,173 @@
+@database glsnoop.guide
+@width 72
+
+@node Main "glSnoop"
+
+    @{B}glSnoop User Guide v0.2@{UB}
+
+    @{" What is glSnoop for and what it does             " link WhatisThat}
+    @{" How to use                                       " link Usage}
+    @{" Command-line parameters                          " link CommandLineParameters}
+    @{" GUI mode                                         " link GUImode}
+    @{" Tracing                                          " link Tracing}
+    @{" Profiling                                        " link Profiling}
+    @{" Filtering                                        " link Filtering}
+    @{" Questions & Answers                              " link QuestionsAndAnswers}
+    @{" Tips & Tricks                                    " link TipsAndTricks}
+    @{" Author & Thanks                                  " link Authorthanks}
+
+    Website:  https://github.com/capehill/glsnoop
+
+@endnode
+
+@node Whatisthat "What is glSnoop for and what it does"
+
+   @{B}What is glSnoop for and what it does@{UB}
+
+   glSnoop is an experimental graphics API tracing and profiling tool for AmigaOS4.
+   It is born as attempt to bring something like @{B}apitrace@{UB}, but writen from scratch
+   and AmigaOS4 specific.
+  
+   At moment only ogles2.library and Warp3DNova.library are supported.
+
+   glSnoop works by patching libraries via SetMethod() and on top of originals inject
+   wrapper functions:
+   
+      OGLES2: 
+
+      glSnoop patches IExec GetInterface and DropInterface using SetMethod, in order to
+      detect applications  who ask for IOGLES2 interface. Then the interface-specific
+      OGLES2 functions get also patched using SetMethod:
+      https://github.com/capehill/glsnoop/blob/master/ogles2_module.c#L278
+
+      NOVA: 
+
+      W3DN_CreateContext is patched using SetMethod, then the function pointers in Nova
+      context are simply replaced with wrapper functions:
+      https://github.com/capehill/glsnoop/blob/master/warp3dnova_module.c#L1065
+
+@endnode
+
+@node Usage "How to use"
+
+@{B}   How to use@{UB}
+
+   glSnoop can works in two modes: Command-line one and GUI one.
+   Command-line mode is that one which glSnoop use by default, and for GUI one you provide GUI argument.
+   The difference between command-line and GUI mode is that in GUI mode you can pause/stop tracing & profiling
+   Both modes described in appropriate sections.
+
+@endnode
+
+@node CommandLineParameters "Command-line parameters"
+
+@{B}   Command-line parameters@{UB}
+
+      OGLES2/S,NOVA/S,GUI/S,PROFILE/S,FILTER/K
+
+@{B}   OGLES2@{UB}
+
+      Enable ogles2.library tracing
+
+@{B}   NOVA@{UB}
+
+      Enable Warp3DNova.library tracing
+
+@{B}   GUI@{UB}
+
+      Launch the graphical user interface
+
+@{B}   PROFILE@{UB}
+
+      Disable function tracing in serial logs.
+
+      Profiling also enabled by default when tracing is enabled, but for speed reassons one may want to disable tracing
+      and keep only profiling to avoid massive output to serial (which usually slow things down, even with Sashimy).
+
+      With disabled tracing you didn't loose any FPS and can go to the slowest place of tested GL application and catch
+      necessary information.
+
+@{B}   FILTER@{UB}
+
+      FILTER filename: define a subset of patched functions
+
+
+   By default glSnoop running with OGLES2 and Warp3DNova tracing enabled, while GUI and function's filtering disabled.
+
+@endnode
+
+@node GUImode "GUI mode"
+
+@{B}   GUI mode@{UB}
+
+   N/A
+
+@endnode
+
+@node Tracing "Tracing"
+
+   @{B}Tracing@{UB}
+
+   glSnoop supports partial logging of:
+
+   ogles2.library
+   Warp3DNova.library
+
+@endnode
+
+@node Profiling "Profiling"
+
+   @{B}Profiling@{UB}
+
+   glSnoop records the call count and duration of known OGLES2 and Warp3D Nova functions.
+   Profiling summaries are logged when contexts are being destroyed.
+
+   Time spent inside OGLES2 functions includes also time spent inside Warp3D Nova functions.
+
+@endnode
+
+
+@node Filtering "Filtering"
+
+   @{B}Filtering@{UB}
+
+   Filtering can be used to patch only a subset of OGLES2/NOVA functions. 
+   This produces less logs and is faster. Filtering impacts also profiling, because non-patched functions cannot be profiled either.
+
+@endnode
+
+
+
+@node QuestionsAndAnswers "Questions & Answers"
+
+   @{B}Questions & Answers@{UB}
+
+   N/A
+
+@endnode
+
+
+@node TipsAndTricks "Tips & Tricks"
+
+   @{B}Tips & Tricks@{UB}
+
+   glSnoop uses serial port for logging. To redirect logs to a file (for speed), one may use the Sashimi tool:
+
+   run >NIL: Sashimi > RAM:MyLogFile.txt
+
+@endnode
+
+@node AuthorThanks "Author & Thanks"
+
+@{B}   Author:@{UB}
+
+     Juha "Capehill" Niemimaki
+
+@{B}   Thanks to:@{UB}
+
+     kas1e for ideas and testing
+     Mason for icons
+     samo79 for ideas
+     Hans for ideas
+
+@endnode

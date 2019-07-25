@@ -14,7 +14,8 @@ glSnoop supports partial logging of:
 
 glSnoop records the call count and duration of known OGLES2
 and Warp3D Nova functions. Profiling summaries are logged when
-contexts are being destroyed.
+contexts are being destroyed, or when user stops profiling manually
+using the GUI. Restarting profiling clears the current statistics.
 
 Time spent inside OGLES2 functions includes also time spent
 inside Warp3D Nova functions.
@@ -46,14 +47,16 @@ to a file (for speed), one may use the Sashimi tool:
 
 Sashimi > RAM:MyLogFile.txt
 
+Download Sashimi: http://os4depot.net/index.php?function=showfile&file=development/debug/sashimi.lha
+
 ## License
 
 PUBLIC DOMAIN
 
 ## Thanks
 
-Kas1e for ideas and testing.
-Mason for icons.
-samo79 for ideas.
-Hans for ideas.
+- Kas1e for ideas, testing and AmigaGuide document
+- Mason for icons
+- samo79 for ideas
+- Hans for ideas
 
