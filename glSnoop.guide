@@ -25,18 +25,18 @@
    @{B}What is glSnoop for and what it does@{UB}
 
    glSnoop is an experimental graphics API tracing and profiling tool for AmigaOS4.
-   It is born as attempt to bring something like @{B}apitrace@{UB}, but writen from scratch
+   It is born as an attempt to bring something like @{B}apitrace@{UB}, but written from scratch
    and AmigaOS4 specific.
   
-   At moment only ogles2.library and Warp3DNova.library are supported.
+   At the moment only ogles2.library and Warp3DNova.library are supported.
 
-   glSnoop works by patching libraries via SetMethod() and on top of originals inject
-   wrapper functions:
+   glSnoop works by patching libraries via SetMethod() and wrapping the original functions
+   with tracing and profiling mechanisms:
    
       OGLES2: 
 
       glSnoop patches IExec GetInterface and DropInterface using SetMethod, in order to
-      detect applications  who ask for IOGLES2 interface. Then the interface-specific
+      detect applications who ask for IOGLES2 interface. Then the interface-specific
       OGLES2 functions get also patched using SetMethod:
       https://github.com/capehill/glsnoop/blob/master/ogles2_module.c#L278
 
@@ -52,7 +52,7 @@
 
 @{B}   How to use@{UB}
 
-   glSnoop can works in two modes: Command-line one and GUI one.
+   glSnoop operates in two modes: Command-line one and GUI one.
    Command-line mode is that one which glSnoop use by default, and for GUI one you provide GUI argument.
    The difference between command-line and GUI mode is that in GUI mode you can pause/stop tracing & profiling
    Both modes described in appropriate sections.
@@ -81,10 +81,10 @@
 
       Disable function tracing in serial logs.
 
-      Profiling also enabled by default when tracing is enabled, but for speed reassons one may want to disable tracing
-      and keep only profiling to avoid massive output to serial (which usually slow things down, even with Sashimy).
+      Profiling is also enabled by default when tracing is enabled, but for speed reasons one may want to disable tracing
+      and keep only profiling to avoid massive output to serial (which usually slow things down, even with Sashimi).
 
-      With disabled tracing you didn't loose any FPS and can go to the slowest place of tested GL application and catch
+      With disabled tracing you don't loose any FPS and can go to the slowest place of tested GL application and catch
       necessary information.
 
 @{B}   FILTER@{UB}
@@ -155,6 +155,8 @@
 
    run >NIL: Sashimi > RAM:MyLogFile.txt
 
+   Download Sashimi: @{B}http://os4depot.net/index.php?function=showfile&file=development/debug/sashimi.lha@{UB}
+
 @endnode
 
 @node AuthorThanks "Author & Thanks"
@@ -165,7 +167,7 @@
 
 @{B}   Thanks to:@{UB}
 
-     kas1e for ideas and testing
+     kas1e for ideas, testing and AmigaGuide document
      Mason for icons
      samo79 for ideas
      Hans for ideas
