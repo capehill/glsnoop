@@ -239,16 +239,17 @@ static void profileResults(struct Ogles2Context* const context)
 
     logAlways("  Frames/s %.1f", swaps / seconds);
 
-    logAlways("%30s | %10s | %10s | %20s | %24s | %20s",
-        "function", "call count", "errors", "duration (ms)", timeUsedBuffer, "% of CPU time");
+    logAlways("%30s | %10s | %10s | %20s | %20s | %24s | %20s",
+        "function", "call count", "errors", "duration (ms)", "avg. call dur. (us)", timeUsedBuffer, "% of CPU time");
 
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logAlways("%30s | %10llu | %10llu | %20.6f | %24.2f | %20.2f",
+            logAlways("%30s | %10llu | %10llu | %20.6f | %20.3f | %24.2f | %20.2f",
                 mapOgles2Function(context->profiling[i].index),
                 context->profiling[i].callCount,
                 context->profiling[i].errors,
-                (double)context->profiling[i].ticks / timer_frequency_ms(),
+                timer_ticks_to_ms(context->profiling[i].ticks),
+                timer_ticks_to_us(context->profiling[i].ticks) / context->profiling[i].callCount,
                 (double)context->profiling[i].ticks * 100.0 / context->ticks,
                 (double)context->profiling[i].ticks * 100.0 / totalTicks);
         }

@@ -54,16 +54,16 @@ typedef struct PrimitiveCounter {
     MyClock finish; \
     ITimer->ReadEClock(&finish.clockVal); \
     const uint64 totalTicks = finish.ticks - context->start.ticks; \
-    const double seconds = (double)totalTicks / timer_frequency();
+    const double seconds = timer_ticks_to_s(totalTicks);
 
 #define PROF_PRINT_TOTAL \
-    const double timeUsed = (double)context->ticks / timer_frequency_ms(); \
+    const double timeUsed = timer_ticks_to_ms(context->ticks); \
     char timeUsedBuffer[32]; \
     snprintf(timeUsedBuffer, sizeof(timeUsedBuffer), "%% of %.6f ms", timeUsed); \
     logAlways("  Function calls used %.6f ms, %.2f %% of context life-time %.6f ms", \
         timeUsed, \
         (double)context->ticks * 100.0 / totalTicks, \
-        (double)totalTicks / timer_frequency_ms()); \
+        timer_ticks_to_ms(totalTicks));
 
 int tickComparison(const void* first, const void* second);
 void primitiveStats(const PrimitiveCounter* const counter, const double seconds, const double drawcalls);

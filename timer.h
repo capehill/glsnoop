@@ -12,7 +12,8 @@ void timer_start(void);
 void timer_stop(void);
 void timer_handle_events(void);
 
-ULONG timer_frequency_ms(void);
-ULONG timer_frequency(void);
+double timer_ticks_to_s(const uint64 ticks);
+double timer_ticks_to_ms(const uint64 ticks);
+double timer_ticks_to_us(const uint64 ticks);
 
 #endif

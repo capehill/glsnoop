@@ -136,13 +136,17 @@ void timer_stop(void)
 	}
 }
 
-ULONG timer_frequency_ms(void)
+double timer_ticks_to_s(const uint64 ticks)
 {
-    return frequency / 1000;
+    return (double)ticks / (double)frequency;
 }
 
-ULONG timer_frequency(void)
+double timer_ticks_to_ms(const uint64 ticks)
 {
-    return frequency;
+    return 1000.0 * timer_ticks_to_s(ticks);
 }
 
+double timer_ticks_to_us(const uint64 ticks)
+{
+    return 1000000.0 * timer_ticks_to_s(ticks);
+}
