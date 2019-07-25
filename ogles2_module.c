@@ -234,17 +234,17 @@ static void profileResults(struct Ogles2Context* const context)
     PROF_PRINT_TOTAL
 
     if (swaps > 0) {
-        logAlways("  Draw calls (glDraw*) per frame %.6f. Draw calls per second %.6f", drawcalls / swaps, drawcalls / seconds);
+        logAlways("  Draw calls/frame %.1f. Draw calls/s %.1f", drawcalls / swaps, drawcalls / seconds);
     }
 
-    logAlways("  Frames (buffer swaps) per second %.6f", swaps / seconds);
+    logAlways("  Frames/s %.1f", swaps / seconds);
 
-    logAlways("%30s | %10s | %10s | %20s | %30s | %30s",
-        "function", "call count", "errors", "duration (ms)", timeUsedBuffer, "% of CPU time (incl. driver)");
+    logAlways("%30s | %10s | %10s | %20s | %24s | %20s",
+        "function", "call count", "errors", "duration (ms)", timeUsedBuffer, "% of CPU time");
 
     for (int i = 0; i < Ogles2FunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logAlways("%30s | %10llu | %10llu | %20.6f | %30.2f | %30.2f",
+            logAlways("%30s | %10llu | %10llu | %20.6f | %24.2f | %20.2f",
                 mapOgles2Function(context->profiling[i].index),
                 context->profiling[i].callCount,
                 context->profiling[i].errors,
@@ -253,6 +253,8 @@ static void profileResults(struct Ogles2Context* const context)
                 (double)context->profiling[i].ticks * 100.0 / totalTicks);
         }
     }
+
+    logAlways("  *) Please note that the above time measurements include time spent inside Warp3D Nova functions");
 
     primitiveStats(&context->counter, seconds, drawcalls);
 }

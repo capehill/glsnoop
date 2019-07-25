@@ -259,14 +259,14 @@ static void profileResults(struct NovaContext* const context)
 
     PROF_PRINT_TOTAL
 
-    logAlways("  Draw calls per second %.6f", drawcalls / seconds);
+    logAlways("  Draw calls/s %.1f", drawcalls / seconds);
 
-    logAlways("%30s | %10s | %10s | %20s | %30s | %30s",
+    logAlways("%30s | %10s | %10s | %20s | %24s | %20s",
         "function", "call count", "errors", "duration (ms)", timeUsedBuffer, "% of CPU time");
 
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (context->profiling[i].callCount > 0) {
-            logAlways("%30s | %10llu | %10llu | %20.6f | %30.2f | %30.2f",
+            logAlways("%30s | %10llu | %10llu | %20.6f | %24.2f | %20.2f",
                 mapNovaFunction(context->profiling[i].index),
                 context->profiling[i].callCount,
                 context->profiling[i].errors,
