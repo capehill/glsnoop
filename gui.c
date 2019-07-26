@@ -53,6 +53,7 @@ static Object* create_gui(LONG profiling)
         WINDOW_Position, WPOS_CENTERMOUSE,
         WINDOW_IconifyGadget, TRUE,
         WINDOW_AppPort, port, // Iconification needs it
+        WINDOW_GadgetHelp, TRUE,
         WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
             LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
 
@@ -65,12 +66,14 @@ static Object* create_gui(LONG profiling)
                     GA_ID, GID_Trace,
                     GA_RelVerify, TRUE, // TODO: required or not?
                     GA_Disabled, TRUE,
+                    GA_HintInfo, "Enable function tracing to serial port",
                     TAG_DONE),
                 LAYOUT_AddChild, objects[OID_Pause] = IIntuition->NewObject(NULL, "button.gadget",
                     GA_Text, "Pause",
                     GA_ID, GID_Pause,
                     GA_RelVerify, TRUE, // TODO: required or not?
                     GA_Disabled, profiling ? TRUE : FALSE,
+                    GA_HintInfo, "Disable function tracing to serial port",
                     TAG_DONE),
                 TAG_DONE), // horizontal layout.gadget
 
@@ -83,12 +86,14 @@ static Object* create_gui(LONG profiling)
                     GA_ID, GID_StartProfiling,
                     GA_RelVerify, TRUE,
                     GA_Disabled, TRUE, // When glSnoop starts, it's "ready to profile", hence we will disable Start
+                    GA_HintInfo, "Initialize profiling statistics",
                     TAG_DONE),
                 LAYOUT_AddChild, objects[OID_FinishProfiling] = IIntuition->NewObject(NULL, "button.gadget",
                     GA_Text, "Finish",
                     GA_ID, GID_FinishProfiling,
                     GA_RelVerify, TRUE,
                     GA_Disabled, FALSE,
+                    GA_HintInfo, "Send profiling statistics to serial port",
                     TAG_DONE),
                 TAG_DONE), // horizontal layout.gadget
 
