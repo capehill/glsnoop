@@ -281,8 +281,6 @@ static void profileResults(struct NovaContext* const context)
 
 void warp3dnova_start_profiling(void)
 {
-    logAlways("Warp3D Nova profiler context started by user");
-
     if (mutex) {
         IExec->MutexObtain(mutex);
 
@@ -299,8 +297,6 @@ void warp3dnova_start_profiling(void)
 
 void warp3dnova_finish_profiling(void)
 {
-    logAlways("Warp3D Nova profiler context finished by user");
-
     if (mutex) {
         IExec->MutexObtain(mutex);
 

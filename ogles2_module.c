@@ -261,8 +261,6 @@ static void profileResults(struct Ogles2Context* const context)
 
 void ogles2_start_profiling(void)
 {
-    logAlways("OGLES2 profiler context started by user");
-
     if (mutex) {
         IExec->MutexObtain(mutex);
 
@@ -279,8 +277,6 @@ void ogles2_start_profiling(void)
 
 void ogles2_finish_profiling(void)
 {
-    logAlways("OGLES2 profiler context finished by user");
-
     if (mutex) {
         IExec->MutexObtain(mutex);
 
