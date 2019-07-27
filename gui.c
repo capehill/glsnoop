@@ -42,7 +42,7 @@ static Object* create_gui(LONG profiling)
 {
     return IIntuition->NewObject(NULL, "window.class",
         WA_ScreenTitle, "glSnoop",
-        WA_Title, profiling ? "glSnoop profiling" : "glSnoop tracing",
+        WA_Title, "glSnoop",
         WA_Activate, TRUE,
         WA_DragBar, TRUE,
         WA_CloseGadget, TRUE,
