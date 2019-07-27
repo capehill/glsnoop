@@ -87,6 +87,7 @@ struct Library* Warp3DNovaBase;
 struct Interface* IWarp3DNova;
 
 static unsigned errorCount;
+static BOOL profilingStarted = TRUE;
 
 static const char* mapNovaError(const W3DN_ErrorCode code)
 {
@@ -244,6 +245,11 @@ static APTR mutex;
 
 static void profileResults(struct NovaContext* const context)
 {
+    if (!profilingStarted) {
+        logAlways("Warp3D Nova profiling not started, skip summary");
+        return;
+    }
+
     PROF_FINISH_CONTEXT
 
     const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
@@ -281,6 +287,8 @@ static void profileResults(struct NovaContext* const context)
 
 void warp3dnova_start_profiling(void)
 {
+    profilingStarted = TRUE;
+
     if (mutex) {
         IExec->MutexObtain(mutex);
 
@@ -308,6 +316,8 @@ void warp3dnova_finish_profiling(void)
 
         IExec->MutexRelease(mutex);
     }
+
+    profilingStarted = FALSE;
 }
 
 static char versionBuffer[64] = "Warp3DNova.library version unknown";

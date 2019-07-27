@@ -14,6 +14,7 @@
 struct Library* OGLES2Base;
 
 static unsigned errorCount;
+static BOOL profilingStarted = TRUE;
 
 typedef enum Ogles2Function {
     SwapBuffers,
@@ -217,6 +218,11 @@ static void close_ogles2_library(void)
 
 static void profileResults(struct Ogles2Context* const context)
 {
+    if (!profilingStarted) {
+        logAlways("OGLES2 profiling not started, skip summary");
+        return;
+    }
+
     PROF_FINISH_CONTEXT
 
     const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
@@ -261,6 +267,8 @@ static void profileResults(struct Ogles2Context* const context)
 
 void ogles2_start_profiling(void)
 {
+    profilingStarted = TRUE;
+
     if (mutex) {
         IExec->MutexObtain(mutex);
 
@@ -288,6 +296,8 @@ void ogles2_finish_profiling(void)
 
         IExec->MutexRelease(mutex);
     }
+
+    profilingStarted = FALSE;
 }
 
 // We patch IExec->GetInterface to be able to patch later IOGLES2 interface.
