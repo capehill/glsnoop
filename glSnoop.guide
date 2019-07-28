@@ -25,7 +25,7 @@
    @{B}What is glSnoop for and what it does@{UB}
 
    glSnoop is an experimental graphics API tracing and profiling tool for AmigaOS4.
-   It is born as an attempt to bring something like @{B}apitrace@{UB}, but written from scratch
+   It was born as an attempt to bring something like @{B}apitrace@{UB}, but written from scratch
    and AmigaOS4 specific.
   
    At the moment only ogles2.library and Warp3DNova.library are supported.
@@ -53,7 +53,7 @@
 @{B}   How to use@{UB}
 
    glSnoop operates in two modes: Command-line one and GUI one.
-   Command-line mode is that one which glSnoop use by default, and for GUI one you provide GUI argument.
+   Command-line mode is the default mode, and GUI can be started with @{B}GUI@{UB} argument.
    The difference between command-line and GUI mode is that in GUI mode you can pause/stop tracing & profiling
    Both modes described in appropriate sections.
 
@@ -67,11 +67,11 @@
 
 @{B}   OGLES2@{UB}
 
-      Enable ogles2.library tracing
+      Enable ogles2.library tracing and profiling
 
 @{B}   NOVA@{UB}
 
-      Enable Warp3DNova.library tracing
+      Enable Warp3DNova.library tracing and profiling
 
 @{B}   GUI@{UB}
 
@@ -92,7 +92,7 @@
       FILTER filename: define a subset of patched functions
 
 
-   By default glSnoop running with OGLES2 and Warp3DNova tracing enabled, while GUI and function's filtering disabled.
+   By default glSnoop is running with OpenGL ES 2.0 and Warp3D Nova tracing enabled, while GUI and function filtering are disabled.
 
 @endnode
 
@@ -119,10 +119,10 @@
 
    @{B}Profiling@{UB}
 
-   glSnoop records the call count and duration of known OGLES2 and Warp3D Nova functions.
+   glSnoop records the call count and duration of known OpenGL ES 2.0 and Warp3D Nova functions.
    Profiling summaries are logged when contexts are being destroyed.
 
-   Time spent inside OGLES2 functions includes also time spent inside Warp3D Nova functions.
+   Time spent inside OpenGL ES 2.0 functions includes also time spent inside Warp3D Nova functions.
 
 @endnode
 
