@@ -7,6 +7,7 @@
 #include <proto/intuition.h>
 #include <proto/dos.h>
 #include <proto/exec.h>
+#include <proto/icon.h>
 
 #include <classes/window.h>
 #include <gadgets/layout.h>
@@ -38,6 +39,37 @@ static Object* objects[OID_Count];
 static struct Window* window;
 static struct MsgPort* port;
 
+static char* getApplicationName()
+{
+    #define maxPathLen 255
+
+    static char pathBuffer[maxPathLen];
+
+    if (IDOS->GetCliProgramName(pathBuffer, maxPathLen - 1)) {
+        logLine("GetCliProgramName: '%s'", pathBuffer);
+    } else {
+        logLine("Failed to get CLI program name, checking task node");
+
+        struct Task* me = IExec->FindTask(NULL);
+        snprintf(pathBuffer, maxPathLen, "%s", ((struct Node *)me)->ln_Name);
+    }
+
+    logLine("Application name: '%s'", pathBuffer);
+
+    return pathBuffer;
+}
+
+static struct DiskObject* getDiskObject()
+{
+    struct DiskObject *diskObject = NULL;
+
+    BPTR oldDir = IDOS->SetCurrentDir(IDOS->GetProgramDir());
+    diskObject = IIcon->GetDiskObject(getApplicationName());
+    IDOS->SetCurrentDir(oldDir);
+
+    return diskObject;
+}
+
 static Object* create_gui(LONG profiling)
 {
     return IIntuition->NewObject(NULL, "window.class",
@@ -52,6 +84,7 @@ static Object* create_gui(LONG profiling)
         WA_Height, 50,
         WINDOW_Position, WPOS_CENTERMOUSE,
         WINDOW_IconifyGadget, TRUE,
+        WINDOW_Icon, getDiskObject(),
         WINDOW_AppPort, port, // Iconification needs it
         WINDOW_GadgetHelp, TRUE,
         WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
