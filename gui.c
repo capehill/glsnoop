@@ -3,6 +3,7 @@
 #include "ogles2_module.h"
 #include "warp3dnova_module.h"
 #include "timer.h"
+#include "version.h"
 
 #include <proto/intuition.h>
 #include <proto/dos.h>
@@ -73,8 +74,8 @@ static struct DiskObject* getDiskObject()
 static Object* create_gui(LONG profiling)
 {
     return IIntuition->NewObject(NULL, "window.class",
-        WA_ScreenTitle, "glSnoop",
-        WA_Title, "glSnoop",
+        WA_ScreenTitle, VERSION_STRING,
+        WA_Title, VERSION_STRING,
         WA_Activate, TRUE,
         WA_DragBar, TRUE,
         WA_CloseGadget, TRUE,

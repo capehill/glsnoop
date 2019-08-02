@@ -4,6 +4,7 @@
 #include "gui.h"
 #include "filter.h"
 #include "timer.h"
+#include "version.h"
 
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -20,7 +21,7 @@ struct Params {
     char *filter;
 };
 
-static const char* const version __attribute__((used)) = "$VER: glSnoop 0.2 (31.7.19)\0";
+static const char* const version __attribute__((used)) = "$VER: " VERSION_STRING "\0";
 static const char* const portName = "glSnoop port";
 static char* filterFile;
 static struct Params params = { 0, 0, 0, 0, NULL };
