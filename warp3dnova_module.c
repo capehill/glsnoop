@@ -12,31 +12,31 @@
 #include <string.h>
 
 typedef enum NovaFunction {
-    Destroy,
-    CreateVertexBufferObject,
-    DestroyVertexBufferObject,
-    VBOSetArray,
-    VBOGetArray,
-    VBOGetAttr,
-    VBOLock,
-    BufferUnlock,
+    BindTexture,
     BindVertexAttribArray,
+    BufferUnlock,
+    Clear,
+    CompileShader,
+    CreateFrameBuffer,
+    CreateVertexBufferObject,
+    Destroy,
+    DestroyFrameBuffer,
+    DestroyVertexBufferObject,
     DrawArrays,
     DrawElements,
-    CreateFrameBuffer,
-    DestroyFrameBuffer,
     FBBindBuffer,
+    FBGetAttr,
     FBGetBufferBM,
     FBGetBufferTex,
     FBGetStatus,
-    SetRenderTarget,
     GetRenderTarget,
-    FBGetAttr,
-    CompileShader,
-    Clear,
-    BindTexture,
-    Submit,
+    SetRenderTarget,
     SetShaderPipeline,
+    Submit,
+    VBOGetArray,
+    VBOGetAttr,
+    VBOLock,
+    VBOSetArray,
     WaitDone,
     WaitIdle,
     // Keep last
@@ -48,31 +48,31 @@ static const char* mapNovaFunction(const NovaFunction func)
     #define MAP_ENUM(x) case x: return #x;
 
     switch (func) {
-        MAP_ENUM(Destroy)
-        MAP_ENUM(CreateVertexBufferObject)
-        MAP_ENUM(DestroyVertexBufferObject)
-        MAP_ENUM(VBOSetArray)
-        MAP_ENUM(VBOGetArray)
-        MAP_ENUM(VBOGetAttr)
-        MAP_ENUM(VBOLock)
-        MAP_ENUM(BufferUnlock)
+        MAP_ENUM(BindTexture)
         MAP_ENUM(BindVertexAttribArray)
+        MAP_ENUM(BufferUnlock)
+        MAP_ENUM(Clear)
+        MAP_ENUM(CompileShader)
+        MAP_ENUM(CreateFrameBuffer)
+        MAP_ENUM(CreateVertexBufferObject)
+        MAP_ENUM(Destroy)
+        MAP_ENUM(DestroyFrameBuffer)
+        MAP_ENUM(DestroyVertexBufferObject)
         MAP_ENUM(DrawArrays)
         MAP_ENUM(DrawElements)
-        MAP_ENUM(CreateFrameBuffer)
-        MAP_ENUM(DestroyFrameBuffer)
         MAP_ENUM(FBBindBuffer)
+        MAP_ENUM(FBGetAttr)
         MAP_ENUM(FBGetBufferBM)
         MAP_ENUM(FBGetBufferTex)
         MAP_ENUM(FBGetStatus)
-        MAP_ENUM(SetRenderTarget)
         MAP_ENUM(GetRenderTarget)
-        MAP_ENUM(FBGetAttr)
-        MAP_ENUM(CompileShader)
-        MAP_ENUM(Clear)
-        MAP_ENUM(BindTexture)
-        MAP_ENUM(Submit)
+        MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
+        MAP_ENUM(Submit)
+        MAP_ENUM(VBOGetArray)
+        MAP_ENUM(VBOGetAttr)
+        MAP_ENUM(VBOLock)
+        MAP_ENUM(VBOSetArray)
         MAP_ENUM(WaitDone)
         MAP_ENUM(WaitIdle)
         case NovaFunctionCount: break;
@@ -163,32 +163,32 @@ struct NovaContext {
 
     // Store original function pointers so that they can be still called
 
-    void (*old_Destroy)(struct W3DN_Context_s *self);
-
-    W3DN_VertexBuffer* (*old_CreateVertexBufferObject)(struct W3DN_Context_s *self,
-    		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags);
-
-    void (*old_DestroyVertexBufferObject)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer);
-
-    uint64 (*old_VBOGetAttr)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr);
-
-    W3DN_ErrorCode (*old_VBOSetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
-    		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
-    		uint64 stride, uint64 offset, uint64 count);
-
-    W3DN_ErrorCode (*old_VBOGetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
-    		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
-    		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count);
-
-    W3DN_BufferLock* (*old_VBOLock)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
-    		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize);
-
-    W3DN_ErrorCode (*old_BufferUnlock)(struct W3DN_Context_s *self,
-    		W3DN_BufferLock *bufferLock, uint64 writeOffset, uint64 writeSize);
+    W3DN_ErrorCode (*old_BindTexture)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler);
 
     W3DN_ErrorCode (*old_BindVertexAttribArray)(struct W3DN_Context_s *self,
     		W3DN_RenderState *renderState, uint32 attribNum,
     		W3DN_VertexBuffer *buffer, uint32 arrayIdx);
+
+    W3DN_ErrorCode (*old_BufferUnlock)(struct W3DN_Context_s *self,
+    		W3DN_BufferLock *bufferLock, uint64 writeOffset, uint64 writeSize);
+
+    W3DN_ErrorCode (*old_Clear)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        const float *colour, const double *depth, const uint32* stencil);
+
+    W3DN_Shader* (*old_CompileShader)(struct W3DN_Context_s *self,
+        W3DN_ErrorCode *errCode, struct TagItem *tags);
+
+    W3DN_FrameBuffer* (*old_CreateFrameBuffer)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
+
+    W3DN_VertexBuffer* (*old_CreateVertexBufferObject)(struct W3DN_Context_s *self,
+    		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags);
+
+    void (*old_Destroy)(struct W3DN_Context_s *self);
+
+    void (*old_DestroyFrameBuffer)(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer);
+
+    void (*old_DestroyVertexBufferObject)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer);
 
     W3DN_ErrorCode (*old_DrawArrays)(struct W3DN_Context_s *self,
     		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 base, uint32 count);
@@ -197,12 +197,11 @@ struct NovaContext {
     		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 baseVertex, uint32 count,
     		W3DN_VertexBuffer *indexBuffer, uint32 arrayIdx);
 
-    W3DN_FrameBuffer* (*old_CreateFrameBuffer)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
-
-    void (*old_DestroyFrameBuffer)(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer);
-
     W3DN_ErrorCode (*old_FBBindBuffer)(struct W3DN_Context_s *self,
     	W3DN_FrameBuffer *frameBuffer, int32 attachmentPt, struct TagItem *tags);
+
+    uint64 (*old_FBGetAttr)(struct W3DN_Context_s *self,
+    	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib);
 
     struct BitMap* (*old_FBGetBufferBM)(struct W3DN_Context_s *self,
     	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode);
@@ -212,28 +211,29 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_FBGetStatus)(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer);
 
-    W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
-    	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
-
     W3DN_FrameBuffer* (*old_GetRenderTarget)(
         struct W3DN_Context_s *self, W3DN_RenderState *renderState);
 
-    uint64 (*old_FBGetAttr)(struct W3DN_Context_s *self,
-    	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib);
-
-    W3DN_Shader* (*old_CompileShader)(struct W3DN_Context_s *self,
-        W3DN_ErrorCode *errCode, struct TagItem *tags);
-
-    W3DN_ErrorCode (*old_Clear)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
-        const float *colour, const double *depth, const uint32* stencil);
-
-    W3DN_ErrorCode (*old_BindTexture)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
-        uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler);
-
-    uint32 (*old_Submit)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
+    W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
+    	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
 
     W3DN_ErrorCode (*old_SetShaderPipeline)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         W3DN_ShaderPipeline *shaderPipeline);
+
+    uint32 (*old_Submit)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
+
+    W3DN_ErrorCode (*old_VBOGetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
+    		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
+    		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count);
+
+    uint64 (*old_VBOGetAttr)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr);
+
+    W3DN_BufferLock* (*old_VBOLock)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
+    		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize);
+
+    W3DN_ErrorCode (*old_VBOSetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
+    		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
+    		uint64 stride, uint64 offset, uint64 count);
 
     W3DN_ErrorCode (*old_WaitDone)(struct W3DN_Context_s *self, uint32 submitID, uint32 timeout);
 
@@ -417,114 +417,42 @@ static void checkSuccess(struct NovaContext* context, const NovaFunction id, con
 
 // Wrap traced calls
 
-static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *self,
-		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags)
+static W3DN_ErrorCode W3DN_BindTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler)
 {
     GET_CONTEXT
 
     PROF_START
 
-    W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
+    const W3DN_ErrorCode result = context->old_BindTexture(self, renderState, texUnit, texture, texSampler);
 
-    PROF_FINISH(CreateVertexBufferObject)
+    PROF_FINISH(BindTexture)
 
-    logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
-        size, usage, (unsigned)maxArrays, tags, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
-
-    checkPointer(context, CreateVertexBufferObject, result);
-    checkSuccess(context, CreateVertexBufferObject, mapNovaErrorPointerToCode(errCode));
-
-    return result;
-}
-
-static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer)
-{
-    GET_CONTEXT
-
-    logLine("%s: %s: vertexBuffer %p", context->name, __func__,
-        vertexBuffer);
-
-    PROF_START
-
-    context->old_DestroyVertexBufferObject(self, vertexBuffer);
-
-    PROF_FINISH(DestroyVertexBufferObject)
-}
-
-static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr)
-{
-    GET_CONTEXT
-
-    PROF_START
-
-    const uint64 result = context->old_VBOGetAttr(self, vertexBuffer, attr);
-
-    PROF_FINISH(VBOGetAttr)
-
-    logLine("%s: %s: vertexBuffer %p, attr %d. Result %llu", context->name, __func__,
-        vertexBuffer, attr, result);
-
-    return result;
-}
-
-static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
-		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
-		uint64 stride, uint64 offset, uint64 count)
-{
-    GET_CONTEXT
-
-    PROF_START
-
-    const W3DN_ErrorCode result = context->old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
-
-    PROF_FINISH(VBOSetArray)
-
-    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
+    logLine("%s: %s: renderState %p, texUnit %lu, texture %p, texSample %p. Result %d (%s)",
         context->name, __func__,
-        buffer, (unsigned)arrayIdx, elementType, normalized, numElements, stride, offset, count, result, mapNovaError(result));
+        renderState, texUnit, texture, texSampler, result, mapNovaError(result));
 
-    checkSuccess(context, VBOSetArray, result);
+    checkSuccess(context, BindTexture, result);
 
     return result;
 }
 
-static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
-		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
-		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count)
+static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
+		W3DN_RenderState *renderState, uint32 attribNum,
+		W3DN_VertexBuffer *buffer, uint32 arrayIdx)
 {
     GET_CONTEXT
 
     PROF_START
 
-    const W3DN_ErrorCode result = context->old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
+    const W3DN_ErrorCode result = context->old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
 
-    PROF_FINISH(VBOGetArray)
+    PROF_FINISH(BindVertexAttribArray)
 
-    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
-        context->name, __func__,
-        buffer, (unsigned)arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
+    logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d (%s)", context->name, __func__,
+        renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result, mapNovaError(result));
 
-    checkSuccess(context, VBOGetArray, result);
-
-    return result;
-}
-
-static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
-		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize)
-{
-    GET_CONTEXT
-
-    PROF_START
-
-    W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
-
-    PROF_FINISH(VBOLock)
-
-    logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u (%s)", context->name, __func__,
-        buffer, readOffset, readSize, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
-
-    checkPointer(context, VBOLock, result);
-    checkSuccess(context, VBOLock, mapNovaErrorPointerToCode(errCode));
+    checkSuccess(context, BindVertexAttribArray, result);
 
     return result;
 }
@@ -548,24 +476,149 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
     return result;
 }
 
-static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
-		W3DN_RenderState *renderState, uint32 attribNum,
-		W3DN_VertexBuffer *buffer, uint32 arrayIdx)
+static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    const float *colour, const double *depth, const uint32* stencil)
 {
     GET_CONTEXT
 
     PROF_START
 
-    const W3DN_ErrorCode result = context->old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
+    const W3DN_ErrorCode result = context->old_Clear(self, renderState, colour, depth, stencil);
 
-    PROF_FINISH(BindVertexAttribArray)
+    PROF_FINISH(Clear)
 
-    logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d (%s)", context->name, __func__,
-        renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result, mapNovaError(result));
+    logLine("%s: %s: renderState %p, colour %p, depth %p, stencil %p. Result %d (%s)",
+        context->name, __func__,
+        renderState, colour, depth, stencil, result, mapNovaError(result));
 
-    checkSuccess(context, BindVertexAttribArray, result);
+    checkSuccess(context, Clear, result);
 
     return result;
+}
+
+static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
+    W3DN_ErrorCode *errCode, struct TagItem *tags)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_Shader *shader = context->old_CompileShader(self, errCode, tags);
+
+    PROF_FINISH(CompileShader)
+
+    logLine("%s: %s: errCode %d (%s), tags %p. Shader address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        tags,
+        shader);
+
+    checkPointer(context, CompileShader, shader);
+    checkSuccess(context, CompileShader, mapNovaErrorPointerToCode(errCode));
+
+    return shader;
+}
+
+static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_FrameBuffer* buffer = context->old_CreateFrameBuffer(self, errCode);
+
+    PROF_FINISH(CreateFrameBuffer)
+
+    logLine("%s: %s: Frame buffer address %p. Result %d (%s)",
+        context->name, __func__,
+        buffer, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+
+    checkPointer(context, CreateFrameBuffer, buffer);
+    checkSuccess(context, CreateFrameBuffer, mapNovaErrorPointerToCode(errCode));
+
+    return buffer;
+}
+
+static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *self,
+		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
+
+    PROF_FINISH(CreateVertexBufferObject)
+
+    logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
+        size, usage, (unsigned)maxArrays, tags, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+
+    checkPointer(context, CreateVertexBufferObject, result);
+    checkSuccess(context, CreateVertexBufferObject, mapNovaErrorPointerToCode(errCode));
+
+    return result;
+}
+
+static void W3DN_Destroy(struct W3DN_Context_s *self)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s",
+        context->name, __func__);
+
+    PROF_START
+
+    context->old_Destroy(self);
+
+    PROF_FINISH(Destroy)
+
+    size_t i;
+
+    IExec->MutexObtain(mutex);
+
+    for (i = 0; i < MAX_CLIENTS; i++) {
+        if (contexts[i] && contexts[i]->context == self) {
+            profileResults(contexts[i]);
+
+            logLine("%s: freeing patched Nova context %p", contexts[i]->name, self);
+
+            IExec->FreeVec(contexts[i]);
+            contexts[i] = NULL;
+            break;
+        }
+    }
+
+    IExec->MutexRelease(mutex);
+}
+
+static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: frameBuffer %p",
+        context->name, __func__,
+        frameBuffer);
+
+    PROF_START
+
+    context->old_DestroyFrameBuffer(self, frameBuffer);
+
+    PROF_FINISH(DestroyFrameBuffer);
+}
+
+static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: vertexBuffer %p", context->name, __func__,
+        vertexBuffer);
+
+    PROF_START
+
+    context->old_DestroyVertexBufferObject(self, vertexBuffer);
+
+    PROF_FINISH(DestroyVertexBufferObject)
 }
 
 static void countPrimitive(PrimitiveCounter * counter, const W3DN_Primitive primitive, const uint32 count)
@@ -640,73 +693,6 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
     return result;
 }
 
-static void W3DN_Destroy(struct W3DN_Context_s *self)
-{
-    GET_CONTEXT
-
-    logLine("%s: %s",
-        context->name, __func__);
-
-    PROF_START
-
-    context->old_Destroy(self);
-
-    PROF_FINISH(Destroy)
-
-    size_t i;
-
-    IExec->MutexObtain(mutex);
-
-    for (i = 0; i < MAX_CLIENTS; i++) {
-        if (contexts[i] && contexts[i]->context == self) {
-            profileResults(contexts[i]);
-
-            logLine("%s: freeing patched Nova context %p", contexts[i]->name, self);
-
-            IExec->FreeVec(contexts[i]);
-            contexts[i] = NULL;
-            break;
-        }
-    }
-
-    IExec->MutexRelease(mutex);
-}
-
-static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
-{
-    GET_CONTEXT
-
-    PROF_START
-
-    W3DN_FrameBuffer* buffer = context->old_CreateFrameBuffer(self, errCode);
-
-    PROF_FINISH(CreateFrameBuffer)
-
-    logLine("%s: %s: Frame buffer address %p. Result %d (%s)",
-        context->name, __func__,
-        buffer, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
-
-    checkPointer(context, CreateFrameBuffer, buffer);
-    checkSuccess(context, CreateFrameBuffer, mapNovaErrorPointerToCode(errCode));
-
-    return buffer;
-}
-
-static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
-{
-    GET_CONTEXT
-
-    logLine("%s: %s: frameBuffer %p",
-        context->name, __func__,
-        frameBuffer);
-
-    PROF_START
-
-    context->old_DestroyFrameBuffer(self, frameBuffer);
-
-    PROF_FINISH(DestroyFrameBuffer);
-}
-
 static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, int32 attachmentPt, struct TagItem *tags)
 {
@@ -723,6 +709,24 @@ static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
         frameBuffer, (int)attachmentPt, tags, result, mapNovaError(result));
 
     checkSuccess(context, FBBindBuffer, result);
+
+    return result;
+}
+
+static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
+	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const uint64 result = context->old_FBGetAttr(self, frameBuffer, attrib);
+
+    PROF_FINISH(FBGetAttr)
+
+    logLine("%s: %s: frameBuffer %p, attrib %d. Result %llu",
+        context->name, __func__,
+        frameBuffer, attrib, result);
 
     return result;
 }
@@ -788,26 +792,6 @@ static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBu
     return result;
 }
 
-static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
-	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
-{
-    GET_CONTEXT
-
-    PROF_START
-
-    const W3DN_ErrorCode result = context->old_SetRenderTarget(self, renderState, frameBuffer);
-
-    PROF_FINISH(SetRenderTarget)
-
-    logLine("%s: %s: renderState %p, frameBuffer %p. Result %d (%s)",
-        context->name, __func__,
-        renderState, frameBuffer, result, mapNovaError(result));
-
-    checkSuccess(context, SetRenderTarget, result);
-
-    return result;
-}
-
 static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
@@ -828,84 +812,42 @@ static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     return buffer;
 }
 
-static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
-	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib)
+static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
+	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
     GET_CONTEXT
 
     PROF_START
 
-    const uint64 result = context->old_FBGetAttr(self, frameBuffer, attrib);
+    const W3DN_ErrorCode result = context->old_SetRenderTarget(self, renderState, frameBuffer);
 
-    PROF_FINISH(FBGetAttr)
+    PROF_FINISH(SetRenderTarget)
 
-    logLine("%s: %s: frameBuffer %p, attrib %d. Result %llu",
+    logLine("%s: %s: renderState %p, frameBuffer %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, attrib, result);
+        renderState, frameBuffer, result, mapNovaError(result));
+
+    checkSuccess(context, SetRenderTarget, result);
 
     return result;
 }
 
-static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
-    W3DN_ErrorCode *errCode, struct TagItem *tags)
+static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_ShaderPipeline *shaderPipeline)
 {
     GET_CONTEXT
 
     PROF_START
 
-    W3DN_Shader *shader = context->old_CompileShader(self, errCode, tags);
+    const W3DN_ErrorCode result = context->old_SetShaderPipeline(self, renderState, shaderPipeline);
 
-    PROF_FINISH(CompileShader)
+    PROF_FINISH(SetShaderPipeline)
 
-    logLine("%s: %s: errCode %d (%s), tags %p. Shader address %p",
+    logLine("%s: %s: renderState %p, shaderPipeline %p. Result %d (%s)",
         context->name, __func__,
-        mapNovaErrorPointerToCode(errCode),
-        mapNovaErrorPointerToString(errCode),
-        tags,
-        shader);
+        renderState, shaderPipeline, result, mapNovaError(result));
 
-    checkPointer(context, CompileShader, shader);
-    checkSuccess(context, CompileShader, mapNovaErrorPointerToCode(errCode));
-
-    return shader;
-}
-
-static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
-    const float *colour, const double *depth, const uint32* stencil)
-{
-    GET_CONTEXT
-
-    PROF_START
-
-    const W3DN_ErrorCode result = context->old_Clear(self, renderState, colour, depth, stencil);
-
-    PROF_FINISH(Clear)
-
-    logLine("%s: %s: renderState %p, colour %p, depth %p, stencil %p. Result %d (%s)",
-        context->name, __func__,
-        renderState, colour, depth, stencil, result, mapNovaError(result));
-
-    checkSuccess(context, Clear, result);
-
-    return result;
-}
-
-static W3DN_ErrorCode W3DN_BindTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
-    uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler)
-{
-    GET_CONTEXT
-
-    PROF_START
-
-    const W3DN_ErrorCode result = context->old_BindTexture(self, renderState, texUnit, texture, texSampler);
-
-    PROF_FINISH(BindTexture)
-
-    logLine("%s: %s: renderState %p, texUnit %lu, texture %p, texSample %p. Result %d (%s)",
-        context->name, __func__,
-        renderState, texUnit, texture, texSampler, result, mapNovaError(result));
-
-    checkSuccess(context, BindTexture, result);
+    checkSuccess(context, SetShaderPipeline, result);
 
     return result;
 }
@@ -941,22 +883,80 @@ static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
     return result;
 }
 
-static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
-    W3DN_ShaderPipeline *shaderPipeline)
+static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
+		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
+		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count)
 {
     GET_CONTEXT
 
     PROF_START
 
-    const W3DN_ErrorCode result = context->old_SetShaderPipeline(self, renderState, shaderPipeline);
+    const W3DN_ErrorCode result = context->old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
-    PROF_FINISH(SetShaderPipeline)
+    PROF_FINISH(VBOGetArray)
 
-    logLine("%s: %s: renderState %p, shaderPipeline %p. Result %d (%s)",
+    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
-        renderState, shaderPipeline, result, mapNovaError(result));
+        buffer, (unsigned)arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
 
-    checkSuccess(context, SetShaderPipeline, result);
+    checkSuccess(context, VBOGetArray, result);
+
+    return result;
+}
+
+static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const uint64 result = context->old_VBOGetAttr(self, vertexBuffer, attr);
+
+    PROF_FINISH(VBOGetAttr)
+
+    logLine("%s: %s: vertexBuffer %p, attr %d. Result %llu", context->name, __func__,
+        vertexBuffer, attr, result);
+
+    return result;
+}
+
+static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
+		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
+
+    PROF_FINISH(VBOLock)
+
+    logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u (%s)", context->name, __func__,
+        buffer, readOffset, readSize, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+
+    checkPointer(context, VBOLock, result);
+    checkSuccess(context, VBOLock, mapNovaErrorPointerToCode(errCode));
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
+		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
+		uint64 stride, uint64 offset, uint64 count)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
+
+    PROF_FINISH(VBOSetArray)
+
+    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
+        context->name, __func__,
+        buffer, (unsigned)arrayIdx, elementType, normalized, numElements, stride, offset, count, result, mapNovaError(result));
+
+    checkSuccess(context, VBOSetArray, result);
 
     return result;
 }
@@ -1017,60 +1017,60 @@ static void patch_##function(BOOL patching, struct NovaContext* nova) \
     } \
 }
 
-GENERATE_NOVA_PATCH(Destroy)
-GENERATE_NOVA_PATCH(CreateVertexBufferObject)
-GENERATE_NOVA_PATCH(DestroyVertexBufferObject)
-GENERATE_NOVA_PATCH(VBOSetArray)
-GENERATE_NOVA_PATCH(VBOGetArray)
-GENERATE_NOVA_PATCH(VBOGetAttr)
-GENERATE_NOVA_PATCH(VBOLock)
-GENERATE_NOVA_PATCH(BufferUnlock)
+GENERATE_NOVA_PATCH(BindTexture)
 GENERATE_NOVA_PATCH(BindVertexAttribArray)
+GENERATE_NOVA_PATCH(BufferUnlock)
+GENERATE_NOVA_PATCH(Clear)
+GENERATE_NOVA_PATCH(CompileShader)
+GENERATE_NOVA_PATCH(CreateFrameBuffer)
+GENERATE_NOVA_PATCH(CreateVertexBufferObject)
+GENERATE_NOVA_PATCH(Destroy)
+GENERATE_NOVA_PATCH(DestroyFrameBuffer)
+GENERATE_NOVA_PATCH(DestroyVertexBufferObject)
 GENERATE_NOVA_PATCH(DrawArrays)
 GENERATE_NOVA_PATCH(DrawElements)
-GENERATE_NOVA_PATCH(CreateFrameBuffer)
-GENERATE_NOVA_PATCH(DestroyFrameBuffer)
 GENERATE_NOVA_PATCH(FBBindBuffer)
+GENERATE_NOVA_PATCH(FBGetAttr)
 GENERATE_NOVA_PATCH(FBGetBufferBM)
 GENERATE_NOVA_PATCH(FBGetBufferTex)
 GENERATE_NOVA_PATCH(FBGetStatus)
-GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(GetRenderTarget)
-GENERATE_NOVA_PATCH(FBGetAttr)
-GENERATE_NOVA_PATCH(CompileShader)
-GENERATE_NOVA_PATCH(Clear)
-GENERATE_NOVA_PATCH(BindTexture)
-GENERATE_NOVA_PATCH(Submit)
+GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
+GENERATE_NOVA_PATCH(Submit)
+GENERATE_NOVA_PATCH(VBOGetArray)
+GENERATE_NOVA_PATCH(VBOGetAttr)
+GENERATE_NOVA_PATCH(VBOLock)
+GENERATE_NOVA_PATCH(VBOSetArray)
 GENERATE_NOVA_PATCH(WaitDone)
 GENERATE_NOVA_PATCH(WaitIdle)
 
 static void (*patches[])(BOOL, struct NovaContext *) = {
-    patch_Destroy,
-    patch_CreateVertexBufferObject,
-    patch_DestroyVertexBufferObject,
-    patch_VBOSetArray,
-    patch_VBOGetArray,
-    patch_VBOGetAttr,
-    patch_VBOLock,
-    patch_BufferUnlock,
+    patch_BindTexture,
     patch_BindVertexAttribArray,
+    patch_BufferUnlock,
+    patch_Clear,
+    patch_CompileShader,
+    patch_CreateFrameBuffer,
+    patch_CreateVertexBufferObject,
+    patch_Destroy,
+    patch_DestroyFrameBuffer,
+    patch_DestroyVertexBufferObject,
     patch_DrawArrays,
     patch_DrawElements,
-    patch_CreateFrameBuffer,
-    patch_DestroyFrameBuffer,
     patch_FBBindBuffer,
+    patch_FBGetAttr,
     patch_FBGetBufferBM,
     patch_FBGetBufferTex,
     patch_FBGetStatus,
-    patch_SetRenderTarget,
     patch_GetRenderTarget,
-    patch_FBGetAttr,
-    patch_CompileShader,
-    patch_Clear,
-    patch_BindTexture,
-    patch_Submit,
+    patch_SetRenderTarget,
     patch_SetShaderPipeline,
+    patch_Submit,
+    patch_VBOGetArray,
+    patch_VBOGetAttr,
+    patch_VBOLock,
+    patch_VBOSetArray,
     patch_WaitDone,
     patch_WaitIdle
 };
