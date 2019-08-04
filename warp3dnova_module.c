@@ -12,6 +12,8 @@
 #include <string.h>
 
 typedef enum NovaFunction {
+    BindBitMapAsTexture,
+    BindShaderDataBuffer,
     BindTexture,
     BindVertexAttribArray,
     BufferUnlock,
@@ -48,6 +50,8 @@ static const char* mapNovaFunction(const NovaFunction func)
     #define MAP_ENUM(x) case x: return #x;
 
     switch (func) {
+        MAP_ENUM(BindBitMapAsTexture)
+        MAP_ENUM(BindShaderDataBuffer)
         MAP_ENUM(BindTexture)
         MAP_ENUM(BindVertexAttribArray)
         MAP_ENUM(BufferUnlock)
@@ -162,6 +166,12 @@ struct NovaContext {
     PrimitiveCounter counter;
 
     // Store original function pointers so that they can be still called
+
+    W3DN_ErrorCode (*old_BindBitMapAsTexture)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        uint32 texUnit, struct BitMap *bitMap, W3DN_TextureSampler *texSampler);
+
+    W3DN_ErrorCode (*old_BindShaderDataBuffer)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_ShaderType shaderType, W3DN_DataBuffer *buffer, uint32 bufferIdx);
 
     W3DN_ErrorCode (*old_BindTexture)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler);
@@ -417,6 +427,46 @@ static void checkSuccess(struct NovaContext* context, const NovaFunction id, con
 
 // Wrap traced calls
 
+static W3DN_ErrorCode W3DN_BindBitMapAsTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    uint32 texUnit, struct BitMap *bitMap, W3DN_TextureSampler *texSampler)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_BindBitMapAsTexture(self, renderState, texUnit, bitMap, texSampler);
+
+    PROF_FINISH(BindBitMapAsTexture)
+
+    logLine("%s: %s: renderState %p, texUnit %lu, bitMap %p, texSampler %p. Result %d (%s)",
+        context->name, __func__,
+        renderState, texUnit, bitMap, texSampler, result, mapNovaError(result));
+
+    checkSuccess(context, BindBitMapAsTexture, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_BindShaderDataBuffer(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_ShaderType shaderType, W3DN_DataBuffer *buffer, uint32 bufferIdx)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_BindShaderDataBuffer(self, renderState, shaderType, buffer, bufferIdx);
+
+    PROF_FINISH(BindShaderDataBuffer)
+
+    logLine("%s: %s: renderState %p, shaderType %d, buffer %p, bufferIdx %lu. Result %d (%s)",
+        context->name, __func__,
+        renderState, shaderType, buffer, bufferIdx, result, mapNovaError(result));
+
+    checkSuccess(context, BindShaderDataBuffer, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_BindTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler)
 {
@@ -428,7 +478,7 @@ static W3DN_ErrorCode W3DN_BindTexture(struct W3DN_Context_s *self, W3DN_RenderS
 
     PROF_FINISH(BindTexture)
 
-    logLine("%s: %s: renderState %p, texUnit %lu, texture %p, texSample %p. Result %d (%s)",
+    logLine("%s: %s: renderState %p, texUnit %lu, texture %p, texSampler %p. Result %d (%s)",
         context->name, __func__,
         renderState, texUnit, texture, texSampler, result, mapNovaError(result));
 
@@ -1017,6 +1067,8 @@ static void patch_##function(BOOL patching, struct NovaContext* nova) \
     } \
 }
 
+GENERATE_NOVA_PATCH(BindBitMapAsTexture)
+GENERATE_NOVA_PATCH(BindShaderDataBuffer)
 GENERATE_NOVA_PATCH(BindTexture)
 GENERATE_NOVA_PATCH(BindVertexAttribArray)
 GENERATE_NOVA_PATCH(BufferUnlock)
@@ -1046,6 +1098,8 @@ GENERATE_NOVA_PATCH(WaitDone)
 GENERATE_NOVA_PATCH(WaitIdle)
 
 static void (*patches[])(BOOL, struct NovaContext *) = {
+    patch_BindBitMapAsTexture,
+    patch_BindShaderDataBuffer,
     patch_BindTexture,
     patch_BindVertexAttribArray,
     patch_BufferUnlock,
