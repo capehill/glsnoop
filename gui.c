@@ -74,7 +74,7 @@ static struct DiskObject* getDiskObject()
 static Object* create_gui(LONG profiling)
 {
     return IIntuition->NewObject(NULL, "window.class",
-        WA_ScreenTitle, VERSION_STRING,
+        WA_ScreenTitle, VERSION_STRING DATE,
         WA_Title, VERSION_STRING,
         WA_Activate, TRUE,
         WA_DragBar, TRUE,

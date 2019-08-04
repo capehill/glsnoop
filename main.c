@@ -21,7 +21,7 @@ struct Params {
     char *filter;
 };
 
-static const char* const version __attribute__((used)) = "$VER: " VERSION_STRING "\0";
+static const char* const version __attribute__((used)) = "$VER: " VERSION_STRING DATE "\0";
 static const char* const portName = "glSnoop port";
 static char* filterFile;
 static struct Params params = { 0, 0, 0, 0, NULL };
