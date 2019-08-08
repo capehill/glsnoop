@@ -19,7 +19,9 @@ typedef enum NovaFunction {
     BufferUnlock,
     Clear,
     CompileShader,
+    CreateDataBufferObject,
     CreateFrameBuffer,
+    CreateRenderStateObject,
     CreateVertexBufferObject,
     Destroy,
     DestroyFrameBuffer,
@@ -57,7 +59,9 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(BufferUnlock)
         MAP_ENUM(Clear)
         MAP_ENUM(CompileShader)
+        MAP_ENUM(CreateDataBufferObject)
         MAP_ENUM(CreateFrameBuffer)
+        MAP_ENUM(CreateRenderStateObject)
         MAP_ENUM(CreateVertexBufferObject)
         MAP_ENUM(Destroy)
         MAP_ENUM(DestroyFrameBuffer)
@@ -189,7 +193,12 @@ struct NovaContext {
     W3DN_Shader* (*old_CompileShader)(struct W3DN_Context_s *self,
         W3DN_ErrorCode *errCode, struct TagItem *tags);
 
+    W3DN_DataBuffer* (*old_CreateDataBufferObject)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
+        uint64 size, W3DN_BufferUsage usage, uint32 maxBuffers, struct TagItem *tags);
+
     W3DN_FrameBuffer* (*old_CreateFrameBuffer)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
+
+    W3DN_RenderState* (*old_CreateRenderStateObject)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
 
     W3DN_VertexBuffer* (*old_CreateVertexBufferObject)(struct W3DN_Context_s *self,
     		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags);
@@ -570,6 +579,33 @@ static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
     return shader;
 }
 
+static W3DN_DataBuffer* W3DN_CreateDataBufferObject(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
+    uint64 size, W3DN_BufferUsage usage, uint32 maxBuffers, struct TagItem *tags)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_DataBuffer *buffer = context->old_CreateDataBufferObject(self, errCode, size, usage, maxBuffers, tags);
+
+    PROF_FINISH(CreateDataBufferObject);
+
+    logLine("%s: %s: errCode %d (%s), size %llu, usage %d, maxBuffers %lu, tags %p. Data buffer object address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        size,
+        usage,
+        maxBuffers,
+        tags,
+        buffer);
+
+    checkPointer(context, CreateDataBufferObject, buffer);
+    checkSuccess(context, CreateDataBufferObject, mapNovaErrorPointerToCode(errCode));
+
+    return buffer;
+}
+
 static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
     GET_CONTEXT
@@ -580,14 +616,38 @@ static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3D
 
     PROF_FINISH(CreateFrameBuffer)
 
-    logLine("%s: %s: Frame buffer address %p. Result %d (%s)",
+    logLine("%s: %s: errCode %d (%s). Frame buffer address %p",
         context->name, __func__,
-        buffer, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        buffer);
 
     checkPointer(context, CreateFrameBuffer, buffer);
     checkSuccess(context, CreateFrameBuffer, mapNovaErrorPointerToCode(errCode));
 
     return buffer;
+}
+
+static W3DN_RenderState* W3DN_CreateRenderStateObject(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_RenderState* state = context->old_CreateRenderStateObject(self, errCode);
+
+    PROF_FINISH(CreateRenderStateObject)
+
+    logLine("%s: %s: errCode %d (%s). Render state object address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        state);
+
+    checkPointer(context, CreateRenderStateObject, state);
+    checkSuccess(context, CreateRenderStateObject, mapNovaErrorPointerToCode(errCode));
+
+    return state;
 }
 
 static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *self,
@@ -601,8 +661,10 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
     PROF_FINISH(CreateVertexBufferObject)
 
-    logLine("%s: %s: size %llu, usage %d, maxArrays %u, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
-        size, usage, (unsigned)maxArrays, tags, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+    logLine("%s: %s: size %llu, usage %d, maxArrays %lu, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
+        size, usage, maxArrays, tags, result,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode));
 
     checkPointer(context, CreateVertexBufferObject, result);
     checkSuccess(context, CreateVertexBufferObject, mapNovaErrorPointerToCode(errCode));
@@ -1074,7 +1136,9 @@ GENERATE_NOVA_PATCH(BindVertexAttribArray)
 GENERATE_NOVA_PATCH(BufferUnlock)
 GENERATE_NOVA_PATCH(Clear)
 GENERATE_NOVA_PATCH(CompileShader)
+GENERATE_NOVA_PATCH(CreateDataBufferObject)
 GENERATE_NOVA_PATCH(CreateFrameBuffer)
+GENERATE_NOVA_PATCH(CreateRenderStateObject)
 GENERATE_NOVA_PATCH(CreateVertexBufferObject)
 GENERATE_NOVA_PATCH(Destroy)
 GENERATE_NOVA_PATCH(DestroyFrameBuffer)
@@ -1105,7 +1169,9 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_BufferUnlock,
     patch_Clear,
     patch_CompileShader,
+    patch_CreateDataBufferObject,
     patch_CreateFrameBuffer,
+    patch_CreateRenderStateObject,
     patch_CreateVertexBufferObject,
     patch_Destroy,
     patch_DestroyFrameBuffer,
