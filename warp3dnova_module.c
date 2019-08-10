@@ -31,7 +31,14 @@ typedef enum NovaFunction {
     DBOLock,
     DBOSetBuffer,
     Destroy,
+    DestroyDataBufferObject,
     DestroyFrameBuffer,
+    DestroyRenderStateObject,
+    DestroyShader,
+    DestroyShaderLog,
+    DestroyShaderPipeline,
+    DestroyTexSampler,
+    DestroyTexture,
     DestroyVertexBufferObject,
     DrawArrays,
     DrawElements,
@@ -78,7 +85,14 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(DBOLock)
         MAP_ENUM(DBOSetBuffer)
         MAP_ENUM(Destroy)
+        MAP_ENUM(DestroyDataBufferObject)
         MAP_ENUM(DestroyFrameBuffer)
+        MAP_ENUM(DestroyRenderStateObject)
+        MAP_ENUM(DestroyShader)
+        MAP_ENUM(DestroyShaderLog)
+        MAP_ENUM(DestroyShaderPipeline)
+        MAP_ENUM(DestroyTexSampler)
+        MAP_ENUM(DestroyTexture)
         MAP_ENUM(DestroyVertexBufferObject)
         MAP_ENUM(DrawArrays)
         MAP_ENUM(DrawElements)
@@ -237,7 +251,21 @@ struct NovaContext {
 
     void (*old_Destroy)(struct W3DN_Context_s *self);
 
+    void (*old_DestroyDataBufferObject)(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer);
+
     void (*old_DestroyFrameBuffer)(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer);
+
+    void (*old_DestroyRenderStateObject)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
+
+    void (*old_DestroyShader)(struct W3DN_Context_s *self, W3DN_Shader *shader);
+
+    void (*old_DestroyShaderLog)(struct W3DN_Context_s *self, const char *shaderLog);
+
+    void (*old_DestroyShaderPipeline)(struct W3DN_Context_s *self, W3DN_ShaderPipeline *shaderPipeline);
+
+    void (*old_DestroyTexSampler)(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler);
+
+    void (*old_DestroyTexture)(struct W3DN_Context_s *self, W3DN_Texture *texture);
 
     void (*old_DestroyVertexBufferObject)(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer);
 
@@ -895,6 +923,21 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
     IExec->MutexRelease(mutex);
 }
 
+static void W3DN_DestroyDataBufferObject(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: dataBuffer %p",
+        context->name, __func__,
+        dataBuffer);
+
+    PROF_START
+
+    context->old_DestroyDataBufferObject(self, dataBuffer);
+
+    PROF_FINISH(DestroyDataBufferObject);
+}
+
 static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
 {
     GET_CONTEXT
@@ -908,6 +951,96 @@ static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffe
     context->old_DestroyFrameBuffer(self, frameBuffer);
 
     PROF_FINISH(DestroyFrameBuffer);
+}
+
+static void W3DN_DestroyRenderStateObject(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: renderState %p",
+        context->name, __func__,
+        renderState);
+
+    PROF_START
+
+    context->old_DestroyRenderStateObject(self, renderState);
+
+    PROF_FINISH(DestroyRenderStateObject);
+}
+
+static void W3DN_DestroyShader(struct W3DN_Context_s *self, W3DN_Shader *shader)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: shader %p",
+        context->name, __func__,
+        shader);
+
+    PROF_START
+
+    context->old_DestroyShader(self, shader);
+
+    PROF_FINISH(DestroyShader);
+}
+
+static void W3DN_DestroyShaderLog(struct W3DN_Context_s *self, const char *shaderLog)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: shaderLog %p",
+        context->name, __func__,
+        shaderLog);
+
+    PROF_START
+
+    context->old_DestroyShaderLog(self, shaderLog);
+
+    PROF_FINISH(DestroyShaderLog);
+}
+
+static void W3DN_DestroyShaderPipeline(struct W3DN_Context_s *self, W3DN_ShaderPipeline *shaderPipeline)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: shaderPipeline %p",
+        context->name, __func__,
+        shaderPipeline);
+
+    PROF_START
+
+    context->old_DestroyShaderPipeline(self, shaderPipeline);
+
+    PROF_FINISH(DestroyShaderPipeline);
+}
+
+static void W3DN_DestroyTexSampler(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: texSampler %p",
+        context->name, __func__,
+        texSampler);
+
+    PROF_START
+
+    context->old_DestroyTexSampler(self, texSampler);
+
+    PROF_FINISH(DestroyTexSampler);
+}
+
+static void W3DN_DestroyTexture(struct W3DN_Context_s *self, W3DN_Texture *texture)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: texture %p",
+        context->name, __func__,
+        texture);
+
+    PROF_START
+
+    context->old_DestroyTexture(self, texture);
+
+    PROF_FINISH(DestroyTexture);
 }
 
 static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer)
@@ -1339,7 +1472,14 @@ GENERATE_NOVA_PATCH(DBOGetBuffer)
 GENERATE_NOVA_PATCH(DBOLock)
 GENERATE_NOVA_PATCH(DBOSetBuffer)
 GENERATE_NOVA_PATCH(Destroy)
+GENERATE_NOVA_PATCH(DestroyDataBufferObject)
 GENERATE_NOVA_PATCH(DestroyFrameBuffer)
+GENERATE_NOVA_PATCH(DestroyRenderStateObject)
+GENERATE_NOVA_PATCH(DestroyShader)
+GENERATE_NOVA_PATCH(DestroyShaderLog)
+GENERATE_NOVA_PATCH(DestroyShaderPipeline)
+GENERATE_NOVA_PATCH(DestroyTexSampler)
+GENERATE_NOVA_PATCH(DestroyTexture)
 GENERATE_NOVA_PATCH(DestroyVertexBufferObject)
 GENERATE_NOVA_PATCH(DrawArrays)
 GENERATE_NOVA_PATCH(DrawElements)
@@ -1379,7 +1519,14 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_DBOLock,
     patch_DBOSetBuffer,
     patch_Destroy,
+    patch_DestroyDataBufferObject,
     patch_DestroyFrameBuffer,
+    patch_DestroyRenderStateObject,
+    patch_DestroyShader,
+    patch_DestroyShaderLog,
+    patch_DestroyShaderPipeline,
+    patch_DestroyTexSampler,
+    patch_DestroyTexture,
     patch_DestroyVertexBufferObject,
     patch_DrawArrays,
     patch_DrawElements,
