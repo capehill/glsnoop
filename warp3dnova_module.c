@@ -22,6 +22,9 @@ typedef enum NovaFunction {
     CreateDataBufferObject,
     CreateFrameBuffer,
     CreateRenderStateObject,
+    CreateShaderPipeline,
+    CreateTexSampler,
+    CreateTexture,
     CreateVertexBufferObject,
     Destroy,
     DestroyFrameBuffer,
@@ -62,6 +65,9 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(CreateDataBufferObject)
         MAP_ENUM(CreateFrameBuffer)
         MAP_ENUM(CreateRenderStateObject)
+        MAP_ENUM(CreateShaderPipeline)
+        MAP_ENUM(CreateTexSampler)
+        MAP_ENUM(CreateTexture)
         MAP_ENUM(CreateVertexBufferObject)
         MAP_ENUM(Destroy)
         MAP_ENUM(DestroyFrameBuffer)
@@ -199,6 +205,14 @@ struct NovaContext {
     W3DN_FrameBuffer* (*old_CreateFrameBuffer)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
 
     W3DN_RenderState* (*old_CreateRenderStateObject)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
+
+    W3DN_ShaderPipeline* (*old_CreateShaderPipeline)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, struct TagItem *tags);
+
+    W3DN_TextureSampler* (*old_CreateTexSampler)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
+
+    W3DN_Texture* (*old_CreateTexture)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_TextureType texType,
+        W3DN_PixelFormat pixelFormat, W3DN_ElementFormat elementFormat, uint32 width, uint32 height, uint32 depth,
+        BOOL mipmapped, W3DN_BufferUsage usage);
 
     W3DN_VertexBuffer* (*old_CreateVertexBufferObject)(struct W3DN_Context_s *self,
     		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags);
@@ -648,6 +662,85 @@ static W3DN_RenderState* W3DN_CreateRenderStateObject(struct W3DN_Context_s *sel
     checkSuccess(context, CreateRenderStateObject, mapNovaErrorPointerToCode(errCode));
 
     return state;
+}
+
+static W3DN_ShaderPipeline* W3DN_CreateShaderPipeline(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, struct TagItem *tags)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_ShaderPipeline* pipeline = context->old_CreateShaderPipeline(self, errCode, tags);
+
+    PROF_FINISH(CreateShaderPipeline)
+
+    logLine("%s: %s: errCode %d (%s), tags %p. Shader pipeline address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        tags,
+        pipeline);
+
+    checkPointer(context, CreateShaderPipeline, pipeline);
+    checkSuccess(context, CreateShaderPipeline, mapNovaErrorPointerToCode(errCode));
+
+    return pipeline;
+}
+
+static W3DN_TextureSampler* W3DN_CreateTexSampler(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_TextureSampler* sampler = context->old_CreateTexSampler(self, errCode);
+
+    PROF_FINISH(CreateTexSampler)
+
+    logLine("%s: %s: errCode %d (%s). Texture sampler address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        sampler);
+
+    checkPointer(context, CreateTexSampler, sampler);
+    checkSuccess(context, CreateTexSampler, mapNovaErrorPointerToCode(errCode));
+
+    return sampler;
+}
+
+W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_TextureType texType,
+    W3DN_PixelFormat pixelFormat, W3DN_ElementFormat elementFormat, uint32 width, uint32 height, uint32 depth,
+    BOOL mipmapped, W3DN_BufferUsage usage)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_Texture* texture = context->old_CreateTexture(self, errCode, texType, pixelFormat, elementFormat,
+        width, height, depth, mipmapped, usage);
+
+    PROF_FINISH(CreateTexture)
+
+    logLine("%s: %s: errCode %d (%s), texType %d, pixelFormat %d, elementFormat %d, width %lu, height %lu, depth %lu, "
+        "mipmapped %d, usage %d. Texture address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        texType,
+        pixelFormat,
+        elementFormat,
+        width,
+        height,
+        depth,
+        mipmapped,
+        usage,
+        texture);
+
+    checkPointer(context, CreateTexture, texture);
+    checkSuccess(context, CreateTexture, mapNovaErrorPointerToCode(errCode));
+
+    return texture;
 }
 
 static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *self,
@@ -1139,6 +1232,9 @@ GENERATE_NOVA_PATCH(CompileShader)
 GENERATE_NOVA_PATCH(CreateDataBufferObject)
 GENERATE_NOVA_PATCH(CreateFrameBuffer)
 GENERATE_NOVA_PATCH(CreateRenderStateObject)
+GENERATE_NOVA_PATCH(CreateShaderPipeline)
+GENERATE_NOVA_PATCH(CreateTexSampler)
+GENERATE_NOVA_PATCH(CreateTexture)
 GENERATE_NOVA_PATCH(CreateVertexBufferObject)
 GENERATE_NOVA_PATCH(Destroy)
 GENERATE_NOVA_PATCH(DestroyFrameBuffer)
@@ -1172,6 +1268,9 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_CreateDataBufferObject,
     patch_CreateFrameBuffer,
     patch_CreateRenderStateObject,
+    patch_CreateShaderPipeline,
+    patch_CreateTexSampler,
+    patch_CreateTexture,
     patch_CreateVertexBufferObject,
     patch_Destroy,
     patch_DestroyFrameBuffer,
