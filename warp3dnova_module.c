@@ -26,6 +26,10 @@ typedef enum NovaFunction {
     CreateTexSampler,
     CreateTexture,
     CreateVertexBufferObject,
+    DBOGetAttr,
+    DBOGetBuffer,
+    DBOLock,
+    DBOSetBuffer,
     Destroy,
     DestroyFrameBuffer,
     DestroyVertexBufferObject,
@@ -69,6 +73,10 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(CreateTexSampler)
         MAP_ENUM(CreateTexture)
         MAP_ENUM(CreateVertexBufferObject)
+        MAP_ENUM(DBOGetAttr)
+        MAP_ENUM(DBOGetBuffer)
+        MAP_ENUM(DBOLock)
+        MAP_ENUM(DBOSetBuffer)
         MAP_ENUM(Destroy)
         MAP_ENUM(DestroyFrameBuffer)
         MAP_ENUM(DestroyVertexBufferObject)
@@ -216,6 +224,16 @@ struct NovaContext {
 
     W3DN_VertexBuffer* (*old_CreateVertexBufferObject)(struct W3DN_Context_s *self,
     		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags);
+
+    uint64 (*old_DBOGetAttr)(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, W3DN_BufferAttribute attr);
+
+    W3DN_ErrorCode (*old_DBOGetBuffer)(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, uint32 bufferIdx,
+        uint64 *offset, uint64 *size, W3DN_Shader **targetShader, struct TagItem *tags);
+
+    W3DN_BufferLock* (*old_DBOLock)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_DataBuffer *buffer, uint64 readOffset, uint64 readSize);
+
+    W3DN_ErrorCode (*old_DBOSetBuffer)(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, uint32 bufferIdx,
+        uint64 offset, uint64 size, W3DN_Shader *targetShader, struct TagItem *tags);
 
     void (*old_Destroy)(struct W3DN_Context_s *self);
 
@@ -754,13 +772,93 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
     PROF_FINISH(CreateVertexBufferObject)
 
-    logLine("%s: %s: size %llu, usage %d, maxArrays %lu, tags %p. Buffer address %p, errCode %d (%s)", context->name, __func__,
+    logLine("%s: %s: size %llu, usage %d, maxArrays %lu, tags %p. Buffer address %p, errCode %d (%s)",
+        context->name, __func__,
         size, usage, maxArrays, tags, result,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode));
 
     checkPointer(context, CreateVertexBufferObject, result);
     checkSuccess(context, CreateVertexBufferObject, mapNovaErrorPointerToCode(errCode));
+
+    return result;
+}
+
+static uint64 W3DN_DBOGetAttr(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, W3DN_BufferAttribute attr)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const uint64 result = context->old_DBOGetAttr(self, dataBuffer, attr);
+
+    PROF_FINISH(DBOGetAttr)
+
+    logLine("%s: %s: dataBuffer %p, attr %d. Result %llu",
+        context->name, __func__,
+        dataBuffer, attr, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_DBOGetBuffer(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, uint32 bufferIdx,
+    uint64 *offset, uint64 *size, W3DN_Shader **targetShader, struct TagItem *tags)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_DBOGetBuffer(self, dataBuffer, bufferIdx, offset, size, targetShader, tags);
+
+    PROF_FINISH(DBOGetBuffer)
+
+    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu, size %llu, targetShader %p, tags %p. Result %d (%s)",
+        context->name, __func__,
+        dataBuffer, bufferIdx, *offset, *size, *targetShader, tags, result, mapNovaError(result));
+
+    checkSuccess(context, DBOGetBuffer, result);
+
+    return result;
+}
+
+static W3DN_BufferLock* W3DN_DBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_DataBuffer *buffer, uint64 readOffset, uint64 readSize)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_BufferLock* lock = context->old_DBOLock(self, errCode, buffer, readOffset, readSize);
+
+    PROF_FINISH(DBOLock)
+
+    logLine("%s: %s: errCode %d (%s), buffer %p, readOffset %llu, readSize %llu. Buffer lock address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        buffer, readOffset, readSize, lock);
+
+    checkPointer(context, DBOLock, lock);
+    checkSuccess(context, DBOLock, mapNovaErrorPointerToCode(errCode));
+
+    return lock;
+}
+
+static W3DN_ErrorCode W3DN_DBOSetBuffer(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, uint32 bufferIdx,
+    uint64 offset, uint64 size, W3DN_Shader *targetShader, struct TagItem *tags)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_DBOSetBuffer(self, dataBuffer, bufferIdx, offset, size, targetShader, tags);
+
+    PROF_FINISH(DBOSetBuffer)
+
+    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu. size %llu, targetShader %p, tags %p. Result %d (%s)",
+        context->name, __func__,
+        dataBuffer, bufferIdx, offset, size, targetShader, tags, result, mapNovaError(result));
+
+    checkSuccess(context, DBOSetBuffer, result);
 
     return result;
 }
@@ -1236,6 +1334,10 @@ GENERATE_NOVA_PATCH(CreateShaderPipeline)
 GENERATE_NOVA_PATCH(CreateTexSampler)
 GENERATE_NOVA_PATCH(CreateTexture)
 GENERATE_NOVA_PATCH(CreateVertexBufferObject)
+GENERATE_NOVA_PATCH(DBOGetAttr)
+GENERATE_NOVA_PATCH(DBOGetBuffer)
+GENERATE_NOVA_PATCH(DBOLock)
+GENERATE_NOVA_PATCH(DBOSetBuffer)
 GENERATE_NOVA_PATCH(Destroy)
 GENERATE_NOVA_PATCH(DestroyFrameBuffer)
 GENERATE_NOVA_PATCH(DestroyVertexBufferObject)
@@ -1272,6 +1374,10 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_CreateTexSampler,
     patch_CreateTexture,
     patch_CreateVertexBufferObject,
+    patch_DBOGetAttr,
+    patch_DBOGetBuffer,
+    patch_DBOLock,
+    patch_DBOSetBuffer,
     patch_Destroy,
     patch_DestroyFrameBuffer,
     patch_DestroyVertexBufferObject,
