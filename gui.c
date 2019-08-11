@@ -13,11 +13,13 @@
 #include <classes/window.h>
 #include <gadgets/layout.h>
 #include <gadgets/button.h>
+#include <libraries/gadtools.h>
 
 #include <stdio.h>
 
 enum EObject {
     OID_Window,
+    OID_AboutWindow,
     OID_TracingLayout,
     OID_Trace,
     OID_Pause,
@@ -34,6 +36,20 @@ enum EGadget {
     GID_Pause,
     GID_StartProfiling,
     GID_FinishProfiling
+};
+
+typedef enum EMenu {
+    MID_Iconify = 1,
+    MID_About,
+    MID_Quit
+} EMenu;
+
+static struct NewMenu menus[] = {
+    { NM_TITLE, "glSnoop", NULL, 0, 0, NULL },
+    { NM_ITEM, "Iconify", "I", 0, 0, (APTR)MID_Iconify },
+    { NM_ITEM, "About", "?", 0, 0, (APTR)MID_About },
+    { NM_ITEM, "Quit", "Q", 0, 0, (APTR)MID_Quit },
+    { NM_END, NULL, NULL, 0, 0, NULL }
 };
 
 static Object* objects[OID_Count];
@@ -71,6 +87,74 @@ static struct DiskObject* getDiskObject()
     return diskObject;
 }
 
+static void handle_about_window_events()
+{
+    uint32 signal = 0;
+    IIntuition->GetAttr(WINDOW_SigMask, objects[OID_AboutWindow], &signal);
+
+    BOOL show = TRUE;
+
+    while (show) {
+        const uint32 wait = IExec->Wait(signal);
+
+        if (wait & signal) {
+            uint32 result;
+            int16 code = 0;
+
+            while ((result = IIntuition->IDoMethod(objects[OID_AboutWindow], WM_HANDLEINPUT, &code)) != WMHI_LASTMSG) {
+                switch (result & WMHI_CLASSMASK) {
+                    case WMHI_CLOSEWINDOW:
+                        show = FALSE;
+                        break;
+                }
+            }
+        }
+    }
+}
+
+static void show_about_window()
+{
+    const char* const immortals = "Capehill, kas1e, Mason, Samo79, Hans, Daytona675x";
+
+    objects[OID_AboutWindow] = IIntuition->NewObject(NULL, "window.class",
+        WA_ScreenTitle, VERSION_STRING DATE,
+        WA_Title, "About glSnoop",
+        WA_Activate, TRUE,
+        WA_DragBar, TRUE,
+        WA_CloseGadget, TRUE,
+        WA_Width, 100,
+        WA_Height, 100,
+        WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
+            LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
+            LAYOUT_BevelStyle, BVS_GROUP,
+            LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
+                GA_ReadOnly, TRUE,
+                GA_Text, VERSION_STRING DATE,
+                BUTTON_BevelStyle, BVS_NONE,
+                TAG_DONE),
+            LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
+                GA_ReadOnly, TRUE,
+                GA_Text, immortals,
+                BUTTON_BevelStyle, BVS_NONE,
+                TAG_DONE),
+            LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
+                GA_ReadOnly, TRUE,
+                GA_Text, "Keep the dream alive",
+                BUTTON_BevelStyle, BVS_NONE,
+                TAG_DONE),
+            TAG_DONE),
+        TAG_DONE);
+
+    if (objects[OID_AboutWindow]) {
+        if (IIntuition->IDoMethod(objects[OID_AboutWindow], WM_OPEN)) {
+            handle_about_window_events();
+        }
+
+        IIntuition->DisposeObject(objects[OID_AboutWindow]);
+        objects[OID_AboutWindow] = NULL;
+    }
+}
+
 static Object* create_gui(LONG profiling)
 {
     return IIntuition->NewObject(NULL, "window.class",
@@ -88,6 +172,7 @@ static Object* create_gui(LONG profiling)
         WINDOW_Icon, getDiskObject(),
         WINDOW_AppPort, port, // Iconification needs it
         WINDOW_GadgetHelp, TRUE,
+        WINDOW_NewMenu, menus,
         WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
             LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
 
@@ -264,6 +349,23 @@ static void handle_uniconify(void)
     window = (struct Window *)IIntuition->IDoMethod(objects[OID_Window], WM_OPEN);
 }
 
+static BOOL handle_menupick(uint16 menuNumber)
+{
+    struct MenuItem* item = IIntuition->ItemAddress(window->MenuStrip, menuNumber);
+
+    if (item) {
+        const EMenu id = (EMenu)GTMENUITEM_USERDATA(item);
+        //printf("menu %x, menu num %d, item num %d, userdata %d\n", menuNumber, MENUNUM(menuNumber), ITEMNUM(menuNumber), (EMenu)GTMENUITEM_USERDATA(item));
+        switch (id) {
+            case MID_Iconify: handle_iconify(); break;
+            case MID_About: show_about_window(); break;
+            case MID_Quit: return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 static void handle_events(void)
 {
     uint32 signal = 0;
@@ -299,6 +401,9 @@ static void handle_events(void)
                         break;
                     case WMHI_UNICONIFY:
                         handle_uniconify();
+                        break;
+                    case WMHI_MENUPICK:
+                        running = handle_menupick(result & WMHI_MENUMASK);
                         break;
                 }
             }
