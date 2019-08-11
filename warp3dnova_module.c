@@ -48,8 +48,10 @@ typedef enum NovaFunction {
     FBGetBufferTex,
     FBGetStatus,
     GetRenderTarget,
+    GetState,
     SetRenderTarget,
     SetShaderPipeline,
+    SetState,
     Submit,
     VBOGetArray,
     VBOGetAttr,
@@ -102,8 +104,10 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(FBGetBufferTex)
         MAP_ENUM(FBGetStatus)
         MAP_ENUM(GetRenderTarget)
+        MAP_ENUM(GetState)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
+        MAP_ENUM(SetState)
         MAP_ENUM(Submit)
         MAP_ENUM(VBOGetArray)
         MAP_ENUM(VBOGetAttr)
@@ -293,11 +297,16 @@ struct NovaContext {
     W3DN_FrameBuffer* (*old_GetRenderTarget)(
         struct W3DN_Context_s *self, W3DN_RenderState *renderState);
 
+    W3DN_State (*old_GetState)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_StateFlag stateFlag);
+
     W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
     	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
 
     W3DN_ErrorCode (*old_SetShaderPipeline)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         W3DN_ShaderPipeline *shaderPipeline);
+
+    W3DN_ErrorCode (*old_SetState)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_StateFlag stateFlag, W3DN_State value);
 
     uint32 (*old_Submit)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
 
@@ -1248,6 +1257,23 @@ static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     return buffer;
 }
 
+static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_StateFlag stateFlag)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_State state = context->old_GetState(self, renderState, stateFlag);
+
+    PROF_FINISH(GetState)
+
+    logLine("%s: %s: renderState %p, stateFlag %d. State %d",
+        context->name, __func__,
+        renderState, stateFlag, state);
+
+    return state;
+}
+
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
@@ -1284,6 +1310,27 @@ static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_R
         renderState, shaderPipeline, result, mapNovaError(result));
 
     checkSuccess(context, SetShaderPipeline, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetState(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_StateFlag stateFlag, W3DN_State value)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_SetState(self, renderState, stateFlag, value);
+
+    PROF_FINISH(SetState)
+
+    logLine("%s: %s: renderState %p, stateFlag %d, value %d. Result %d (%s)",
+        context->name, __func__,
+        renderState, stateFlag, value,
+        result, mapNovaError(result));
+
+    checkSuccess(context, SetState, result);
 
     return result;
 }
@@ -1489,8 +1536,10 @@ GENERATE_NOVA_PATCH(FBGetBufferBM)
 GENERATE_NOVA_PATCH(FBGetBufferTex)
 GENERATE_NOVA_PATCH(FBGetStatus)
 GENERATE_NOVA_PATCH(GetRenderTarget)
+GENERATE_NOVA_PATCH(GetState)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
+GENERATE_NOVA_PATCH(SetState)
 GENERATE_NOVA_PATCH(Submit)
 GENERATE_NOVA_PATCH(VBOGetArray)
 GENERATE_NOVA_PATCH(VBOGetAttr)
@@ -1536,8 +1585,10 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_FBGetBufferTex,
     patch_FBGetStatus,
     patch_GetRenderTarget,
+    patch_GetState,
     patch_SetRenderTarget,
     patch_SetShaderPipeline,
+    patch_SetState,
     patch_Submit,
     patch_VBOGetArray,
     patch_VBOGetAttr,
