@@ -47,6 +47,10 @@ typedef enum NovaFunction {
     FBGetBufferBM,
     FBGetBufferTex,
     FBGetStatus,
+    GetBitMapTexture,
+    GetBlendColour,
+    GetBlendEquation,
+    GetBlendMode,
     GetRenderTarget,
     GetState,
     SetRenderTarget,
@@ -98,6 +102,10 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(DestroyVertexBufferObject)
         MAP_ENUM(DrawArrays)
         MAP_ENUM(DrawElements)
+        MAP_ENUM(GetBitMapTexture)
+        MAP_ENUM(GetBlendColour)
+        MAP_ENUM(GetBlendEquation)
+        MAP_ENUM(GetBlendMode)
         MAP_ENUM(FBBindBuffer)
         MAP_ENUM(FBGetAttr)
         MAP_ENUM(FBGetBufferBM)
@@ -289,10 +297,21 @@ struct NovaContext {
     struct BitMap* (*old_FBGetBufferBM)(struct W3DN_Context_s *self,
     	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode);
 
-    W3DN_Texture*  (*old_FBGetBufferTex)(struct W3DN_Context_s *self,
+    W3DN_Texture* (*old_FBGetBufferTex)(struct W3DN_Context_s *self,
     	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode);
 
     W3DN_ErrorCode (*old_FBGetStatus)(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer);
+
+    struct BitMap* (*old_GetBitMapTexture)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit);
+
+    W3DN_ErrorCode (*old_GetBlendColour)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        float *red, float *green, float *blue, float *alpha);
+
+    W3DN_ErrorCode (*old_GetBlendEquation)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        uint32 buffIdx, W3DN_BlendEquation *colEquation, W3DN_BlendEquation *alphaEquation);
+
+    W3DN_ErrorCode (*old_GetBlendMode)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
+        W3DN_BlendMode *colSrc, W3DN_BlendMode *colDst, W3DN_BlendMode *alphaSrc, W3DN_BlendMode *alphaDst);
 
     W3DN_FrameBuffer* (*old_GetRenderTarget)(
         struct W3DN_Context_s *self, W3DN_RenderState *renderState);
@@ -1237,6 +1256,99 @@ static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBu
     return result;
 }
 
+static struct BitMap* W3DN_GetBitMapTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    struct BitMap* bitmap = context->old_GetBitMapTexture(self, renderState, texUnit);
+
+    PROF_FINISH(GetBitMapTexture)
+
+    logLine("%s: %s: renderState %p, texUnit %lu. Bitmap address %p",
+        context->name, __func__,
+        renderState, texUnit, bitmap);
+
+    checkPointer(context, GetBitMapTexture, bitmap);
+
+    return bitmap;
+}
+
+static W3DN_ErrorCode W3DN_GetBlendColour(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    float *red, float *green, float *blue, float *alpha)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetBlendColour(self, renderState, red, green, blue, alpha);
+
+    PROF_FINISH(GetBlendColour)
+
+    logLine("%s: %s: renderState %p, red %f, green %f, blue %f, alpha %f. Result %d (%s)",
+        context->name, __func__,
+        renderState, *red, *green, *blue, *alpha,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetBlendColour, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_GetBlendEquation(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    uint32 buffIdx, W3DN_BlendEquation *colEquation, W3DN_BlendEquation *alphaEquation)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetBlendEquation(self, renderState, buffIdx, colEquation, alphaEquation);
+
+    PROF_FINISH(GetBlendEquation)
+
+    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %d, alphaEquation %d. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        buffIdx,
+        *colEquation,
+        *alphaEquation,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetBlendEquation, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_GetBlendMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendMode *colSrc,
+    W3DN_BlendMode *colDst, W3DN_BlendMode *alphaSrc, W3DN_BlendMode *alphaDst)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetBlendMode(self, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst);
+
+    PROF_FINISH(GetBlendMode)
+
+    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %d, colDst %d, alphaSrc %d, alphaDst %d. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        buffIdx,
+        *colSrc,
+        *colDst,
+        *alphaSrc,
+        *alphaDst,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetBlendMode, result);
+
+    return result;
+}
+
 static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
@@ -1444,7 +1556,7 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
     return result;
 }
 
-W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID, uint32 timeout)
+static W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID, uint32 timeout)
 {
     GET_CONTEXT
 
@@ -1463,7 +1575,7 @@ W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID, uint3
     return result;
 }
 
-W3DN_ErrorCode W3DN_WaitIdle(struct W3DN_Context_s *self, uint32 timeout)
+static W3DN_ErrorCode W3DN_WaitIdle(struct W3DN_Context_s *self, uint32 timeout)
 {
     GET_CONTEXT
 
@@ -1535,6 +1647,10 @@ GENERATE_NOVA_PATCH(FBGetAttr)
 GENERATE_NOVA_PATCH(FBGetBufferBM)
 GENERATE_NOVA_PATCH(FBGetBufferTex)
 GENERATE_NOVA_PATCH(FBGetStatus)
+GENERATE_NOVA_PATCH(GetBitMapTexture)
+GENERATE_NOVA_PATCH(GetBlendColour)
+GENERATE_NOVA_PATCH(GetBlendEquation)
+GENERATE_NOVA_PATCH(GetBlendMode)
 GENERATE_NOVA_PATCH(GetRenderTarget)
 GENERATE_NOVA_PATCH(GetState)
 GENERATE_NOVA_PATCH(SetRenderTarget)
@@ -1584,6 +1700,10 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_FBGetBufferBM,
     patch_FBGetBufferTex,
     patch_FBGetStatus,
+    patch_GetBitMapTexture,
+    patch_GetBlendColour,
+    patch_GetBlendEquation,
+    patch_GetBlendMode,
     patch_GetRenderTarget,
     patch_GetState,
     patch_SetRenderTarget,
