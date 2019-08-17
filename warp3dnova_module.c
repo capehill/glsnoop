@@ -55,7 +55,11 @@ typedef enum NovaFunction {
     GetDepthCompareFunc,
     GetFrontFace,
     GetLineWidth,
+    GetPolygonOffset,
+    GetProvokingVertex,
     GetRenderTarget,
+    GetScissor,
+    GetShaderDataBuffer,
     GetState,
     SetRenderTarget,
     SetShaderPipeline,
@@ -119,7 +123,11 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(GetDepthCompareFunc)
         MAP_ENUM(GetFrontFace)
         MAP_ENUM(GetLineWidth)
+        MAP_ENUM(GetPolygonOffset)
+        MAP_ENUM(GetProvokingVertex)
         MAP_ENUM(GetRenderTarget)
+        MAP_ENUM(GetScissor)
+        MAP_ENUM(GetShaderDataBuffer)
         MAP_ENUM(GetState)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
@@ -329,8 +337,19 @@ struct NovaContext {
 
     float (*old_GetLineWidth)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
 
+    W3DN_ErrorCode (*old_GetPolygonOffset)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        float *factor, float *units, float *clamp);
+
+    W3DN_ProvokingVertexMode (*old_GetProvokingVertex)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
+
     W3DN_FrameBuffer* (*old_GetRenderTarget)(
         struct W3DN_Context_s *self, W3DN_RenderState *renderState);
+
+    W3DN_ErrorCode (*old_GetScissor)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        uint32 *x, uint32 *y, uint32 *width, uint32 *height);
+
+    W3DN_ErrorCode (*old_GetShaderDataBuffer)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_ShaderType shaderType, W3DN_DataBuffer **buffer, uint32 *bufferIdx);
 
     W3DN_State (*old_GetState)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_StateFlag stateFlag);
 
@@ -1458,6 +1477,100 @@ static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     return buffer;
 }
 
+static W3DN_ErrorCode W3DN_GetPolygonOffset(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    float *factor, float *units, float *clamp)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetPolygonOffset(self, renderState, factor, units, clamp);
+
+    PROF_FINISH(GetPolygonOffset)
+
+    logLine("%s: %s: renderState %p, factor %f, units %f, clamp %f. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        *factor,
+        *units,
+        *clamp,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetPolygonOffset, result);
+
+    return result;
+}
+
+static W3DN_ProvokingVertexMode W3DN_GetProvokingVertex(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ProvokingVertexMode mode = context->old_GetProvokingVertex(self, renderState);
+
+    PROF_FINISH(GetProvokingVertex)
+
+    logLine("%s: %s: renderState %p. Vertex mode %d",
+        context->name, __func__,
+        renderState,
+        mode);
+
+    return mode;
+}
+
+static W3DN_ErrorCode W3DN_GetScissor(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    uint32 *x, uint32 *y, uint32 *width, uint32 *height)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetScissor(self, renderState, x, y, width, height);
+
+    PROF_FINISH(GetScissor)
+
+    logLine("%s: %s: renderState %p, x %lu, y %lu, width %lu, height %lu. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        *x,
+        *y,
+        *width,
+        *height,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetScissor, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_GetShaderDataBuffer(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_ShaderType shaderType, W3DN_DataBuffer **buffer, uint32 *bufferIdx)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetShaderDataBuffer(self, renderState, shaderType, buffer, bufferIdx);
+
+    PROF_FINISH(GetShaderDataBuffer)
+
+    logLine("%s: %s: renderState %p, shaderType %d, buffer %p, bufferIdx %lu. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        shaderType,
+        *buffer,
+        *bufferIdx,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetShaderDataBuffer, result);
+
+    return result;
+}
+
 static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_StateFlag stateFlag)
 {
     GET_CONTEXT
@@ -1744,7 +1857,11 @@ GENERATE_NOVA_PATCH(GetColourMask)
 GENERATE_NOVA_PATCH(GetDepthCompareFunc)
 GENERATE_NOVA_PATCH(GetFrontFace)
 GENERATE_NOVA_PATCH(GetLineWidth)
+GENERATE_NOVA_PATCH(GetPolygonOffset)
+GENERATE_NOVA_PATCH(GetProvokingVertex)
 GENERATE_NOVA_PATCH(GetRenderTarget)
+GENERATE_NOVA_PATCH(GetScissor)
+GENERATE_NOVA_PATCH(GetShaderDataBuffer)
 GENERATE_NOVA_PATCH(GetState)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
@@ -1801,7 +1918,11 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_GetDepthCompareFunc,
     patch_GetFrontFace,
     patch_GetLineWidth,
+    patch_GetPolygonOffset,
+    patch_GetProvokingVertex,
     patch_GetRenderTarget,
+    patch_GetScissor,
+    patch_GetShaderDataBuffer,
     patch_GetState,
     patch_SetRenderTarget,
     patch_SetShaderPipeline,
