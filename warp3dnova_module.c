@@ -60,7 +60,11 @@ typedef enum NovaFunction {
     GetRenderTarget,
     GetScissor,
     GetShaderDataBuffer,
+    GetShaderPipeline,
     GetState,
+    GetStencilFunc,
+    GetStencilOp,
+    GetStencilWriteMask,
     SetRenderTarget,
     SetShaderPipeline,
     SetState,
@@ -128,7 +132,11 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(GetRenderTarget)
         MAP_ENUM(GetScissor)
         MAP_ENUM(GetShaderDataBuffer)
+        MAP_ENUM(GetShaderPipeline)
         MAP_ENUM(GetState)
+        MAP_ENUM(GetStencilFunc)
+        MAP_ENUM(GetStencilOp)
+        MAP_ENUM(GetStencilWriteMask)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
         MAP_ENUM(SetState)
@@ -351,7 +359,18 @@ struct NovaContext {
     W3DN_ErrorCode (*old_GetShaderDataBuffer)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         W3DN_ShaderType shaderType, W3DN_DataBuffer **buffer, uint32 *bufferIdx);
 
+    W3DN_ShaderPipeline* (*old_GetShaderPipeline)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
+
     W3DN_State (*old_GetState)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_StateFlag stateFlag);
+
+    W3DN_ErrorCode (*old_GetStencilFunc)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_FaceSelect face, W3DN_CompareFunc *func, uint32 *ref, uint32 *mask);
+
+    W3DN_ErrorCode (*old_GetStencilOp)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_FaceSelect face, W3DN_StencilOp *sFail, W3DN_StencilOp *dpFail, W3DN_StencilOp *dpPass);
+
+    uint32 (*old_GetStencilWriteMask)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_FaceSelect face, W3DN_ErrorCode *errCode);
 
     W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
     	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
@@ -1571,6 +1590,26 @@ static W3DN_ErrorCode W3DN_GetShaderDataBuffer(struct W3DN_Context_s *self, W3DN
     return result;
 }
 
+static W3DN_ShaderPipeline* W3DN_GetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_ShaderPipeline* pipeline = context->old_GetShaderPipeline(self, renderState);
+
+    PROF_FINISH(GetShaderPipeline)
+
+    logLine("%s: %s: renderState %p. Shader pipeline address %p",
+        context->name, __func__,
+        renderState,
+        pipeline);
+
+    checkPointer(context, GetShaderPipeline, pipeline); // TODO: error or not?
+
+    return pipeline;
+}
+
 static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_StateFlag stateFlag)
 {
     GET_CONTEXT
@@ -1586,6 +1625,82 @@ static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *r
         renderState, stateFlag, state);
 
     return state;
+}
+
+static W3DN_ErrorCode W3DN_GetStencilFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_FaceSelect face, W3DN_CompareFunc *func, uint32 *ref, uint32 *mask)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetStencilFunc(self, renderState, face, func, ref, mask);
+
+    PROF_FINISH(GetStencilFunc)
+
+    logLine("%s: %s: renderState %p, face %d, func %d, ref %lu, mask %lu. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        face,
+        func ? *func : 0,
+        ref ? *ref : 0,
+        mask ? *mask : 0,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetStencilFunc, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_GetStencilOp(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_FaceSelect face, W3DN_StencilOp *sFail, W3DN_StencilOp *dpFail, W3DN_StencilOp *dpPass)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetStencilOp(self, renderState, face, sFail, dpFail, dpPass);
+
+    PROF_FINISH(GetStencilOp)
+
+    logLine("%s: %s: renderState %p, face %d, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        face,
+        *sFail,
+        *dpFail,
+        *dpPass,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetStencilOp, result);
+
+    return result;
+}
+
+static uint32 W3DN_GetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_FaceSelect face, W3DN_ErrorCode *errCode)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const uint32 mask = context->old_GetStencilWriteMask(self, renderState, face, errCode);
+
+    PROF_FINISH(GetStencilWriteMask)
+
+    logLine("%s: %s: renderState %p, face %d, errCode %d (%s). Stencil write mask %lu",
+        context->name, __func__,
+        renderState,
+        face,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        mask);
+
+    checkSuccess(context, GetStencilWriteMask, mapNovaErrorPointerToCode(errCode));
+
+    return mask;
 }
 
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
@@ -1862,7 +1977,11 @@ GENERATE_NOVA_PATCH(GetProvokingVertex)
 GENERATE_NOVA_PATCH(GetRenderTarget)
 GENERATE_NOVA_PATCH(GetScissor)
 GENERATE_NOVA_PATCH(GetShaderDataBuffer)
+GENERATE_NOVA_PATCH(GetShaderPipeline)
 GENERATE_NOVA_PATCH(GetState)
+GENERATE_NOVA_PATCH(GetStencilFunc)
+GENERATE_NOVA_PATCH(GetStencilOp)
+GENERATE_NOVA_PATCH(GetStencilWriteMask)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
 GENERATE_NOVA_PATCH(SetState)
@@ -1923,7 +2042,11 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_GetRenderTarget,
     patch_GetScissor,
     patch_GetShaderDataBuffer,
+    patch_GetShaderPipeline,
     patch_GetState,
+    patch_GetStencilFunc,
+    patch_GetStencilOp,
+    patch_GetStencilWriteMask,
     patch_SetRenderTarget,
     patch_SetShaderPipeline,
     patch_SetState,
