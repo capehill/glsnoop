@@ -69,6 +69,10 @@ typedef enum NovaFunction {
     GetTexture,
     GetVertexAttribArray,
     GetViewport,
+    IsDone,
+    Query,
+    RSOCopy,
+    RSOSetMaster,
     SetRenderTarget,
     SetShaderPipeline,
     SetState,
@@ -145,6 +149,10 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(GetTexture)
         MAP_ENUM(GetVertexAttribArray)
         MAP_ENUM(GetViewport)
+        MAP_ENUM(IsDone)
+        MAP_ENUM(Query)
+        MAP_ENUM(RSOCopy)
+        MAP_ENUM(RSOSetMaster)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
         MAP_ENUM(SetState)
@@ -389,6 +397,14 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_GetViewport)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         double *x, double *y, double *width, double *height, double *zNear, double *zFar);
+
+    BOOL (*old_IsDone)(struct W3DN_Context_s *self, uint32 submitID);
+
+    uint32 (*old_Query)(struct W3DN_Context_s *self, W3DN_CapQuery query);
+
+    W3DN_ErrorCode (*old_RSOCopy)(struct W3DN_Context_s *self, W3DN_RenderState *dest, const W3DN_RenderState *src);
+
+    W3DN_ErrorCode (*old_RSOSetMaster)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_RenderState *master);
 
     W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
     	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
@@ -855,7 +871,7 @@ static W3DN_TextureSampler* W3DN_CreateTexSampler(struct W3DN_Context_s *self, W
     return sampler;
 }
 
-W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_TextureType texType,
+static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_TextureType texType,
     W3DN_PixelFormat pixelFormat, W3DN_ElementFormat elementFormat, uint32 width, uint32 height, uint32 depth,
     BOOL mipmapped, W3DN_BufferUsage usage)
 {
@@ -1816,6 +1832,86 @@ static W3DN_ErrorCode W3DN_GetViewport(struct W3DN_Context_s *self, W3DN_RenderS
     return result;
 }
 
+static BOOL W3DN_IsDone(struct W3DN_Context_s *self, uint32 submitID)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const BOOL result = context->old_IsDone(self, submitID);
+
+    PROF_FINISH(IsDone)
+
+    logLine("%s: %s: submitID %lu. Result %d.",
+        context->name, __func__,
+        submitID,
+        result);
+
+    return result;
+}
+
+static uint32 W3DN_Query(struct W3DN_Context_s *self, W3DN_CapQuery query)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const uint32 result = context->old_Query(self, query);
+
+    PROF_FINISH(Query)
+
+    logLine("%s: %s: query %d. Result %lu.",
+        context->name, __func__,
+        query,
+        result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_RSOCopy(struct W3DN_Context_s *self, W3DN_RenderState *dest, const W3DN_RenderState *src)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_RSOCopy(self, dest, src);
+
+    PROF_FINISH(RSOCopy)
+
+    logLine("%s: %s: dest %p, src %p. Result %d (%s).",
+        context->name, __func__,
+        dest,
+        src,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, RSOCopy, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_RSOSetMaster(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_RenderState *master)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_RSOSetMaster(self, renderState, master);
+
+    PROF_FINISH(RSOSetMaster)
+
+    logLine("%s: %s: renderState %p, master %p. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        master,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, RSOSetMaster, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
@@ -2099,6 +2195,10 @@ GENERATE_NOVA_PATCH(GetTexSampler)
 GENERATE_NOVA_PATCH(GetTexture)
 GENERATE_NOVA_PATCH(GetVertexAttribArray)
 GENERATE_NOVA_PATCH(GetViewport)
+GENERATE_NOVA_PATCH(IsDone)
+GENERATE_NOVA_PATCH(Query)
+GENERATE_NOVA_PATCH(RSOCopy)
+GENERATE_NOVA_PATCH(RSOSetMaster)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
 GENERATE_NOVA_PATCH(SetState)
@@ -2168,6 +2268,10 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_GetTexture,
     patch_GetVertexAttribArray,
     patch_GetViewport,
+    patch_IsDone,
+    patch_Query,
+    patch_RSOCopy,
+    patch_RSOSetMaster,
     patch_SetRenderTarget,
     patch_SetShaderPipeline,
     patch_SetState,
