@@ -51,6 +51,10 @@ typedef enum NovaFunction {
     GetBlendColour,
     GetBlendEquation,
     GetBlendMode,
+    GetColourMask,
+    GetDepthCompareFunc,
+    GetFrontFace,
+    GetLineWidth,
     GetRenderTarget,
     GetState,
     SetRenderTarget,
@@ -102,15 +106,19 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(DestroyVertexBufferObject)
         MAP_ENUM(DrawArrays)
         MAP_ENUM(DrawElements)
-        MAP_ENUM(GetBitMapTexture)
-        MAP_ENUM(GetBlendColour)
-        MAP_ENUM(GetBlendEquation)
-        MAP_ENUM(GetBlendMode)
         MAP_ENUM(FBBindBuffer)
         MAP_ENUM(FBGetAttr)
         MAP_ENUM(FBGetBufferBM)
         MAP_ENUM(FBGetBufferTex)
         MAP_ENUM(FBGetStatus)
+        MAP_ENUM(GetBitMapTexture)
+        MAP_ENUM(GetBlendColour)
+        MAP_ENUM(GetBlendEquation)
+        MAP_ENUM(GetBlendMode)
+        MAP_ENUM(GetColourMask)
+        MAP_ENUM(GetDepthCompareFunc)
+        MAP_ENUM(GetFrontFace)
+        MAP_ENUM(GetLineWidth)
         MAP_ENUM(GetRenderTarget)
         MAP_ENUM(GetState)
         MAP_ENUM(SetRenderTarget)
@@ -312,6 +320,14 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_GetBlendMode)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
         W3DN_BlendMode *colSrc, W3DN_BlendMode *colDst, W3DN_BlendMode *alphaSrc, W3DN_BlendMode *alphaDst);
+
+    uint8 (*old_GetColourMask)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 index);
+
+    W3DN_CompareFunc (*old_GetDepthCompareFunc)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
+
+    W3DN_Face (*old_GetFrontFace)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
+
+    float (*old_GetLineWidth)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
 
     W3DN_FrameBuffer* (*old_GetRenderTarget)(
         struct W3DN_Context_s *self, W3DN_RenderState *renderState);
@@ -1349,6 +1365,79 @@ static W3DN_ErrorCode W3DN_GetBlendMode(struct W3DN_Context_s *self, W3DN_Render
     return result;
 }
 
+static uint8 W3DN_GetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 index)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const uint8 mask = context->old_GetColourMask(self, renderState, index);
+
+    PROF_FINISH(GetColourMask)
+
+    logLine("%s: %s: renderState %p, index %lu. Mask value %u",
+        context->name, __func__,
+        renderState,
+        index,
+        mask);
+
+    return mask;
+}
+
+static W3DN_CompareFunc W3DN_GetDepthCompareFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_CompareFunc function = context->old_GetDepthCompareFunc(self, renderState);
+
+    PROF_FINISH(GetDepthCompareFunc)
+
+    logLine("%s: %s: renderState %p. Compare function %d",
+        context->name, __func__,
+        renderState,
+        function);
+
+    return function;
+}
+
+static W3DN_Face W3DN_GetFrontFace(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_Face face = context->old_GetFrontFace(self, renderState);
+
+    PROF_FINISH(GetFrontFace)
+
+    logLine("%s: %s: renderState %p. Front face %d",
+        context->name, __func__,
+        renderState,
+        face);
+
+    return face;
+}
+
+static float W3DN_GetLineWidth(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const float width = context->old_GetLineWidth(self, renderState);
+
+    PROF_FINISH(GetLineWidth)
+
+    logLine("%s: %s: renderState %p. Line width %f",
+        context->name, __func__,
+        renderState,
+        width);
+
+    return width;
+}
+
 static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
@@ -1651,6 +1740,10 @@ GENERATE_NOVA_PATCH(GetBitMapTexture)
 GENERATE_NOVA_PATCH(GetBlendColour)
 GENERATE_NOVA_PATCH(GetBlendEquation)
 GENERATE_NOVA_PATCH(GetBlendMode)
+GENERATE_NOVA_PATCH(GetColourMask)
+GENERATE_NOVA_PATCH(GetDepthCompareFunc)
+GENERATE_NOVA_PATCH(GetFrontFace)
+GENERATE_NOVA_PATCH(GetLineWidth)
 GENERATE_NOVA_PATCH(GetRenderTarget)
 GENERATE_NOVA_PATCH(GetState)
 GENERATE_NOVA_PATCH(SetRenderTarget)
@@ -1704,6 +1797,10 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_GetBlendColour,
     patch_GetBlendEquation,
     patch_GetBlendMode,
+    patch_GetColourMask,
+    patch_GetDepthCompareFunc,
+    patch_GetFrontFace,
+    patch_GetLineWidth,
     patch_GetRenderTarget,
     patch_GetState,
     patch_SetRenderTarget,
