@@ -65,6 +65,10 @@ typedef enum NovaFunction {
     GetStencilFunc,
     GetStencilOp,
     GetStencilWriteMask,
+    GetTexSampler,
+    GetTexture,
+    GetVertexAttribArray,
+    GetViewport,
     SetRenderTarget,
     SetShaderPipeline,
     SetState,
@@ -137,6 +141,10 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(GetStencilFunc)
         MAP_ENUM(GetStencilOp)
         MAP_ENUM(GetStencilWriteMask)
+        MAP_ENUM(GetTexSampler)
+        MAP_ENUM(GetTexture)
+        MAP_ENUM(GetVertexAttribArray)
+        MAP_ENUM(GetViewport)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
         MAP_ENUM(SetState)
@@ -371,6 +379,16 @@ struct NovaContext {
 
     uint32 (*old_GetStencilWriteMask)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         W3DN_FaceSelect face, W3DN_ErrorCode *errCode);
+
+    W3DN_TextureSampler* (*old_GetTexSampler)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit);
+
+    W3DN_Texture* (*old_GetTexture)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit);
+
+    W3DN_ErrorCode (*old_GetVertexAttribArray)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        uint32 attribNum, W3DN_VertexBuffer **buffer, uint32 *arrayIdx);
+
+    W3DN_ErrorCode (*old_GetViewport)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        double *x, double *y, double *width, double *height, double *zNear, double *zFar);
 
     W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
     	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
@@ -1703,6 +1721,101 @@ static uint32 W3DN_GetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderS
     return mask;
 }
 
+static W3DN_TextureSampler* W3DN_GetTexSampler(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_TextureSampler* sampler = context->old_GetTexSampler(self, renderState, texUnit);
+
+    PROF_FINISH(GetTexSampler)
+
+    logLine("%s: %s: renderState %p, texUnit %lu. Texture sampler address %p",
+        context->name, __func__,
+        renderState,
+        texUnit,
+        sampler);
+
+    checkPointer(context, GetTexSampler, sampler);
+
+    return sampler;
+}
+
+static W3DN_Texture* W3DN_GetTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    W3DN_Texture* texture = context->old_GetTexture(self, renderState, texUnit);
+
+    PROF_FINISH(GetTexture)
+
+    logLine("%s: %s: renderState %p, texUnit %lu. Texture address %p",
+        context->name, __func__,
+        renderState,
+        texUnit,
+        texture);
+
+    checkPointer(context, GetTexture, texture);
+
+    return texture;
+}
+
+static W3DN_ErrorCode W3DN_GetVertexAttribArray(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    uint32 attribNum, W3DN_VertexBuffer **buffer, uint32 *arrayIdx)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
+
+    PROF_FINISH(GetVertexAttribArray)
+
+    logLine("%s: %s: renderState %p, attribNum %lu, buffer %p, arrayIdx %lu. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        attribNum,
+        *buffer,
+        *arrayIdx,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetVertexAttribArray, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_GetViewport(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    double *x, double *y, double *width, double *height, double *zNear, double *zFar)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_ErrorCode result = context->old_GetViewport(self, renderState, x, y, width, height, zNear, zFar);
+
+    PROF_FINISH(GetViewport)
+
+    logLine("%s: %s: renderState %p, x %f, y %f, width %f, height %f, zNear %f, zFar %f. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        *x,
+        *y,
+        *width,
+        *height,
+        *zNear,
+        *zFar,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, GetViewport, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
@@ -1982,6 +2095,10 @@ GENERATE_NOVA_PATCH(GetState)
 GENERATE_NOVA_PATCH(GetStencilFunc)
 GENERATE_NOVA_PATCH(GetStencilOp)
 GENERATE_NOVA_PATCH(GetStencilWriteMask)
+GENERATE_NOVA_PATCH(GetTexSampler)
+GENERATE_NOVA_PATCH(GetTexture)
+GENERATE_NOVA_PATCH(GetVertexAttribArray)
+GENERATE_NOVA_PATCH(GetViewport)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
 GENERATE_NOVA_PATCH(SetState)
@@ -2047,6 +2164,10 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_GetStencilFunc,
     patch_GetStencilOp,
     patch_GetStencilWriteMask,
+    patch_GetTexSampler,
+    patch_GetTexture,
+    patch_GetVertexAttribArray,
+    patch_GetViewport,
     patch_SetRenderTarget,
     patch_SetShaderPipeline,
     patch_SetState,
