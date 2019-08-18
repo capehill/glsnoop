@@ -97,6 +97,12 @@ typedef enum NovaFunction {
     SetStencilWriteMask,
     SetStencilWriteMaskSeparate,
     SetViewport,
+    ShaderGetCount,
+    ShaderGetObjectInfo,
+    ShaderGetOffset,
+    ShaderGetTotalStorage,
+    ShaderGetType,
+    ShaderPipelineGetShader,
     Submit,
     VBOGetArray,
     VBOGetAttr,
@@ -198,6 +204,12 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(SetStencilWriteMask)
         MAP_ENUM(SetStencilWriteMaskSeparate)
         MAP_ENUM(SetViewport)
+        MAP_ENUM(ShaderGetCount)
+        MAP_ENUM(ShaderGetObjectInfo)
+        MAP_ENUM(ShaderGetOffset)
+        MAP_ENUM(ShaderGetTotalStorage)
+        MAP_ENUM(ShaderGetType)
+        MAP_ENUM(ShaderPipelineGetShader)
         MAP_ENUM(Submit)
         MAP_ENUM(VBOGetArray)
         MAP_ENUM(VBOGetAttr)
@@ -507,6 +519,22 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_SetViewport)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         double x, double y, double width, double height, double zNear, double zFar);
+
+    uint32 (*old_ShaderGetCount)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_Shader *shader,
+        W3DN_ShaderObjectType objectType);
+
+    W3DN_ErrorCode (*old_ShaderGetObjectInfo)(struct W3DN_Context_s *self, W3DN_Shader *shader,
+        W3DN_ShaderObjectType objectType, uint32 index, struct TagItem *tags);
+
+    uint32 (*old_ShaderGetOffset)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_Shader *shader,
+        W3DN_ShaderObjectType objectType, const char *name);
+
+    uint64 (*old_ShaderGetTotalStorage)(struct W3DN_Context_s *self, W3DN_Shader *shader);
+
+    W3DN_ShaderType (*old_ShaderGetType)(struct W3DN_Context_s *self, W3DN_Shader *shader);
+
+    W3DN_Shader* (*old_ShaderPipelineGetShader)(struct W3DN_Context_s *self, W3DN_ShaderPipeline *shaderPipeline,
+        W3DN_ShaderType shaderType);
 
     uint32 (*old_Submit)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
 
@@ -2405,6 +2433,128 @@ static W3DN_ErrorCode W3DN_SetViewport(struct W3DN_Context_s *self, W3DN_RenderS
     return result;
 }
 
+static uint32 W3DN_ShaderGetCount(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_Shader *shader,
+    W3DN_ShaderObjectType objectType)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const uint32 count = context->old_ShaderGetCount(self, errCode, shader, objectType);
+
+    PROF_FINISH(ShaderGetCount)
+
+    logLine("%s: %s: errCode %d (%s), shader %p, objectType %d. Shader count %lu",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        shader,
+        objectType,
+        count);
+
+    checkSuccess(context, ShaderGetCount, mapNovaErrorPointerToCode(errCode));
+
+    return count;
+}
+
+static W3DN_ErrorCode W3DN_ShaderGetObjectInfo(struct W3DN_Context_s *self, W3DN_Shader *shader,
+    W3DN_ShaderObjectType objectType, uint32 index, struct TagItem *tags)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_ShaderGetObjectInfo(self, shader, objectType, index, tags);
+
+    PROF_FINISH(ShaderGetObjectInfo)
+
+    logLine("%s: %s: shader %p, objectType %d, index %lu, tags %p. Result %d (%s)",
+        context->name, __func__,
+        shader,
+        objectType,
+        index,
+        tags,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, ShaderGetObjectInfo, result);
+
+    return result;
+}
+
+static uint32 W3DN_ShaderGetOffset(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_Shader *shader,
+    W3DN_ShaderObjectType objectType, const char *name)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const uint32 offset = context->old_ShaderGetOffset(self, errCode, shader, objectType, name);
+
+    PROF_FINISH(ShaderGetOffset)
+
+    logLine("%s: %s: errCode %d (%s), shader %p, objectType %d, name '%s'. Offset %lu",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        shader,
+        objectType,
+        name,
+        offset);
+
+    checkSuccess(context, ShaderGetOffset, mapNovaErrorPointerToCode(errCode));
+
+    // TODO: check offset and flag error?
+
+    return offset;
+}
+
+static uint64 W3DN_ShaderGetTotalStorage(struct W3DN_Context_s *self, W3DN_Shader *shader)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const uint64 size = context->old_ShaderGetTotalStorage(self, shader);
+
+    PROF_FINISH(ShaderGetTotalStorage)
+
+    logLine("%s: %s: shader %p. Size %llu",
+        context->name, __func__,
+        shader,
+        size);
+
+    return size;
+}
+
+static W3DN_ShaderType W3DN_ShaderGetType(struct W3DN_Context_s *self, W3DN_Shader *shader)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ShaderType type = context->old_ShaderGetType(self, shader);
+
+    PROF_FINISH(ShaderGetType)
+
+    logLine("%s: %s: shader %p. Type %d",
+        context->name, __func__,
+        shader,
+        type);
+
+    return type;
+}
+
+static W3DN_Shader* W3DN_ShaderPipelineGetShader(struct W3DN_Context_s *self, W3DN_ShaderPipeline *shaderPipeline,
+    W3DN_ShaderType shaderType)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    W3DN_Shader* shader = context->old_ShaderPipelineGetShader(self, shaderPipeline, shaderType);
+
+    PROF_FINISH(ShaderPipelineGetShader)
+
+    logLine("%s: %s: shaderPipeline %p, shaderType %d. Shader %p",
+        context->name, __func__,
+        shaderPipeline,
+        shaderType,
+        shader);
+
+    checkPointer(context, ShaderPipelineGetShader, shader);
+
+    return shader;
+}
+
 static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
     GET_CONTEXT_AND_START_PROFILING
@@ -2641,6 +2791,12 @@ GENERATE_NOVA_PATCH(SetStencilOpSeparate)
 GENERATE_NOVA_PATCH(SetStencilWriteMask)
 GENERATE_NOVA_PATCH(SetStencilWriteMaskSeparate)
 GENERATE_NOVA_PATCH(SetViewport)
+GENERATE_NOVA_PATCH(ShaderGetCount)
+GENERATE_NOVA_PATCH(ShaderGetObjectInfo)
+GENERATE_NOVA_PATCH(ShaderGetOffset)
+GENERATE_NOVA_PATCH(ShaderGetTotalStorage)
+GENERATE_NOVA_PATCH(ShaderGetType)
+GENERATE_NOVA_PATCH(ShaderPipelineGetShader)
 GENERATE_NOVA_PATCH(Submit)
 GENERATE_NOVA_PATCH(VBOGetArray)
 GENERATE_NOVA_PATCH(VBOGetAttr)
@@ -2735,6 +2891,12 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_SetStencilWriteMask,
     patch_SetStencilWriteMaskSeparate,
     patch_SetViewport,
+    patch_ShaderGetCount,
+    patch_ShaderGetObjectInfo,
+    patch_ShaderGetOffset,
+    patch_ShaderGetTotalStorage,
+    patch_ShaderGetType,
+    patch_ShaderPipelineGetShader,
     patch_Submit,
     patch_VBOGetArray,
     patch_VBOGetAttr,
