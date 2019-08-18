@@ -87,8 +87,13 @@ typedef enum NovaFunction {
     SetPolygonOffset,
     SetProvokingVertex,
     SetRenderTarget,
+    SetScissor,
     SetShaderPipeline,
     SetState,
+    SetStencilFunc,
+    SetStencilFuncSeparate,
+    SetStencilOp,
+    SetStencilOpSeparate,
     Submit,
     VBOGetArray,
     VBOGetAttr,
@@ -180,8 +185,13 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(SetPolygonOffset)
         MAP_ENUM(SetProvokingVertex)
         MAP_ENUM(SetRenderTarget)
+        MAP_ENUM(SetScissor)
         MAP_ENUM(SetShaderPipeline)
         MAP_ENUM(SetState)
+        MAP_ENUM(SetStencilFunc)
+        MAP_ENUM(SetStencilFuncSeparate)
+        MAP_ENUM(SetStencilOp)
+        MAP_ENUM(SetStencilOpSeparate)
         MAP_ENUM(Submit)
         MAP_ENUM(VBOGetArray)
         MAP_ENUM(VBOGetAttr)
@@ -463,11 +473,26 @@ struct NovaContext {
     W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
     	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
 
+    W3DN_ErrorCode (*old_SetScissor)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        uint32 x, uint32 y, uint32 width, uint32 height);
+
     W3DN_ErrorCode (*old_SetShaderPipeline)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         W3DN_ShaderPipeline *shaderPipeline);
 
     W3DN_ErrorCode (*old_SetState)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         W3DN_StateFlag stateFlag, W3DN_State value);
+
+    W3DN_ErrorCode (*old_SetStencilFunc)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_CompareFunc func, uint32 ref, uint32 mask);
+
+    W3DN_ErrorCode (*old_SetStencilFuncSeparate)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_FaceSelect face, W3DN_CompareFunc func, uint32 ref, uint32 mask);
+
+    W3DN_ErrorCode (*old_SetStencilOp)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_StencilOp sFail, W3DN_StencilOp dpFail, W3DN_StencilOp dpPass);
+
+    W3DN_ErrorCode (*old_SetStencilOpSeparate)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_FaceSelect face, W3DN_StencilOp sFail, W3DN_StencilOp dpFail, W3DN_StencilOp dpPass);
 
     uint32 (*old_Submit)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
 
@@ -2143,6 +2168,30 @@ static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
     return result;
 }
 
+static W3DN_ErrorCode W3DN_SetScissor(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    uint32 x, uint32 y, uint32 width, uint32 height)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetScissor(self, renderState, x, y, width, height);
+
+    PROF_FINISH(SetScissor)
+
+    logLine("%s: %s: renderState %p, x %lu, y %lu, width %lu, height %lu. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        x,
+        y,
+        width,
+        height,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetScissor, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_ShaderPipeline *shaderPipeline)
 {
@@ -2176,6 +2225,100 @@ static W3DN_ErrorCode W3DN_SetState(struct W3DN_Context_s *self, W3DN_RenderStat
         result, mapNovaError(result));
 
     checkSuccess(context, SetState, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetStencilFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_CompareFunc func, uint32 ref, uint32 mask)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetStencilFunc(self, renderState, func, ref, mask);
+
+    PROF_FINISH(SetStencilFunc)
+
+    logLine("%s: %s: renderState %p, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        func,
+        ref,
+        mask,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetStencilFunc, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetStencilFuncSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_FaceSelect face, W3DN_CompareFunc func, uint32 ref, uint32 mask)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetStencilFuncSeparate(self, renderState, face, func, ref, mask);
+
+    PROF_FINISH(SetStencilFuncSeparate)
+
+    logLine("%s: %s: renderState %p, face %d, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        face,
+        func,
+        ref,
+        mask,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetStencilFuncSeparate, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetStencilOp(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_StencilOp sFail, W3DN_StencilOp dpFail, W3DN_StencilOp dpPass)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetStencilOp(self, renderState, sFail, dpFail, dpPass);
+
+    PROF_FINISH(SetStencilOp)
+
+    logLine("%s: %s: renderState %p, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        sFail,
+        dpFail,
+        dpPass,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetStencilOp, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetStencilOpSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_FaceSelect face, W3DN_StencilOp sFail, W3DN_StencilOp dpFail, W3DN_StencilOp dpPass)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetStencilOpSeparate(self, renderState, face, sFail, dpFail, dpPass);
+
+    PROF_FINISH(SetStencilOpSeparate)
+
+    logLine("%s: %s: renderState %p, face %d, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        face,
+        sFail,
+        dpFail,
+        dpPass,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetStencilOpSeparate, result);
 
     return result;
 }
@@ -2406,8 +2549,13 @@ GENERATE_NOVA_PATCH(SetPolygonMode)
 GENERATE_NOVA_PATCH(SetPolygonOffset)
 GENERATE_NOVA_PATCH(SetProvokingVertex)
 GENERATE_NOVA_PATCH(SetRenderTarget)
+GENERATE_NOVA_PATCH(SetScissor)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
 GENERATE_NOVA_PATCH(SetState)
+GENERATE_NOVA_PATCH(SetStencilFunc)
+GENERATE_NOVA_PATCH(SetStencilFuncSeparate)
+GENERATE_NOVA_PATCH(SetStencilOp)
+GENERATE_NOVA_PATCH(SetStencilOpSeparate)
 GENERATE_NOVA_PATCH(Submit)
 GENERATE_NOVA_PATCH(VBOGetArray)
 GENERATE_NOVA_PATCH(VBOGetAttr)
@@ -2492,8 +2640,13 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_SetPolygonOffset,
     patch_SetProvokingVertex,
     patch_SetRenderTarget,
+    patch_SetScissor,
     patch_SetShaderPipeline,
     patch_SetState,
+    patch_SetStencilFunc,
+    patch_SetStencilFuncSeparate,
+    patch_SetStencilOp,
+    patch_SetStencilOpSeparate,
     patch_Submit,
     patch_VBOGetArray,
     patch_VBOGetAttr,
