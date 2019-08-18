@@ -79,6 +79,10 @@ typedef enum NovaFunction {
     SetBlendEquationSeparate,
     SetBlendMode,
     SetBlendModeSeparate,
+    SetColourMask,
+    SetDepthCompareFunc,
+    SetFrontFace,
+    SetLineWidth,
     SetRenderTarget,
     SetShaderPipeline,
     SetState,
@@ -165,6 +169,10 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(SetBlendEquationSeparate)
         MAP_ENUM(SetBlendMode)
         MAP_ENUM(SetBlendModeSeparate)
+        MAP_ENUM(SetColourMask)
+        MAP_ENUM(SetDepthCompareFunc)
+        MAP_ENUM(SetFrontFace)
+        MAP_ENUM(SetLineWidth)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
         MAP_ENUM(SetState)
@@ -431,6 +439,14 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_SetBlendModeSeparate)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
         W3DN_BlendMode colSrc, W3DN_BlendMode colDst, W3DN_BlendMode alphaSrc, W3DN_BlendMode alphaDst);
+
+    W3DN_ErrorCode (*old_SetColourMask)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 index, uint8 mask);
+
+    W3DN_ErrorCode (*old_SetDepthCompareFunc)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_CompareFunc func);
+
+    W3DN_ErrorCode (*old_SetFrontFace)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_Face face);
+
+    W3DN_ErrorCode (*old_SetLineWidth)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float width);
 
     W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
     	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
@@ -1953,6 +1969,87 @@ static W3DN_ErrorCode W3DN_SetBlendModeSeparate(struct W3DN_Context_s *self, W3D
     return result;
 }
 
+static W3DN_ErrorCode W3DN_SetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 index, uint8 mask)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetColourMask(self, renderState, index, mask);
+
+    PROF_FINISH(SetColourMask)
+
+    logLine("%s: %s: renderState %p, index %lu, mask %u. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        index,
+        mask,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetColourMask, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetDepthCompareFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_CompareFunc func)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetDepthCompareFunc(self, renderState, func);
+
+    PROF_FINISH(SetDepthCompareFunc)
+
+    logLine("%s: %s: renderState %p, func %d. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        func,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetDepthCompareFunc, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetFrontFace(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_Face face)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetFrontFace(self, renderState, face);
+
+    PROF_FINISH(SetFrontFace)
+
+    logLine("%s: %s: renderState %p, face %d. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        face,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetFrontFace, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetLineWidth(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float width)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetLineWidth(self, renderState, width);
+
+    PROF_FINISH(SetLineWidth)
+
+    logLine("%s: %s: renderState %p, width %f. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        width,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetLineWidth, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
@@ -2226,6 +2323,10 @@ GENERATE_NOVA_PATCH(SetBlendEquation)
 GENERATE_NOVA_PATCH(SetBlendEquationSeparate)
 GENERATE_NOVA_PATCH(SetBlendMode)
 GENERATE_NOVA_PATCH(SetBlendModeSeparate)
+GENERATE_NOVA_PATCH(SetColourMask)
+GENERATE_NOVA_PATCH(SetDepthCompareFunc)
+GENERATE_NOVA_PATCH(SetFrontFace)
+GENERATE_NOVA_PATCH(SetLineWidth)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
 GENERATE_NOVA_PATCH(SetState)
@@ -2305,6 +2406,10 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_SetBlendEquationSeparate,
     patch_SetBlendMode,
     patch_SetBlendModeSeparate,
+    patch_SetColourMask,
+    patch_SetDepthCompareFunc,
+    patch_SetFrontFace,
+    patch_SetLineWidth,
     patch_SetRenderTarget,
     patch_SetShaderPipeline,
     patch_SetState,
