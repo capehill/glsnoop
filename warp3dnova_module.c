@@ -55,6 +55,7 @@ typedef enum NovaFunction {
     GetDepthCompareFunc,
     GetFrontFace,
     GetLineWidth,
+    GetPolygonMode,
     GetPolygonOffset,
     GetProvokingVertex,
     GetRenderTarget,
@@ -135,6 +136,7 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(GetDepthCompareFunc)
         MAP_ENUM(GetFrontFace)
         MAP_ENUM(GetLineWidth)
+        MAP_ENUM(GetPolygonMode)
         MAP_ENUM(GetPolygonOffset)
         MAP_ENUM(GetProvokingVertex)
         MAP_ENUM(GetRenderTarget)
@@ -360,6 +362,8 @@ struct NovaContext {
     W3DN_Face (*old_GetFrontFace)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
 
     float (*old_GetLineWidth)(struct W3DN_Context_s *self, W3DN_RenderState *renderState);
+
+    W3DN_PolygonMode (*old_GetPolygonMode)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_FaceSelect face);
 
     W3DN_ErrorCode (*old_GetPolygonOffset)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         float *factor, float *units, float *clamp);
@@ -1530,6 +1534,27 @@ static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     return buffer;
 }
 
+static W3DN_PolygonMode W3DN_GetPolygonMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    W3DN_FaceSelect face)
+{
+    GET_CONTEXT
+
+    PROF_START
+
+    const W3DN_PolygonMode mode = context->old_GetPolygonMode(self, renderState, face);
+
+    PROF_FINISH(GetPolygonMode)
+
+    logLine("%s: %s: renderState %p, face %d. Polygon mode %d",
+        context->name, __func__,
+        renderState,
+        face,
+        mode);
+
+    return mode;
+}
+
+
 static W3DN_ErrorCode W3DN_GetPolygonOffset(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     float *factor, float *units, float *clamp)
 {
@@ -2181,6 +2206,7 @@ GENERATE_NOVA_PATCH(GetColourMask)
 GENERATE_NOVA_PATCH(GetDepthCompareFunc)
 GENERATE_NOVA_PATCH(GetFrontFace)
 GENERATE_NOVA_PATCH(GetLineWidth)
+GENERATE_NOVA_PATCH(GetPolygonMode)
 GENERATE_NOVA_PATCH(GetPolygonOffset)
 GENERATE_NOVA_PATCH(GetProvokingVertex)
 GENERATE_NOVA_PATCH(GetRenderTarget)
@@ -2254,6 +2280,7 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_GetDepthCompareFunc,
     patch_GetFrontFace,
     patch_GetLineWidth,
+    patch_GetPolygonMode,
     patch_GetPolygonOffset,
     patch_GetProvokingVertex,
     patch_GetRenderTarget,
