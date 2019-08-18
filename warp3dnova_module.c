@@ -1803,7 +1803,7 @@ static W3DN_ErrorCode W3DN_GetViewport(struct W3DN_Context_s *self, W3DN_RenderS
 
     PROF_FINISH(GetViewport)
 
-    logLine("%s: %s: renderState %p, x %f, y %f, width %f, height %f, zNear %f, zFar %f. Result %d (%s).",
+    logLine("%s: %s: renderState %p, x %f, y %f, width %f, height %f, zNear %f, zFar %f. Result %d (%s)",
         context->name, __func__,
         renderState,
         *x,
@@ -1828,7 +1828,7 @@ static BOOL W3DN_IsDone(struct W3DN_Context_s *self, uint32 submitID)
 
     PROF_FINISH(IsDone)
 
-    logLine("%s: %s: submitID %lu. Result %d.",
+    logLine("%s: %s: submitID %lu. Result %d",
         context->name, __func__,
         submitID,
         result);
@@ -1844,7 +1844,7 @@ static uint32 W3DN_Query(struct W3DN_Context_s *self, W3DN_CapQuery query)
 
     PROF_FINISH(Query)
 
-    logLine("%s: %s: query %d. Result %lu.",
+    logLine("%s: %s: query %d. Result %lu",
         context->name, __func__,
         query,
         result);
@@ -1860,7 +1860,7 @@ static W3DN_ErrorCode W3DN_RSOCopy(struct W3DN_Context_s *self, W3DN_RenderState
 
     PROF_FINISH(RSOCopy)
 
-    logLine("%s: %s: dest %p, src %p. Result %d (%s).",
+    logLine("%s: %s: dest %p, src %p. Result %d (%s)",
         context->name, __func__,
         dest,
         src,
@@ -1880,7 +1880,7 @@ static W3DN_ErrorCode W3DN_RSOSetMaster(struct W3DN_Context_s *self, W3DN_Render
 
     PROF_FINISH(RSOSetMaster)
 
-    logLine("%s: %s: renderState %p, master %p. Result %d (%s).",
+    logLine("%s: %s: renderState %p, master %p. Result %d (%s)",
         context->name, __func__,
         renderState,
         master,
@@ -1923,7 +1923,7 @@ static W3DN_ErrorCode W3DN_SetBlendEquation(struct W3DN_Context_s *self, W3DN_Re
 
     PROF_FINISH(SetBlendEquation)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, equation %d. Result %d (%s).",
+    logLine("%s: %s: renderState %p, buffIdx %lu, equation %d. Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
@@ -1945,7 +1945,7 @@ static W3DN_ErrorCode W3DN_SetBlendEquationSeparate(struct W3DN_Context_s *self,
 
     PROF_FINISH(SetBlendEquationSeparate)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %d, alphaEquation %d. Result %d (%s).",
+    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %d, alphaEquation %d. Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
@@ -1967,7 +1967,7 @@ static W3DN_ErrorCode W3DN_SetBlendMode(struct W3DN_Context_s *self, W3DN_Render
 
     PROF_FINISH(SetBlendMode)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, src %d, dst %d. Result %d (%s).",
+    logLine("%s: %s: renderState %p, buffIdx %lu, src %d, dst %d. Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
@@ -1990,7 +1990,7 @@ static W3DN_ErrorCode W3DN_SetBlendModeSeparate(struct W3DN_Context_s *self, W3D
 
     PROF_FINISH(SetBlendModeSeparate)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %d, colDst %d, alphaSrc %d, alphaDst %d. Result %d (%s).",
+    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %d, colDst %d, alphaSrc %d, alphaDst %d. Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
@@ -2014,7 +2014,7 @@ static W3DN_ErrorCode W3DN_SetColourMask(struct W3DN_Context_s *self, W3DN_Rende
 
     PROF_FINISH(SetColourMask)
 
-    logLine("%s: %s: renderState %p, index %lu, mask %u. Result %d (%s).",
+    logLine("%s: %s: renderState %p, index %lu, mask %u. Result %d (%s)",
         context->name, __func__,
         renderState,
         index,
@@ -2035,7 +2035,7 @@ static W3DN_ErrorCode W3DN_SetDepthCompareFunc(struct W3DN_Context_s *self, W3DN
 
     PROF_FINISH(SetDepthCompareFunc)
 
-    logLine("%s: %s: renderState %p, func %d. Result %d (%s).",
+    logLine("%s: %s: renderState %p, func %d. Result %d (%s)",
         context->name, __func__,
         renderState,
         func,
@@ -2055,7 +2055,7 @@ static W3DN_ErrorCode W3DN_SetFrontFace(struct W3DN_Context_s *self, W3DN_Render
 
     PROF_FINISH(SetFrontFace)
 
-    logLine("%s: %s: renderState %p, face %d. Result %d (%s).",
+    logLine("%s: %s: renderState %p, face %d. Result %d (%s)",
         context->name, __func__,
         renderState,
         face,
@@ -2075,7 +2075,7 @@ static W3DN_ErrorCode W3DN_SetLineWidth(struct W3DN_Context_s *self, W3DN_Render
 
     PROF_FINISH(SetLineWidth)
 
-    logLine("%s: %s: renderState %p, width %f. Result %d (%s).",
+    logLine("%s: %s: renderState %p, width %f. Result %d (%s)",
         context->name, __func__,
         renderState,
         width,
@@ -2095,7 +2095,7 @@ static W3DN_ErrorCode W3DN_SetPolygonMode(struct W3DN_Context_s *self, W3DN_Rend
 
     PROF_FINISH(SetPolygonMode)
 
-    logLine("%s: %s: renderState %p, face %d, mode %d. Result %d (%s).",
+    logLine("%s: %s: renderState %p, face %d, mode %d. Result %d (%s)",
         context->name, __func__,
         renderState,
         face,
@@ -2116,7 +2116,7 @@ static W3DN_ErrorCode W3DN_SetPolygonOffset(struct W3DN_Context_s *self, W3DN_Re
 
     PROF_FINISH(SetPolygonOffset)
 
-    logLine("%s: %s: renderState %p, factor %f, units %f, clamp %f. Result %d (%s).",
+    logLine("%s: %s: renderState %p, factor %f, units %f, clamp %f. Result %d (%s)",
         context->name, __func__,
         renderState,
         factor,
@@ -2138,7 +2138,7 @@ static W3DN_ErrorCode W3DN_SetProvokingVertex(struct W3DN_Context_s *self, W3DN_
 
     PROF_FINISH(SetProvokingVertex)
 
-    logLine("%s: %s: renderState %p, mode %d. Result %d (%s).",
+    logLine("%s: %s: renderState %p, mode %d. Result %d (%s)",
         context->name, __func__,
         renderState,
         mode,
