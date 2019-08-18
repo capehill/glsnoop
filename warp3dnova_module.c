@@ -83,6 +83,9 @@ typedef enum NovaFunction {
     SetDepthCompareFunc,
     SetFrontFace,
     SetLineWidth,
+    SetPolygonMode,
+    SetPolygonOffset,
+    SetProvokingVertex,
     SetRenderTarget,
     SetShaderPipeline,
     SetState,
@@ -173,6 +176,9 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(SetDepthCompareFunc)
         MAP_ENUM(SetFrontFace)
         MAP_ENUM(SetLineWidth)
+        MAP_ENUM(SetPolygonMode)
+        MAP_ENUM(SetPolygonOffset)
+        MAP_ENUM(SetProvokingVertex)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
         MAP_ENUM(SetState)
@@ -447,6 +453,12 @@ struct NovaContext {
     W3DN_ErrorCode (*old_SetFrontFace)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_Face face);
 
     W3DN_ErrorCode (*old_SetLineWidth)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float width);
+
+    W3DN_ErrorCode (*old_SetPolygonMode)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_FaceSelect face, W3DN_PolygonMode mode);
+
+    W3DN_ErrorCode (*old_SetPolygonOffset)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float factor, float units, float clamp);
+
+    W3DN_ErrorCode (*old_SetProvokingVertex)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_ProvokingVertexMode mode);
 
     W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
     	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
@@ -2050,6 +2062,69 @@ static W3DN_ErrorCode W3DN_SetLineWidth(struct W3DN_Context_s *self, W3DN_Render
     return result;
 }
 
+static W3DN_ErrorCode W3DN_SetPolygonMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_FaceSelect face, W3DN_PolygonMode mode)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetPolygonMode(self, renderState, face, mode);
+
+    PROF_FINISH(SetPolygonMode)
+
+    logLine("%s: %s: renderState %p, face %d, mode %d. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        face,
+        mode,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetPolygonMode, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetPolygonOffset(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float factor, float units, float clamp)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetPolygonOffset(self, renderState, factor, units, clamp);
+
+    PROF_FINISH(SetPolygonOffset)
+
+    logLine("%s: %s: renderState %p, factor %f, units %f, clamp %f. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        factor,
+        units,
+        clamp,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetPolygonOffset, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetProvokingVertex(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_ProvokingVertexMode mode)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetProvokingVertex(self, renderState, mode);
+
+    PROF_FINISH(SetProvokingVertex)
+
+    logLine("%s: %s: renderState %p, mode %d. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        mode,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetProvokingVertex, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
@@ -2327,6 +2402,9 @@ GENERATE_NOVA_PATCH(SetColourMask)
 GENERATE_NOVA_PATCH(SetDepthCompareFunc)
 GENERATE_NOVA_PATCH(SetFrontFace)
 GENERATE_NOVA_PATCH(SetLineWidth)
+GENERATE_NOVA_PATCH(SetPolygonMode)
+GENERATE_NOVA_PATCH(SetPolygonOffset)
+GENERATE_NOVA_PATCH(SetProvokingVertex)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
 GENERATE_NOVA_PATCH(SetState)
@@ -2410,6 +2488,9 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_SetDepthCompareFunc,
     patch_SetFrontFace,
     patch_SetLineWidth,
+    patch_SetPolygonMode,
+    patch_SetPolygonOffset,
+    patch_SetProvokingVertex,
     patch_SetRenderTarget,
     patch_SetShaderPipeline,
     patch_SetState,
