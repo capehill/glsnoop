@@ -614,14 +614,16 @@ static void checkSuccess(struct NovaContext* context, const NovaFunction id, con
 
 #define GET_CONTEXT struct NovaContext* context = find_context(self);
 
+#define GET_CONTEXT_AND_START_PROFILING \
+    GET_CONTEXT \
+    PROF_START
+
 // Wrap traced calls
 
 static W3DN_ErrorCode W3DN_BindBitMapAsTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 texUnit, struct BitMap *bitMap, W3DN_TextureSampler *texSampler)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_BindBitMapAsTexture(self, renderState, texUnit, bitMap, texSampler);
 
@@ -639,9 +641,7 @@ static W3DN_ErrorCode W3DN_BindBitMapAsTexture(struct W3DN_Context_s *self, W3DN
 static W3DN_ErrorCode W3DN_BindShaderDataBuffer(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_ShaderType shaderType, W3DN_DataBuffer *buffer, uint32 bufferIdx)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_BindShaderDataBuffer(self, renderState, shaderType, buffer, bufferIdx);
 
@@ -659,9 +659,7 @@ static W3DN_ErrorCode W3DN_BindShaderDataBuffer(struct W3DN_Context_s *self, W3D
 static W3DN_ErrorCode W3DN_BindTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_BindTexture(self, renderState, texUnit, texture, texSampler);
 
@@ -680,9 +678,7 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, uint32 attribNum,
 		W3DN_VertexBuffer *buffer, uint32 arrayIdx)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
 
@@ -699,9 +695,7 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 		W3DN_BufferLock *bufferLock, uint64 writeOffset, uint64 writeSize)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_BufferUnlock(self, bufferLock, writeOffset, writeSize);
 
@@ -718,9 +712,7 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     const float *colour, const double *depth, const uint32* stencil)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_Clear(self, renderState, colour, depth, stencil);
 
@@ -738,9 +730,7 @@ static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *
 static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
     W3DN_ErrorCode *errCode, struct TagItem *tags)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_Shader *shader = context->old_CompileShader(self, errCode, tags);
 
@@ -762,9 +752,7 @@ static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
 static W3DN_DataBuffer* W3DN_CreateDataBufferObject(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
     uint64 size, W3DN_BufferUsage usage, uint32 maxBuffers, struct TagItem *tags)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_DataBuffer *buffer = context->old_CreateDataBufferObject(self, errCode, size, usage, maxBuffers, tags);
 
@@ -788,9 +776,7 @@ static W3DN_DataBuffer* W3DN_CreateDataBufferObject(struct W3DN_Context_s *self,
 
 static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_FrameBuffer* buffer = context->old_CreateFrameBuffer(self, errCode);
 
@@ -810,9 +796,7 @@ static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3D
 
 static W3DN_RenderState* W3DN_CreateRenderStateObject(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_RenderState* state = context->old_CreateRenderStateObject(self, errCode);
 
@@ -832,9 +816,7 @@ static W3DN_RenderState* W3DN_CreateRenderStateObject(struct W3DN_Context_s *sel
 
 static W3DN_ShaderPipeline* W3DN_CreateShaderPipeline(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, struct TagItem *tags)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_ShaderPipeline* pipeline = context->old_CreateShaderPipeline(self, errCode, tags);
 
@@ -855,9 +837,7 @@ static W3DN_ShaderPipeline* W3DN_CreateShaderPipeline(struct W3DN_Context_s *sel
 
 static W3DN_TextureSampler* W3DN_CreateTexSampler(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_TextureSampler* sampler = context->old_CreateTexSampler(self, errCode);
 
@@ -879,9 +859,7 @@ static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorC
     W3DN_PixelFormat pixelFormat, W3DN_ElementFormat elementFormat, uint32 width, uint32 height, uint32 depth,
     BOOL mipmapped, W3DN_BufferUsage usage)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_Texture* texture = context->old_CreateTexture(self, errCode, texType, pixelFormat, elementFormat,
         width, height, depth, mipmapped, usage);
@@ -912,9 +890,7 @@ static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorC
 static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *self,
 		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
 
@@ -934,9 +910,7 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
 static uint64 W3DN_DBOGetAttr(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, W3DN_BufferAttribute attr)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const uint64 result = context->old_DBOGetAttr(self, dataBuffer, attr);
 
@@ -952,9 +926,7 @@ static uint64 W3DN_DBOGetAttr(struct W3DN_Context_s *self, W3DN_DataBuffer *data
 static W3DN_ErrorCode W3DN_DBOGetBuffer(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, uint32 bufferIdx,
     uint64 *offset, uint64 *size, W3DN_Shader **targetShader, struct TagItem *tags)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_DBOGetBuffer(self, dataBuffer, bufferIdx, offset, size, targetShader, tags);
 
@@ -971,9 +943,7 @@ static W3DN_ErrorCode W3DN_DBOGetBuffer(struct W3DN_Context_s *self, W3DN_DataBu
 
 static W3DN_BufferLock* W3DN_DBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_DataBuffer *buffer, uint64 readOffset, uint64 readSize)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_BufferLock* lock = context->old_DBOLock(self, errCode, buffer, readOffset, readSize);
 
@@ -994,9 +964,7 @@ static W3DN_BufferLock* W3DN_DBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 static W3DN_ErrorCode W3DN_DBOSetBuffer(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, uint32 bufferIdx,
     uint64 offset, uint64 size, W3DN_Shader *targetShader, struct TagItem *tags)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_DBOSetBuffer(self, dataBuffer, bufferIdx, offset, size, targetShader, tags);
 
@@ -1013,16 +981,14 @@ static W3DN_ErrorCode W3DN_DBOSetBuffer(struct W3DN_Context_s *self, W3DN_DataBu
 
 static void W3DN_Destroy(struct W3DN_Context_s *self)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s",
-        context->name, __func__);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_Destroy(self);
 
     PROF_FINISH(Destroy)
+
+    logLine("%s: %s",
+        context->name, __func__);
 
     size_t i;
 
@@ -1045,136 +1011,118 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
 
 static void W3DN_DestroyDataBufferObject(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: dataBuffer %p",
-        context->name, __func__,
-        dataBuffer);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyDataBufferObject(self, dataBuffer);
 
     PROF_FINISH(DestroyDataBufferObject);
+
+    logLine("%s: %s: dataBuffer %p",
+        context->name, __func__,
+        dataBuffer);
 }
 
 static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: frameBuffer %p",
-        context->name, __func__,
-        frameBuffer);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyFrameBuffer(self, frameBuffer);
 
     PROF_FINISH(DestroyFrameBuffer);
+
+    logLine("%s: %s: frameBuffer %p",
+        context->name, __func__,
+        frameBuffer);
 }
 
 static void W3DN_DestroyRenderStateObject(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: renderState %p",
-        context->name, __func__,
-        renderState);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyRenderStateObject(self, renderState);
 
     PROF_FINISH(DestroyRenderStateObject);
+
+    logLine("%s: %s: renderState %p",
+        context->name, __func__,
+        renderState);
 }
 
 static void W3DN_DestroyShader(struct W3DN_Context_s *self, W3DN_Shader *shader)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: shader %p",
-        context->name, __func__,
-        shader);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyShader(self, shader);
 
     PROF_FINISH(DestroyShader);
+
+    logLine("%s: %s: shader %p",
+        context->name, __func__,
+        shader);
 }
 
 static void W3DN_DestroyShaderLog(struct W3DN_Context_s *self, const char *shaderLog)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: shaderLog %p",
-        context->name, __func__,
-        shaderLog);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyShaderLog(self, shaderLog);
 
     PROF_FINISH(DestroyShaderLog);
+
+    logLine("%s: %s: shaderLog %p",
+        context->name, __func__,
+        shaderLog);
 }
 
 static void W3DN_DestroyShaderPipeline(struct W3DN_Context_s *self, W3DN_ShaderPipeline *shaderPipeline)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: shaderPipeline %p",
-        context->name, __func__,
-        shaderPipeline);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyShaderPipeline(self, shaderPipeline);
 
     PROF_FINISH(DestroyShaderPipeline);
+
+    logLine("%s: %s: shaderPipeline %p",
+        context->name, __func__,
+        shaderPipeline);
 }
 
 static void W3DN_DestroyTexSampler(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: texSampler %p",
-        context->name, __func__,
-        texSampler);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyTexSampler(self, texSampler);
 
     PROF_FINISH(DestroyTexSampler);
+
+    logLine("%s: %s: texSampler %p",
+        context->name, __func__,
+        texSampler);
 }
 
 static void W3DN_DestroyTexture(struct W3DN_Context_s *self, W3DN_Texture *texture)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: texture %p",
-        context->name, __func__,
-        texture);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyTexture(self, texture);
 
     PROF_FINISH(DestroyTexture);
+
+    logLine("%s: %s: texture %p",
+        context->name, __func__,
+        texture);
 }
 
 static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer)
 {
-    GET_CONTEXT
-
-    logLine("%s: %s: vertexBuffer %p", context->name, __func__,
-        vertexBuffer);
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     context->old_DestroyVertexBufferObject(self, vertexBuffer);
 
     PROF_FINISH(DestroyVertexBufferObject)
+
+    logLine("%s: %s: vertexBuffer %p", context->name, __func__,
+        vertexBuffer);
 }
 
 static void countPrimitive(PrimitiveCounter * counter, const W3DN_Primitive primitive, const uint32 count)
@@ -1210,9 +1158,7 @@ static void countPrimitive(PrimitiveCounter * counter, const W3DN_Primitive prim
 static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 base, uint32 count)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_DrawArrays(self, renderState, primitive, base, count);
 
@@ -1231,9 +1177,7 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 baseVertex, uint32 count,
 		W3DN_VertexBuffer *indexBuffer, uint32 arrayIdx)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_DrawElements(self, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx);
 
@@ -1252,9 +1196,7 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, int32 attachmentPt, struct TagItem *tags)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_FBBindBuffer(self, frameBuffer, attachmentPt, tags);
 
@@ -1272,9 +1214,7 @@ static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const uint64 result = context->old_FBGetAttr(self, frameBuffer, attrib);
 
@@ -1290,9 +1230,7 @@ static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
 static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     struct BitMap* bitmap = context->old_FBGetBufferBM(self, frameBuffer, attachmentPt, errCode);
 
@@ -1311,9 +1249,7 @@ static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_Texture * texture = context->old_FBGetBufferTex(self, frameBuffer, attachmentPt, errCode);
 
@@ -1331,9 +1267,7 @@ static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 
 static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_FBGetStatus(self, frameBuffer);
 
@@ -1350,9 +1284,7 @@ static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBu
 
 static struct BitMap* W3DN_GetBitMapTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     struct BitMap* bitmap = context->old_GetBitMapTexture(self, renderState, texUnit);
 
@@ -1370,9 +1302,7 @@ static struct BitMap* W3DN_GetBitMapTexture(struct W3DN_Context_s *self, W3DN_Re
 static W3DN_ErrorCode W3DN_GetBlendColour(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     float *red, float *green, float *blue, float *alpha)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetBlendColour(self, renderState, red, green, blue, alpha);
 
@@ -1392,9 +1322,7 @@ static W3DN_ErrorCode W3DN_GetBlendColour(struct W3DN_Context_s *self, W3DN_Rend
 static W3DN_ErrorCode W3DN_GetBlendEquation(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 buffIdx, W3DN_BlendEquation *colEquation, W3DN_BlendEquation *alphaEquation)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetBlendEquation(self, renderState, buffIdx, colEquation, alphaEquation);
 
@@ -1417,9 +1345,7 @@ static W3DN_ErrorCode W3DN_GetBlendEquation(struct W3DN_Context_s *self, W3DN_Re
 static W3DN_ErrorCode W3DN_GetBlendMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendMode *colSrc,
     W3DN_BlendMode *colDst, W3DN_BlendMode *alphaSrc, W3DN_BlendMode *alphaDst)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetBlendMode(self, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst);
 
@@ -1443,9 +1369,7 @@ static W3DN_ErrorCode W3DN_GetBlendMode(struct W3DN_Context_s *self, W3DN_Render
 
 static uint8 W3DN_GetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 index)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const uint8 mask = context->old_GetColourMask(self, renderState, index);
 
@@ -1462,9 +1386,7 @@ static uint8 W3DN_GetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *r
 
 static W3DN_CompareFunc W3DN_GetDepthCompareFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_CompareFunc function = context->old_GetDepthCompareFunc(self, renderState);
 
@@ -1480,9 +1402,7 @@ static W3DN_CompareFunc W3DN_GetDepthCompareFunc(struct W3DN_Context_s *self, W3
 
 static W3DN_Face W3DN_GetFrontFace(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_Face face = context->old_GetFrontFace(self, renderState);
 
@@ -1498,9 +1418,7 @@ static W3DN_Face W3DN_GetFrontFace(struct W3DN_Context_s *self, W3DN_RenderState
 
 static float W3DN_GetLineWidth(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const float width = context->old_GetLineWidth(self, renderState);
 
@@ -1517,9 +1435,7 @@ static float W3DN_GetLineWidth(struct W3DN_Context_s *self, W3DN_RenderState *re
 static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_FrameBuffer* buffer = context->old_GetRenderTarget(self, renderState);
 
@@ -1537,9 +1453,7 @@ static W3DN_FrameBuffer* W3DN_GetRenderTarget(
 static W3DN_PolygonMode W3DN_GetPolygonMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_PolygonMode mode = context->old_GetPolygonMode(self, renderState, face);
 
@@ -1558,9 +1472,7 @@ static W3DN_PolygonMode W3DN_GetPolygonMode(struct W3DN_Context_s *self, W3DN_Re
 static W3DN_ErrorCode W3DN_GetPolygonOffset(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     float *factor, float *units, float *clamp)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetPolygonOffset(self, renderState, factor, units, clamp);
 
@@ -1582,9 +1494,7 @@ static W3DN_ErrorCode W3DN_GetPolygonOffset(struct W3DN_Context_s *self, W3DN_Re
 
 static W3DN_ProvokingVertexMode W3DN_GetProvokingVertex(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ProvokingVertexMode mode = context->old_GetProvokingVertex(self, renderState);
 
@@ -1601,9 +1511,7 @@ static W3DN_ProvokingVertexMode W3DN_GetProvokingVertex(struct W3DN_Context_s *s
 static W3DN_ErrorCode W3DN_GetScissor(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 *x, uint32 *y, uint32 *width, uint32 *height)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetScissor(self, renderState, x, y, width, height);
 
@@ -1627,9 +1535,7 @@ static W3DN_ErrorCode W3DN_GetScissor(struct W3DN_Context_s *self, W3DN_RenderSt
 static W3DN_ErrorCode W3DN_GetShaderDataBuffer(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_ShaderType shaderType, W3DN_DataBuffer **buffer, uint32 *bufferIdx)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetShaderDataBuffer(self, renderState, shaderType, buffer, bufferIdx);
 
@@ -1651,9 +1557,7 @@ static W3DN_ErrorCode W3DN_GetShaderDataBuffer(struct W3DN_Context_s *self, W3DN
 
 static W3DN_ShaderPipeline* W3DN_GetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_ShaderPipeline* pipeline = context->old_GetShaderPipeline(self, renderState);
 
@@ -1671,9 +1575,7 @@ static W3DN_ShaderPipeline* W3DN_GetShaderPipeline(struct W3DN_Context_s *self, 
 
 static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_StateFlag stateFlag)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_State state = context->old_GetState(self, renderState, stateFlag);
 
@@ -1689,9 +1591,7 @@ static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *r
 static W3DN_ErrorCode W3DN_GetStencilFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face, W3DN_CompareFunc *func, uint32 *ref, uint32 *mask)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetStencilFunc(self, renderState, face, func, ref, mask);
 
@@ -1715,9 +1615,7 @@ static W3DN_ErrorCode W3DN_GetStencilFunc(struct W3DN_Context_s *self, W3DN_Rend
 static W3DN_ErrorCode W3DN_GetStencilOp(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face, W3DN_StencilOp *sFail, W3DN_StencilOp *dpFail, W3DN_StencilOp *dpPass)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetStencilOp(self, renderState, face, sFail, dpFail, dpPass);
 
@@ -1741,9 +1639,7 @@ static W3DN_ErrorCode W3DN_GetStencilOp(struct W3DN_Context_s *self, W3DN_Render
 static uint32 W3DN_GetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const uint32 mask = context->old_GetStencilWriteMask(self, renderState, face, errCode);
 
@@ -1764,9 +1660,7 @@ static uint32 W3DN_GetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderS
 
 static W3DN_TextureSampler* W3DN_GetTexSampler(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_TextureSampler* sampler = context->old_GetTexSampler(self, renderState, texUnit);
 
@@ -1785,9 +1679,7 @@ static W3DN_TextureSampler* W3DN_GetTexSampler(struct W3DN_Context_s *self, W3DN
 
 static W3DN_Texture* W3DN_GetTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_Texture* texture = context->old_GetTexture(self, renderState, texUnit);
 
@@ -1807,9 +1699,7 @@ static W3DN_Texture* W3DN_GetTexture(struct W3DN_Context_s *self, W3DN_RenderSta
 static W3DN_ErrorCode W3DN_GetVertexAttribArray(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 attribNum, W3DN_VertexBuffer **buffer, uint32 *arrayIdx)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
 
@@ -1832,9 +1722,7 @@ static W3DN_ErrorCode W3DN_GetVertexAttribArray(struct W3DN_Context_s *self, W3D
 static W3DN_ErrorCode W3DN_GetViewport(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     double *x, double *y, double *width, double *height, double *zNear, double *zFar)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_GetViewport(self, renderState, x, y, width, height, zNear, zFar);
 
@@ -1859,9 +1747,7 @@ static W3DN_ErrorCode W3DN_GetViewport(struct W3DN_Context_s *self, W3DN_RenderS
 
 static BOOL W3DN_IsDone(struct W3DN_Context_s *self, uint32 submitID)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const BOOL result = context->old_IsDone(self, submitID);
 
@@ -1877,9 +1763,7 @@ static BOOL W3DN_IsDone(struct W3DN_Context_s *self, uint32 submitID)
 
 static uint32 W3DN_Query(struct W3DN_Context_s *self, W3DN_CapQuery query)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const uint32 result = context->old_Query(self, query);
 
@@ -1895,9 +1779,7 @@ static uint32 W3DN_Query(struct W3DN_Context_s *self, W3DN_CapQuery query)
 
 static W3DN_ErrorCode W3DN_RSOCopy(struct W3DN_Context_s *self, W3DN_RenderState *dest, const W3DN_RenderState *src)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_RSOCopy(self, dest, src);
 
@@ -1917,9 +1799,7 @@ static W3DN_ErrorCode W3DN_RSOCopy(struct W3DN_Context_s *self, W3DN_RenderState
 
 static W3DN_ErrorCode W3DN_RSOSetMaster(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_RenderState *master)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_RSOSetMaster(self, renderState, master);
 
@@ -1940,9 +1820,7 @@ static W3DN_ErrorCode W3DN_RSOSetMaster(struct W3DN_Context_s *self, W3DN_Render
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_SetRenderTarget(self, renderState, frameBuffer);
 
@@ -1960,9 +1838,7 @@ static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_ShaderPipeline *shaderPipeline)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_SetShaderPipeline(self, renderState, shaderPipeline);
 
@@ -1980,9 +1856,7 @@ static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_R
 static W3DN_ErrorCode W3DN_SetState(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_StateFlag stateFlag, W3DN_State value)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_SetState(self, renderState, stateFlag, value);
 
@@ -2000,9 +1874,7 @@ static W3DN_ErrorCode W3DN_SetState(struct W3DN_Context_s *self, W3DN_RenderStat
 
 static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_ErrorCode myErrCode = 0;
 
@@ -2033,9 +1905,7 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
 		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
@@ -2052,9 +1922,7 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
 static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const uint64 result = context->old_VBOGetAttr(self, vertexBuffer, attr);
 
@@ -2069,9 +1937,7 @@ static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *ve
 static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
 		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
 
@@ -2090,9 +1956,7 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
 		uint64 stride, uint64 offset, uint64 count)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
 
@@ -2109,9 +1973,7 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
 static W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID, uint32 timeout)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_WaitDone(self, submitID, timeout);
 
@@ -2128,9 +1990,7 @@ static W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID
 
 static W3DN_ErrorCode W3DN_WaitIdle(struct W3DN_Context_s *self, uint32 timeout)
 {
-    GET_CONTEXT
-
-    PROF_START
+    GET_CONTEXT_AND_START_PROFILING
 
     const W3DN_ErrorCode result = context->old_WaitIdle(self, timeout);
 
