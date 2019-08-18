@@ -94,6 +94,9 @@ typedef enum NovaFunction {
     SetStencilFuncSeparate,
     SetStencilOp,
     SetStencilOpSeparate,
+    SetStencilWriteMask,
+    SetStencilWriteMaskSeparate,
+    SetViewport,
     Submit,
     VBOGetArray,
     VBOGetAttr,
@@ -192,6 +195,9 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(SetStencilFuncSeparate)
         MAP_ENUM(SetStencilOp)
         MAP_ENUM(SetStencilOpSeparate)
+        MAP_ENUM(SetStencilWriteMask)
+        MAP_ENUM(SetStencilWriteMaskSeparate)
+        MAP_ENUM(SetViewport)
         MAP_ENUM(Submit)
         MAP_ENUM(VBOGetArray)
         MAP_ENUM(VBOGetAttr)
@@ -493,6 +499,14 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_SetStencilOpSeparate)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
         W3DN_FaceSelect face, W3DN_StencilOp sFail, W3DN_StencilOp dpFail, W3DN_StencilOp dpPass);
+
+    W3DN_ErrorCode (*old_SetStencilWriteMask)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 mask);
+
+    W3DN_ErrorCode (*old_SetStencilWriteMaskSeparate)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        W3DN_FaceSelect face, uint32 mask);
+
+    W3DN_ErrorCode (*old_SetViewport)(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+        double x, double y, double width, double height, double zNear, double zFar);
 
     uint32 (*old_Submit)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
 
@@ -2323,6 +2337,74 @@ static W3DN_ErrorCode W3DN_SetStencilOpSeparate(struct W3DN_Context_s *self, W3D
     return result;
 }
 
+static W3DN_ErrorCode W3DN_SetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 mask)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetStencilWriteMask(self, renderState, mask);
+
+    PROF_FINISH(SetStencilWriteMask)
+
+    logLine("%s: %s: renderState %p, mask %lx. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        mask,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetStencilWriteMask, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetStencilWriteMaskSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+     W3DN_FaceSelect face, uint32 mask)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetStencilWriteMaskSeparate(self, renderState, face, mask);
+
+    PROF_FINISH(SetStencilWriteMaskSeparate)
+
+    logLine("%s: %s: renderState %p, face %d, mask %lx. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        face,
+        mask,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetStencilWriteMaskSeparate, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetViewport(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
+    double x, double y, double width, double height, double zNear, double zFar)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetViewport(self, renderState, x, y, width, height, zNear, zFar);
+
+    PROF_FINISH(SetViewport)
+
+    logLine("%s: %s: renderState %p, x %f, y %f, width %f, height %f, zNear %f, zFar %f. Result %d (%s)",
+        context->name, __func__,
+        renderState,
+        x,
+        y,
+        width,
+        height,
+        zNear,
+        zFar,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetViewport, result);
+
+    return result;
+}
+
 static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
     GET_CONTEXT_AND_START_PROFILING
@@ -2556,6 +2638,9 @@ GENERATE_NOVA_PATCH(SetStencilFunc)
 GENERATE_NOVA_PATCH(SetStencilFuncSeparate)
 GENERATE_NOVA_PATCH(SetStencilOp)
 GENERATE_NOVA_PATCH(SetStencilOpSeparate)
+GENERATE_NOVA_PATCH(SetStencilWriteMask)
+GENERATE_NOVA_PATCH(SetStencilWriteMaskSeparate)
+GENERATE_NOVA_PATCH(SetViewport)
 GENERATE_NOVA_PATCH(Submit)
 GENERATE_NOVA_PATCH(VBOGetArray)
 GENERATE_NOVA_PATCH(VBOGetAttr)
@@ -2647,6 +2732,9 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_SetStencilFuncSeparate,
     patch_SetStencilOp,
     patch_SetStencilOpSeparate,
+    patch_SetStencilWriteMask,
+    patch_SetStencilWriteMaskSeparate,
+    patch_SetViewport,
     patch_Submit,
     patch_VBOGetArray,
     patch_VBOGetAttr,
