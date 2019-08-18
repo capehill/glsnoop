@@ -74,6 +74,11 @@ typedef enum NovaFunction {
     Query,
     RSOCopy,
     RSOSetMaster,
+    SetBlendColour,
+    SetBlendEquation,
+    SetBlendEquationSeparate,
+    SetBlendMode,
+    SetBlendModeSeparate,
     SetRenderTarget,
     SetShaderPipeline,
     SetState,
@@ -155,6 +160,11 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(Query)
         MAP_ENUM(RSOCopy)
         MAP_ENUM(RSOSetMaster)
+        MAP_ENUM(SetBlendColour)
+        MAP_ENUM(SetBlendEquation)
+        MAP_ENUM(SetBlendEquationSeparate)
+        MAP_ENUM(SetBlendMode)
+        MAP_ENUM(SetBlendModeSeparate)
         MAP_ENUM(SetRenderTarget)
         MAP_ENUM(SetShaderPipeline)
         MAP_ENUM(SetState)
@@ -409,6 +419,18 @@ struct NovaContext {
     W3DN_ErrorCode (*old_RSOCopy)(struct W3DN_Context_s *self, W3DN_RenderState *dest, const W3DN_RenderState *src);
 
     W3DN_ErrorCode (*old_RSOSetMaster)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_RenderState *master);
+
+    W3DN_ErrorCode (*old_SetBlendColour)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float red, float green, float blue, float alpha);
+
+    W3DN_ErrorCode (*old_SetBlendEquation)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendEquation equation);
+
+    W3DN_ErrorCode (*old_SetBlendEquationSeparate)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
+        W3DN_BlendEquation colEquation, W3DN_BlendEquation alphaEquation);
+
+    W3DN_ErrorCode (*old_SetBlendMode)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendMode src, W3DN_BlendMode dst);
+
+    W3DN_ErrorCode (*old_SetBlendModeSeparate)(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
+        W3DN_BlendMode colSrc, W3DN_BlendMode colDst, W3DN_BlendMode alphaSrc, W3DN_BlendMode alphaDst);
 
     W3DN_ErrorCode (*old_SetRenderTarget)(struct W3DN_Context_s *self,
     	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer);
@@ -1817,6 +1839,120 @@ static W3DN_ErrorCode W3DN_RSOSetMaster(struct W3DN_Context_s *self, W3DN_Render
     return result;
 }
 
+static W3DN_ErrorCode W3DN_SetBlendColour(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float red, float green, float blue, float alpha)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetBlendColour(self, renderState, red, green, blue, alpha);
+
+    PROF_FINISH(SetBlendColour)
+
+    logLine("%s: %s: renderState %p, red %f, green %f, blue %f, alpha %f. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        red,
+        green,
+        blue,
+        alpha,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetBlendColour, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetBlendEquation(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendEquation equation)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetBlendEquation(self, renderState, buffIdx, equation);
+
+    PROF_FINISH(SetBlendEquation)
+
+    logLine("%s: %s: renderState %p, buffIdx %lu, equation %d. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        buffIdx,
+        equation,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetBlendEquation, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetBlendEquationSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
+    W3DN_BlendEquation colEquation, W3DN_BlendEquation alphaEquation)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetBlendEquationSeparate(self, renderState, buffIdx, colEquation, alphaEquation);
+
+    PROF_FINISH(SetBlendEquationSeparate)
+
+    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %d, alphaEquation %d. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        buffIdx,
+        colEquation,
+        alphaEquation,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetBlendEquationSeparate, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetBlendMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendMode src, W3DN_BlendMode dst)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetBlendMode(self, renderState, buffIdx, src, dst);
+
+    PROF_FINISH(SetBlendMode)
+
+    logLine("%s: %s: renderState %p, buffIdx %lu, src %d, dst %d. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        buffIdx,
+        src,
+        dst,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetBlendMode, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_SetBlendModeSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
+    W3DN_BlendMode colSrc, W3DN_BlendMode colDst, W3DN_BlendMode alphaSrc, W3DN_BlendMode alphaDst)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_SetBlendModeSeparate(self, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst);
+
+    PROF_FINISH(SetBlendModeSeparate)
+
+    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %d, colDst %d, alphaSrc %d, alphaDst %d. Result %d (%s).",
+        context->name, __func__,
+        renderState,
+        buffIdx,
+        colSrc,
+        colDst,
+        alphaSrc,
+        alphaDst,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, SetBlendModeSeparate, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
@@ -2085,6 +2221,11 @@ GENERATE_NOVA_PATCH(IsDone)
 GENERATE_NOVA_PATCH(Query)
 GENERATE_NOVA_PATCH(RSOCopy)
 GENERATE_NOVA_PATCH(RSOSetMaster)
+GENERATE_NOVA_PATCH(SetBlendColour)
+GENERATE_NOVA_PATCH(SetBlendEquation)
+GENERATE_NOVA_PATCH(SetBlendEquationSeparate)
+GENERATE_NOVA_PATCH(SetBlendMode)
+GENERATE_NOVA_PATCH(SetBlendModeSeparate)
 GENERATE_NOVA_PATCH(SetRenderTarget)
 GENERATE_NOVA_PATCH(SetShaderPipeline)
 GENERATE_NOVA_PATCH(SetState)
@@ -2159,6 +2300,11 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_Query,
     patch_RSOCopy,
     patch_RSOSetMaster,
+    patch_SetBlendColour,
+    patch_SetBlendEquation,
+    patch_SetBlendEquationSeparate,
+    patch_SetBlendMode,
+    patch_SetBlendModeSeparate,
     patch_SetRenderTarget,
     patch_SetShaderPipeline,
     patch_SetState,
