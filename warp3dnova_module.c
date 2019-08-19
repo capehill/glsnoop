@@ -104,6 +104,12 @@ typedef enum NovaFunction {
     ShaderGetType,
     ShaderPipelineGetShader,
     Submit,
+    TexGenMipMaps,
+    TexGetParameters,
+    TexGetProperty,
+    TexSetParameters,
+    TexUpdateImage,
+    TexUpdateSubImage,
     VBOGetArray,
     VBOGetAttr,
     VBOLock,
@@ -211,6 +217,12 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(ShaderGetType)
         MAP_ENUM(ShaderPipelineGetShader)
         MAP_ENUM(Submit)
+        MAP_ENUM(TexGenMipMaps)
+        MAP_ENUM(TexGetParameters)
+        MAP_ENUM(TexGetProperty)
+        MAP_ENUM(TexSetParameters)
+        MAP_ENUM(TexUpdateImage)
+        MAP_ENUM(TexUpdateSubImage)
         MAP_ENUM(VBOGetArray)
         MAP_ENUM(VBOGetAttr)
         MAP_ENUM(VBOLock)
@@ -538,6 +550,21 @@ struct NovaContext {
 
     uint32 (*old_Submit)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode);
 
+    W3DN_ErrorCode (*old_TexGenMipMaps)(struct W3DN_Context_s *self, W3DN_Texture *texture, uint32 base, uint32 last);
+
+    W3DN_ErrorCode (*old_TexGetParameters)(struct W3DN_Context_s *self, W3DN_Texture *texture, struct TagItem *tags);
+
+    W3DN_ErrorCode (*old_TexGetProperty)(struct W3DN_Context_s *self, W3DN_Texture *texture, W3DN_TextureProperty texProp, void *buffer);
+
+    W3DN_ErrorCode (*old_TexSetParameters)(struct W3DN_Context_s *self, W3DN_Texture *texture, struct TagItem *tags);
+
+    W3DN_ErrorCode (*old_TexUpdateImage)(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
+        uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer);
+
+    W3DN_ErrorCode (*old_TexUpdateSubImage)(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
+        uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer,
+        uint32 dstX, uint32 dstY, uint32 dstLayer, uint32 width, uint32 height, uint32 depth);
+
     W3DN_ErrorCode (*old_VBOGetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
     		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
     		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count);
@@ -801,8 +828,8 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 
     PROF_FINISH(BindVertexAttribArray)
 
-    logLine("%s: %s: renderState %p, attribNum %u, buffer %p, arrayIdx %u. Result %d (%s)", context->name, __func__,
-        renderState, (unsigned)attribNum, buffer, (unsigned)arrayIdx, result, mapNovaError(result));
+    logLine("%s: %s: renderState %p, attribNum %lu, buffer %p, arrayIdx %lu. Result %d (%s)", context->name, __func__,
+        renderState, attribNum, buffer, arrayIdx, result, mapNovaError(result));
 
     checkSuccess(context, BindVertexAttribArray, result);
 
@@ -1281,8 +1308,8 @@ static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 
     PROF_FINISH(DrawArrays)
 
-    logLine("%s: %s: renderState %p, primitive %d, base %u, count %u. Result %d (%s)", context->name, __func__,
-        renderState, primitive, (unsigned)base, (unsigned)count, result, mapNovaError(result));
+    logLine("%s: %s: renderState %p, primitive %d, base %lu, count %lu. Result %d (%s)", context->name, __func__,
+        renderState, primitive, base, count, result, mapNovaError(result));
 
     countPrimitive(&context->counter, primitive, count);
     checkSuccess(context, DrawArrays, result);
@@ -1300,9 +1327,9 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 
     PROF_FINISH(DrawElements)
 
-    logLine("%s: %s: renderState %p, primitive %d, baseVertex %u, count %u, indexBuffer %p, arrayIdx %u. Result %d (%s)",
+    logLine("%s: %s: renderState %p, primitive %d, baseVertex %lu, count %lu, indexBuffer %p, arrayIdx %lu. Result %d (%s)",
         context->name, __func__,
-        renderState, primitive, (unsigned)baseVertex, (unsigned)count, indexBuffer, (unsigned)arrayIdx, result, mapNovaError(result));
+        renderState, primitive, baseVertex, count, indexBuffer, arrayIdx, result, mapNovaError(result));
 
     countPrimitive(&context->counter, primitive, count);
     checkSuccess(context, DrawElements, result);
@@ -1353,9 +1380,9 @@ static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 
     PROF_FINISH(FBGetBufferBM)
 
-    logLine("%s: %s: frameBuffer %p, attachmentPt %u. Bitmap address %p. Result %d (%s)",
+    logLine("%s: %s: frameBuffer %p, attachmentPt %lu. Bitmap address %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, (unsigned)attachmentPt, bitmap, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+        frameBuffer, attachmentPt, bitmap, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
     checkPointer(context, FBGetBufferBM, bitmap);
     checkSuccess(context, FBGetBufferBM, mapNovaErrorPointerToCode(errCode));
@@ -1372,9 +1399,9 @@ static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 
     PROF_FINISH(FBGetBufferTex)
 
-    logLine("%s: %s: frameBuffer %p, attachmentPt %u. Texture address %p. Result %d (%s)",
+    logLine("%s: %s: frameBuffer %p, attachmentPt %lu. Texture address %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, (unsigned)attachmentPt, texture, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+        frameBuffer, attachmentPt, texture, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
 
     checkPointer(context, FBGetBufferTex, texture);
     checkSuccess(context, FBGetBufferTex, mapNovaErrorPointerToCode(errCode));
@@ -2584,6 +2611,147 @@ static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
     return result;
 }
 
+static W3DN_ErrorCode W3DN_TexGenMipMaps(struct W3DN_Context_s *self, W3DN_Texture *texture, uint32 base, uint32 last)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_TexGenMipMaps(self, texture, base, last);
+
+    PROF_FINISH(TexGenMipMaps)
+
+    logLine("%s: %s: texture %p, base %lu, last %lu. Result %d (%s)",
+        context->name, __func__,
+        texture,
+        base,
+        last,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, TexGenMipMaps, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_TexGetParameters(struct W3DN_Context_s *self, W3DN_Texture *texture, struct TagItem *tags)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_TexGetParameters(self, texture, tags);
+
+    PROF_FINISH(TexGetParameters)
+
+    logLine("%s: %s: texture %p, tags %p. Result %d (%s)",
+        context->name, __func__,
+        texture,
+        tags,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, TexGetParameters, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_TexGetProperty(struct W3DN_Context_s *self, W3DN_Texture *texture, W3DN_TextureProperty texProp, void *buffer)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_TexGetProperty(self, texture, texProp, buffer);
+
+    PROF_FINISH(TexGetProperty)
+
+    logLine("%s: %s: texture %p, texProp %d, buffer %p. Result %d (%s)",
+        context->name, __func__,
+        texture,
+        texProp,
+        buffer,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, TexGetProperty, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_TexSetParameters(struct W3DN_Context_s *self, W3DN_Texture *texture, struct TagItem *tags)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_TexSetParameters(self, texture, tags);
+
+    PROF_FINISH(TexSetParameters)
+
+    logLine("%s: %s: texture %p, tags %p. Result %d (%s)",
+        context->name, __func__,
+        texture,
+        tags,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, TexSetParameters, result);
+
+    return result;
+}
+
+W3DN_ErrorCode W3DN_TexUpdateImage(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
+    uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_TexUpdateImage(self, texture, source, level, arrayIdx, srcBytesPerRow, srcRowsPerLayer);
+
+    PROF_FINISH(TexUpdateImage)
+
+    logLine("%s: %s: texture %p, source %p, level %lu, arrayIdx %lu, srcBytesPerRow %lu, srcRowsPerLayer %lu. Result %d (%s)",
+        context->name, __func__,
+        texture,
+        source,
+        level,
+        arrayIdx,
+        srcBytesPerRow,
+        srcRowsPerLayer,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, TexUpdateImage, result);
+
+    return result;
+}
+
+W3DN_ErrorCode W3DN_TexUpdateSubImage(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
+    uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer,
+    uint32 dstX, uint32 dstY, uint32 dstLayer, uint32 width, uint32 height, uint32 depth)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_TexUpdateSubImage(self, texture, source,
+        level, arrayIdx, srcBytesPerRow, srcRowsPerLayer, dstX, dstY, dstLayer, width, height, depth);
+
+    PROF_FINISH(TexUpdateSubImage)
+
+    logLine("%s: %s: texture %p, source %p, level %lu, arrayIdx %lu, srcBytesPerRow %lu, srcRowsPerLayer %lu, "
+        "dstX %lu, dstY %lu, dstLayer %lu, width %lu, height %lu, depth %lu. Result %d (%s)",
+        context->name, __func__,
+        texture,
+        source,
+        level,
+        arrayIdx,
+        srcBytesPerRow,
+        srcRowsPerLayer,
+        dstX,
+        dstY,
+        dstLayer,
+        width,
+        height,
+        depth,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, TexUpdateSubImage, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
 		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
 		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count)
@@ -2594,9 +2762,9 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     PROF_FINISH(VBOGetArray)
 
-    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
+    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
-        buffer, (unsigned)arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
+        buffer, arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
 
     checkSuccess(context, VBOGetArray, result);
 
@@ -2645,9 +2813,9 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     PROF_FINISH(VBOSetArray)
 
-    logLine("%s: %s: buffer %p, arrayIdx %u, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
+    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
-        buffer, (unsigned)arrayIdx, elementType, normalized, numElements, stride, offset, count, result, mapNovaError(result));
+        buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count, result, mapNovaError(result));
 
     checkSuccess(context, VBOSetArray, result);
 
@@ -2798,6 +2966,12 @@ GENERATE_NOVA_PATCH(ShaderGetTotalStorage)
 GENERATE_NOVA_PATCH(ShaderGetType)
 GENERATE_NOVA_PATCH(ShaderPipelineGetShader)
 GENERATE_NOVA_PATCH(Submit)
+GENERATE_NOVA_PATCH(TexGenMipMaps)
+GENERATE_NOVA_PATCH(TexGetParameters)
+GENERATE_NOVA_PATCH(TexGetProperty)
+GENERATE_NOVA_PATCH(TexSetParameters)
+GENERATE_NOVA_PATCH(TexUpdateImage)
+GENERATE_NOVA_PATCH(TexUpdateSubImage)
 GENERATE_NOVA_PATCH(VBOGetArray)
 GENERATE_NOVA_PATCH(VBOGetAttr)
 GENERATE_NOVA_PATCH(VBOLock)
@@ -2898,6 +3072,12 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_ShaderGetType,
     patch_ShaderPipelineGetShader,
     patch_Submit,
+    patch_TexGenMipMaps,
+    patch_TexGetParameters,
+    patch_TexGetProperty,
+    patch_TexSetParameters,
+    patch_TexUpdateImage,
+    patch_TexUpdateSubImage,
     patch_VBOGetArray,
     patch_VBOGetAttr,
     patch_VBOLock,
