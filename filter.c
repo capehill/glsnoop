@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_FILTER 100
+#define MAX_FILTER 200
 
 static char* filters[MAX_FILTER];
 static size_t count;
