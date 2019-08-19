@@ -110,6 +110,8 @@ typedef enum NovaFunction {
     TexSetParameters,
     TexUpdateImage,
     TexUpdateSubImage,
+    TSGetParameters,
+    TSSetParameters,
     VBOGetArray,
     VBOGetAttr,
     VBOLock,
@@ -223,6 +225,8 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(TexSetParameters)
         MAP_ENUM(TexUpdateImage)
         MAP_ENUM(TexUpdateSubImage)
+        MAP_ENUM(TSGetParameters)
+        MAP_ENUM(TSSetParameters)
         MAP_ENUM(VBOGetArray)
         MAP_ENUM(VBOGetAttr)
         MAP_ENUM(VBOLock)
@@ -564,6 +568,10 @@ struct NovaContext {
     W3DN_ErrorCode (*old_TexUpdateSubImage)(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
         uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer,
         uint32 dstX, uint32 dstY, uint32 dstLayer, uint32 width, uint32 height, uint32 depth);
+
+    W3DN_ErrorCode (*old_TSGetParameters)(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler, struct TagItem *tags);
+
+    W3DN_ErrorCode (*old_TSSetParameters)(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler, struct TagItem *tags);
 
     W3DN_ErrorCode (*old_VBOGetArray)(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
     		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
@@ -2752,6 +2760,46 @@ W3DN_ErrorCode W3DN_TexUpdateSubImage(struct W3DN_Context_s *self, W3DN_Texture 
     return result;
 }
 
+static W3DN_ErrorCode W3DN_TSGetParameters(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler, struct TagItem *tags)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_TSGetParameters(self, texSampler, tags);
+
+    PROF_FINISH(TSGetParameters)
+
+    logLine("%s: %s: texSampler %p, tags %p. Result %d (%s)",
+        context->name, __func__,
+        texSampler,
+        tags,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, TSGetParameters, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_TSSetParameters(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler, struct TagItem *tags)
+{
+    GET_CONTEXT_AND_START_PROFILING
+
+    const W3DN_ErrorCode result = context->old_TSSetParameters(self, texSampler, tags);
+
+    PROF_FINISH(TSSetParameters)
+
+    logLine("%s: %s: texSampler %p, tags %p. Result %d (%s)",
+        context->name, __func__,
+        texSampler,
+        tags,
+        result,
+        mapNovaError(result));
+
+    checkSuccess(context, TSSetParameters, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexBuffer *buffer,
 		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
 		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count)
@@ -2972,6 +3020,8 @@ GENERATE_NOVA_PATCH(TexGetProperty)
 GENERATE_NOVA_PATCH(TexSetParameters)
 GENERATE_NOVA_PATCH(TexUpdateImage)
 GENERATE_NOVA_PATCH(TexUpdateSubImage)
+GENERATE_NOVA_PATCH(TSGetParameters)
+GENERATE_NOVA_PATCH(TSSetParameters)
 GENERATE_NOVA_PATCH(VBOGetArray)
 GENERATE_NOVA_PATCH(VBOGetAttr)
 GENERATE_NOVA_PATCH(VBOLock)
@@ -3078,6 +3128,8 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_TexSetParameters,
     patch_TexUpdateImage,
     patch_TexUpdateSubImage,
+    patch_TSGetParameters,
+    patch_TSSetParameters,
     patch_VBOGetArray,
     patch_VBOGetAttr,
     patch_VBOLock,
