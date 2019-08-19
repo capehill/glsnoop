@@ -1492,7 +1492,7 @@ static uint8 W3DN_GetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *r
 
     PROF_FINISH(GetColourMask)
 
-    logLine("%s: %s: renderState %p, index %lu. Mask value %u",
+    logLine("%s: %s: renderState %p, index %lu. Mask value 0x%x",
         context->name, __func__,
         renderState,
         index,
@@ -1714,7 +1714,7 @@ static W3DN_ErrorCode W3DN_GetStencilFunc(struct W3DN_Context_s *self, W3DN_Rend
 
     PROF_FINISH(GetStencilFunc)
 
-    logLine("%s: %s: renderState %p, face %d, func %d, ref %lu, mask %lu. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %d, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
         face,
@@ -1762,7 +1762,7 @@ static uint32 W3DN_GetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderS
 
     PROF_FINISH(GetStencilWriteMask)
 
-    logLine("%s: %s: renderState %p, face %d, errCode %d (%s). Stencil write mask %lu",
+    logLine("%s: %s: renderState %p, face %d, errCode %d (%s). Stencil write mask 0x%lx",
         context->name, __func__,
         renderState,
         face,
@@ -2056,7 +2056,7 @@ static W3DN_ErrorCode W3DN_SetColourMask(struct W3DN_Context_s *self, W3DN_Rende
 
     PROF_FINISH(SetColourMask)
 
-    logLine("%s: %s: renderState %p, index %lu, mask %u. Result %d (%s)",
+    logLine("%s: %s: renderState %p, index %lu, mask 0x%x. Result %d (%s)",
         context->name, __func__,
         renderState,
         index,
@@ -2373,7 +2373,7 @@ static W3DN_ErrorCode W3DN_SetStencilWriteMask(struct W3DN_Context_s *self, W3DN
 
     PROF_FINISH(SetStencilWriteMask)
 
-    logLine("%s: %s: renderState %p, mask %lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
         mask,
@@ -2394,7 +2394,7 @@ static W3DN_ErrorCode W3DN_SetStencilWriteMaskSeparate(struct W3DN_Context_s *se
 
     PROF_FINISH(SetStencilWriteMaskSeparate)
 
-    logLine("%s: %s: renderState %p, face %d, mask %lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %d, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
         face,
