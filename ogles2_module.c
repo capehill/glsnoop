@@ -29,9 +29,13 @@ typedef enum Ogles2Function {
     DeleteBuffers,
     DeleteFramebuffers,
     DeleteTextures,
+    Disable,
     DrawArrays,
     DrawElements,
+    Enable,
     EnableVertexAttribArray,
+    Finish,
+    Flush,
     FramebufferRenderbuffer,
     FramebufferTexture2D,
     GenBuffers,
@@ -70,9 +74,13 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(DeleteBuffers)
         MAP_ENUM(DeleteFramebuffers)
         MAP_ENUM(DeleteTextures)
+        MAP_ENUM(Disable)
         MAP_ENUM(DrawArrays)
         MAP_ENUM(DrawElements)
+        MAP_ENUM(Enable)
         MAP_ENUM(EnableVertexAttribArray)
+        MAP_ENUM(Finish)
+        MAP_ENUM(Flush)
         MAP_ENUM(FramebufferRenderbuffer)
         MAP_ENUM(FramebufferTexture2D)
         MAP_ENUM(GenBuffers)
@@ -142,9 +150,13 @@ struct Ogles2Context
     void (*old_glDeleteBuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers);
     void (*old_glDeleteFramebuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers);
     void (*old_glDeleteTextures)(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures);
+    void (*old_glDisable)(struct OGLES2IFace *Self, GLenum cap);
     void (*old_glDrawArrays)(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count);
     void (*old_glDrawElements)(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices);
+    void (*old_glEnable)(struct OGLES2IFace *Self, GLenum cap);
     void (*old_glEnableVertexAttribArray)(struct OGLES2IFace *Self, GLuint index);
+    void (*old_glFinish)(struct OGLES2IFace *Self);
+    void (*old_glFlush)(struct OGLES2IFace *Self);
     void (*old_glFramebufferRenderbuffer)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
     void (*old_glFramebufferTexture2D)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
     void (*old_glGenBuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers);
@@ -598,6 +610,18 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
     }
 }
 
+static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: cap %d", context->name, __func__,
+        cap);
+
+    if (context->old_glDisable) {
+        CHECK(context->old_glDisable(Self, cap), Enable)
+    }
+}
+
 static void countPrimitive(PrimitiveCounter * counter, const GLenum type, const size_t count)
 {
     switch (type) {
@@ -657,6 +681,18 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
     }
 }
 
+static void OGLES2_glEnable(struct OGLES2IFace *Self, GLenum cap)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: cap %d", context->name, __func__,
+        cap);
+
+    if (context->old_glEnable) {
+        CHECK(context->old_glEnable(Self, cap), Enable)
+    }
+}
+
 static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint index)
 {
     GET_CONTEXT
@@ -666,6 +702,28 @@ static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint in
 
     if (context->old_glEnableVertexAttribArray) {
         CHECK(context->old_glEnableVertexAttribArray(Self, index), EnableVertexAttribArray)
+    }
+}
+
+static void OGLES2_glFinish(struct OGLES2IFace *Self)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s", context->name, __func__);
+
+    if (context->old_glFinish) {
+        CHECK(context->old_glFinish(Self), Finish)
+    }
+}
+
+static void OGLES2_glFlush(struct OGLES2IFace *Self)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s", context->name, __func__);
+
+    if (context->old_glFlush) {
+        CHECK(context->old_glFlush(Self), Finish)
     }
 }
 
@@ -899,9 +957,13 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteFramebuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDisable, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawElements, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glEnable, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glEnableVertexAttribArray, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glFinish, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glFlush, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glFramebufferRenderbuffer, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glFramebufferTexture2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
@@ -933,9 +995,13 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glDeleteBuffers,
     patch_glDeleteFramebuffers,
     patch_glDeleteTextures,
+    patch_glDisable,
     patch_glDrawArrays,
     patch_glDrawElements,
+    patch_glEnable,
     patch_glEnableVertexAttribArray,
+    patch_glFinish,
+    patch_glFlush,
     patch_glFramebufferRenderbuffer,
     patch_glFramebufferTexture2D,
     patch_glGenBuffers,
