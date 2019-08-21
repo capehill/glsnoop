@@ -67,6 +67,9 @@ typedef enum Ogles2Function {
     Uniform4fv,
     Uniform4i,
     Uniform4iv,
+    UniformMatrix2fv,
+    UniformMatrix3fv,
+    UniformMatrix4fv,
     UseProgram,
     VertexAttribPointer,
     // Keep last
@@ -128,6 +131,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(Uniform4fv)
         MAP_ENUM(Uniform4i)
         MAP_ENUM(Uniform4iv)
+        MAP_ENUM(UniformMatrix2fv)
+        MAP_ENUM(UniformMatrix3fv)
+        MAP_ENUM(UniformMatrix4fv)
         MAP_ENUM(UseProgram)
         MAP_ENUM(VertexAttribPointer)
 
@@ -203,7 +209,6 @@ struct Ogles2Context
     void (*old_glTexParameteri)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint param);
     void (*old_glTexParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLint * params);
     void (*old_glTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);
-
     void (*old_glUniform1f)(struct OGLES2IFace *Self, GLint location, GLfloat v0);
     void (*old_glUniform1fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value);
     void (*old_glUniform1i)(struct OGLES2IFace *Self, GLint location, GLint v0);
@@ -220,7 +225,9 @@ struct Ogles2Context
     void (*old_glUniform4fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value);
     void (*old_glUniform4i)(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
     void (*old_glUniform4iv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value);
-
+    void (*old_glUniformMatrix2fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
+    void (*old_glUniformMatrix3fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
+    void (*old_glUniformMatrix4fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
     void (*old_glUseProgram)(struct OGLES2IFace *Self, GLuint program);
     // void (*old_glVertexAttrib3fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
     void (*old_glVertexAttribPointer)(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer);
@@ -1196,6 +1203,63 @@ static void OGLES2_glUniform4iv(struct OGLES2IFace *Self, GLint location, GLsize
     }
 }
 
+static void OGLES2_glUniformMatrix2fv(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d, transpose %d", context->name, __func__,
+        location, count, transpose);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("matrix #%d {%f, %f, %f, %f}", i,
+            value[4 * i    ], value[4 * i + 1],
+            value[4 * i + 2], value[4 * i + 3]);
+    }
+
+    if (context->old_glUniformMatrix2fv) {
+        CHECK(context->old_glUniformMatrix2fv(Self, location, count, transpose, value), UniformMatrix2fv)
+    }
+}
+
+static void OGLES2_glUniformMatrix3fv(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d, transpose %d", context->name, __func__,
+        location, count, transpose);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("matrix #%d {%f, %f, %f, %f, %f, %f, %f, %f, %f}", i,
+            value[9 * i    ], value[9 * i + 1], value[9 * i + 2],
+            value[9 * i + 3], value[9 * i + 4], value[9 * i + 5],
+            value[9 * i + 6], value[9 * i + 7], value[9 * i + 8]);
+    }
+
+    if (context->old_glUniformMatrix3fv) {
+        CHECK(context->old_glUniformMatrix3fv(Self, location, count, transpose, value), UniformMatrix3fv)
+    }
+}
+
+static void OGLES2_glUniformMatrix4fv(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d, transpose %d", context->name, __func__,
+        location, count, transpose);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("matrix #%d {%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f}", i,
+            value[16 * i     ], value[16 * i + 1 ], value[16 * i + 2 ], value[16 * i + 3],
+            value[16 * i + 4 ], value[16 * i + 5 ], value[16 * i + 6 ], value[16 * i + 7],
+            value[16 * i + 8 ], value[16 * i + 9 ], value[16 * i + 10], value[16 * i + 11],
+            value[16 * i + 12], value[16 * i + 13], value[16 * i + 14], value[16 * i + 15]);
+    }
+
+    if (context->old_glUniformMatrix4fv) {
+        CHECK(context->old_glUniformMatrix4fv(Self, location, count, transpose, value), UniformMatrix4fv)
+    }
+}
+
 static void OGLES2_glUseProgram(struct OGLES2IFace *Self, GLuint program)
 {
     GET_CONTEXT
@@ -1268,6 +1332,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4f, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4i, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4iv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix2fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix3fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix4fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUseProgram, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Context)
 
@@ -1322,6 +1389,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glUniform4fv,
     patch_glUniform4i,
     patch_glUniform4iv,
+    patch_glUniformMatrix2fv,
+    patch_glUniformMatrix3fv,
+    patch_glUniformMatrix4fv,
     patch_glUseProgram,
     patch_glVertexAttribPointer,
 };
