@@ -51,6 +51,22 @@ typedef enum Ogles2Function {
     TexParameteri,
     TexParameteriv,
     TexSubImage2D,
+    Uniform1f,
+    Uniform1fv,
+    Uniform1i,
+    Uniform1iv,
+    Uniform2f,
+    Uniform2fv,
+    Uniform2i,
+    Uniform2iv,
+    Uniform3f,
+    Uniform3fv,
+    Uniform3i,
+    Uniform3iv,
+    Uniform4f,
+    Uniform4fv,
+    Uniform4i,
+    Uniform4iv,
     UseProgram,
     VertexAttribPointer,
     // Keep last
@@ -96,6 +112,22 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(TexParameteri)
         MAP_ENUM(TexParameteriv)
         MAP_ENUM(TexSubImage2D)
+        MAP_ENUM(Uniform1f)
+        MAP_ENUM(Uniform1fv)
+        MAP_ENUM(Uniform1i)
+        MAP_ENUM(Uniform1iv)
+        MAP_ENUM(Uniform2f)
+        MAP_ENUM(Uniform2fv)
+        MAP_ENUM(Uniform2i)
+        MAP_ENUM(Uniform2iv)
+        MAP_ENUM(Uniform3f)
+        MAP_ENUM(Uniform3fv)
+        MAP_ENUM(Uniform3i)
+        MAP_ENUM(Uniform3iv)
+        MAP_ENUM(Uniform4f)
+        MAP_ENUM(Uniform4fv)
+        MAP_ENUM(Uniform4i)
+        MAP_ENUM(Uniform4iv)
         MAP_ENUM(UseProgram)
         MAP_ENUM(VertexAttribPointer)
 
@@ -171,6 +203,24 @@ struct Ogles2Context
     void (*old_glTexParameteri)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint param);
     void (*old_glTexParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLint * params);
     void (*old_glTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);
+
+    void (*old_glUniform1f)(struct OGLES2IFace *Self, GLint location, GLfloat v0);
+    void (*old_glUniform1fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value);
+    void (*old_glUniform1i)(struct OGLES2IFace *Self, GLint location, GLint v0);
+    void (*old_glUniform1iv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value);
+    void (*old_glUniform2f)(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1);
+    void (*old_glUniform2fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value);
+    void (*old_glUniform2i)(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1);
+    void (*old_glUniform2iv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value);
+    void (*old_glUniform3f)(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+    void (*old_glUniform3fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value);
+    void (*old_glUniform3i)(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1, GLint v2);
+    void (*old_glUniform3iv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value);
+    void (*old_glUniform4f)(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+    void (*old_glUniform4fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value);
+    void (*old_glUniform4i)(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
+    void (*old_glUniform4iv)(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value);
+
     void (*old_glUseProgram)(struct OGLES2IFace *Self, GLuint program);
     // void (*old_glVertexAttrib3fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
     void (*old_glVertexAttribPointer)(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer);
@@ -618,7 +668,7 @@ static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
         cap);
 
     if (context->old_glDisable) {
-        CHECK(context->old_glDisable(Self, cap), Enable)
+        CHECK(context->old_glDisable(Self, cap), Disable)
     }
 }
 
@@ -723,7 +773,7 @@ static void OGLES2_glFlush(struct OGLES2IFace *Self)
     logLine("%s: %s", context->name, __func__);
 
     if (context->old_glFlush) {
-        CHECK(context->old_glFlush(Self), Finish)
+        CHECK(context->old_glFlush(Self), Flush)
     }
 }
 
@@ -922,6 +972,230 @@ static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLin
     }
 }
 
+static void OGLES2_glUniform1f(struct OGLES2IFace *Self, GLint location, GLfloat v0)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, v0 %f", context->name, __func__,
+        location, v0);
+
+    if (context->old_glUniform1f) {
+        CHECK(context->old_glUniform1f(Self, location, v0), Uniform1f)
+    }
+}
+
+static void OGLES2_glUniform1fv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d", context->name, __func__,
+        location, count);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("v%d { %f }", i, value[i]);
+    }
+
+    if (context->old_glUniform1fv) {
+        CHECK(context->old_glUniform1fv(Self, location, count, value), Uniform1fv)
+    }
+}
+
+static void OGLES2_glUniform1i(struct OGLES2IFace *Self, GLint location, GLint v0)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, v0 %d", context->name, __func__,
+        location, v0);
+
+    if (context->old_glUniform1i) {
+        CHECK(context->old_glUniform1i(Self, location, v0), Uniform1i)
+    }
+}
+
+static void OGLES2_glUniform1iv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d", context->name, __func__,
+        location, count);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("v%d { %d }", i, value[i]);
+    }
+
+    if (context->old_glUniform1iv) {
+        CHECK(context->old_glUniform1iv(Self, location, count, value), Uniform1iv)
+    }
+}
+
+static void OGLES2_glUniform2f(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, v0 %f, v1 %f", context->name, __func__,
+        location, v0, v1);
+
+    if (context->old_glUniform2f) {
+        CHECK(context->old_glUniform2f(Self, location, v0, v1), Uniform2f)
+    }
+}
+
+static void OGLES2_glUniform2fv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d", context->name, __func__,
+        location, count);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("v%d {%f, %f}", i, value[2 * i], value[2 * i + 1]);
+    }
+
+    if (context->old_glUniform2fv) {
+        CHECK(context->old_glUniform2fv(Self, location, count, value), Uniform2fv)
+    }
+}
+
+static void OGLES2_glUniform2i(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, v0 %d, v1 %d", context->name, __func__,
+        location, v0, v1);
+
+    if (context->old_glUniform2i) {
+        CHECK(context->old_glUniform2i(Self, location, v0, v1), Uniform2i)
+    }
+}
+
+static void OGLES2_glUniform2iv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d", context->name, __func__,
+        location, count);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("v%d {%d, %d}", i, value[2 * i], value[2 * i + 1]);
+    }
+
+    if (context->old_glUniform2iv) {
+        CHECK(context->old_glUniform2iv(Self, location, count, value), Uniform2iv)
+    }
+}
+
+static void OGLES2_glUniform3f(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1, GLfloat v2)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, v0 %f, v1 %f, v2 %f", context->name, __func__,
+        location, v0, v1, v2);
+
+    if (context->old_glUniform3f) {
+        CHECK(context->old_glUniform3f(Self, location, v0, v1, v2), Uniform3f)
+    }
+}
+
+static void OGLES2_glUniform3fv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d", context->name, __func__,
+        location, count);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("v%d {%f, %f, %f}", i, value[3 * i], value[3 * i + 1], value[3 * i + 2]);
+    }
+
+    if (context->old_glUniform3fv) {
+        CHECK(context->old_glUniform3fv(Self, location, count, value), Uniform3fv)
+    }
+}
+
+static void OGLES2_glUniform3i(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1, GLint v2)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, v0 %d, v1 %d, v2 %d", context->name, __func__,
+        location, v0, v1, v2);
+
+    if (context->old_glUniform3i) {
+        CHECK(context->old_glUniform3i(Self, location, v0, v1, v2), Uniform3i)
+    }
+}
+
+static void OGLES2_glUniform3iv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d", context->name, __func__,
+        location, count);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("v%d {%d, %d, %d}", i, value[3 * i], value[3 * i + 1], value[3 * i + 2]);
+    }
+
+    if (context->old_glUniform3iv) {
+        CHECK(context->old_glUniform3iv(Self, location, count, value), Uniform3iv)
+    }
+}
+
+static void OGLES2_glUniform4f(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, v0 %f, v1 %f, v2 %f, v3 %f", context->name, __func__,
+        location, v0, v1, v2, v3);
+
+    if (context->old_glUniform4f) {
+        CHECK(context->old_glUniform4f(Self, location, v0, v1, v2, v3), Uniform4f)
+    }
+}
+
+static void OGLES2_glUniform4fv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d", context->name, __func__,
+        location, count);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("v%d {%f, %f, %f, %f}", i, value[4 * i], value[4 * i + 1], value[4 * i + 2], value[4 * i + 3]);
+    }
+
+    if (context->old_glUniform4fv) {
+        CHECK(context->old_glUniform4fv(Self, location, count, value), Uniform4fv)
+    }
+}
+
+static void OGLES2_glUniform4i(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1, GLint v2, GLint v3)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, v0 %d, v1 %d, v2 %d, v3 %d", context->name, __func__,
+        location, v0, v1, v2, v3);
+
+    if (context->old_glUniform4i) {
+        CHECK(context->old_glUniform4i(Self, location, v0, v1, v2, v3), Uniform4i)
+    }
+}
+
+static void OGLES2_glUniform4iv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: location %d, count %d", context->name, __func__,
+        location, count);
+
+    for (GLsizei i = 0; i < count; i++) {
+        logLine("v%d {%d, %d, %d, %d}", i, value[4 * i], value[4 * i + 1], value[4 * i + 2], value[4 * i + 3]);
+    }
+
+    if (context->old_glUniform4iv) {
+        CHECK(context->old_glUniform4iv(Self, location, count, value), Uniform4iv)
+    }
+}
+
 static void OGLES2_glUseProgram(struct OGLES2IFace *Self, GLuint program)
 {
     GET_CONTEXT
@@ -978,6 +1252,22 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterfv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameteri, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexSubImage2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform1f, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform1fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform1i, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform1iv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform2f, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform2fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform2i, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform2iv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform3f, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform3fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform3i, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform3iv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4f, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4i, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4iv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUseProgram, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Context)
 
@@ -1016,6 +1306,22 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glTexParameteri,
     patch_glTexParameteriv,
     patch_glTexSubImage2D,
+    patch_glUniform1f,
+    patch_glUniform1fv,
+    patch_glUniform1i,
+    patch_glUniform1iv,
+    patch_glUniform2f,
+    patch_glUniform2fv,
+    patch_glUniform2i,
+    patch_glUniform2iv,
+    patch_glUniform3f,
+    patch_glUniform3fv,
+    patch_glUniform3i,
+    patch_glUniform3iv,
+    patch_glUniform4f,
+    patch_glUniform4fv,
+    patch_glUniform4i,
+    patch_glUniform4iv,
     patch_glUseProgram,
     patch_glVertexAttribPointer,
 };
