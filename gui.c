@@ -47,7 +47,7 @@ typedef enum EMenu {
 static struct NewMenu menus[] = {
     { NM_TITLE, "glSnoop", NULL, 0, 0, NULL },
     { NM_ITEM, "Iconify", "I", 0, 0, (APTR)MID_Iconify },
-    { NM_ITEM, "About", "?", 0, 0, (APTR)MID_About },
+    { NM_ITEM, "About...", "?", 0, 0, (APTR)MID_About },
     { NM_ITEM, "Quit", "Q", 0, 0, (APTR)MID_Quit },
     { NM_END, NULL, NULL, 0, 0, NULL }
 };
