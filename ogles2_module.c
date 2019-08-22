@@ -1055,7 +1055,8 @@ static void OGLES2_glUniform2fv(struct OGLES2IFace *Self, GLint location, GLsize
         location, count);
 
     for (GLsizei i = 0; i < count; i++) {
-        logLine("v%d {%f, %f}", i, value[2 * i], value[2 * i + 1]);
+        const GLsizei index = 2 * i;
+        logLine("v%d {%f, %f}", i, value[index], value[index + 1]);
     }
 
     if (context->old_glUniform2fv) {
@@ -1083,7 +1084,8 @@ static void OGLES2_glUniform2iv(struct OGLES2IFace *Self, GLint location, GLsize
         location, count);
 
     for (GLsizei i = 0; i < count; i++) {
-        logLine("v%d {%d, %d}", i, value[2 * i], value[2 * i + 1]);
+        const GLsizei index = 2 * i;
+        logLine("v%d {%d, %d}", i, value[index], value[index + 1]);
     }
 
     if (context->old_glUniform2iv) {
@@ -1111,7 +1113,8 @@ static void OGLES2_glUniform3fv(struct OGLES2IFace *Self, GLint location, GLsize
         location, count);
 
     for (GLsizei i = 0; i < count; i++) {
-        logLine("v%d {%f, %f, %f}", i, value[3 * i], value[3 * i + 1], value[3 * i + 2]);
+        const GLsizei index = 3 * i;
+        logLine("v%d {%f, %f, %f}", i, value[index], value[index + 1], value[index + 2]);
     }
 
     if (context->old_glUniform3fv) {
@@ -1139,7 +1142,8 @@ static void OGLES2_glUniform3iv(struct OGLES2IFace *Self, GLint location, GLsize
         location, count);
 
     for (GLsizei i = 0; i < count; i++) {
-        logLine("v%d {%d, %d, %d}", i, value[3 * i], value[3 * i + 1], value[3 * i + 2]);
+        const GLsizei index = 3 * i;
+        logLine("v%d {%d, %d, %d}", i, value[index], value[index + 1], value[index + 2]);
     }
 
     if (context->old_glUniform3iv) {
@@ -1167,7 +1171,8 @@ static void OGLES2_glUniform4fv(struct OGLES2IFace *Self, GLint location, GLsize
         location, count);
 
     for (GLsizei i = 0; i < count; i++) {
-        logLine("v%d {%f, %f, %f, %f}", i, value[4 * i], value[4 * i + 1], value[4 * i + 2], value[4 * i + 3]);
+        const GLsizei index = 4 * i;
+        logLine("v%d {%f, %f, %f, %f}", i, value[index], value[index + 1], value[index + 2], value[index + 3]);
     }
 
     if (context->old_glUniform4fv) {
@@ -1195,7 +1200,8 @@ static void OGLES2_glUniform4iv(struct OGLES2IFace *Self, GLint location, GLsize
         location, count);
 
     for (GLsizei i = 0; i < count; i++) {
-        logLine("v%d {%d, %d, %d, %d}", i, value[4 * i], value[4 * i + 1], value[4 * i + 2], value[4 * i + 3]);
+        const GLsizei index = 4 * i;
+        logLine("v%d {%d, %d, %d, %d}", i, value[index], value[index + 1], value[index + 2], value[index + 3]);
     }
 
     if (context->old_glUniform4iv) {
@@ -1211,9 +1217,10 @@ static void OGLES2_glUniformMatrix2fv(struct OGLES2IFace *Self, GLint location, 
         location, count, transpose);
 
     for (GLsizei i = 0; i < count; i++) {
+        const GLsizei index = 4 * i;
         logLine("matrix #%d {%f, %f, %f, %f}", i,
-            value[4 * i    ], value[4 * i + 1],
-            value[4 * i + 2], value[4 * i + 3]);
+            value[index    ], value[index + 1],
+            value[index + 2], value[index + 3]);
     }
 
     if (context->old_glUniformMatrix2fv) {
@@ -1229,10 +1236,11 @@ static void OGLES2_glUniformMatrix3fv(struct OGLES2IFace *Self, GLint location, 
         location, count, transpose);
 
     for (GLsizei i = 0; i < count; i++) {
+        const GLsizei index = 9 * i;
         logLine("matrix #%d {%f, %f, %f, %f, %f, %f, %f, %f, %f}", i,
-            value[9 * i    ], value[9 * i + 1], value[9 * i + 2],
-            value[9 * i + 3], value[9 * i + 4], value[9 * i + 5],
-            value[9 * i + 6], value[9 * i + 7], value[9 * i + 8]);
+            value[index    ], value[index + 1], value[index + 2],
+            value[index + 3], value[index + 4], value[index + 5],
+            value[index + 6], value[index + 7], value[index + 8]);
     }
 
     if (context->old_glUniformMatrix3fv) {
@@ -1248,11 +1256,12 @@ static void OGLES2_glUniformMatrix4fv(struct OGLES2IFace *Self, GLint location, 
         location, count, transpose);
 
     for (GLsizei i = 0; i < count; i++) {
+        const GLsizei index = 16 * i;
         logLine("matrix #%d {%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f}", i,
-            value[16 * i     ], value[16 * i + 1 ], value[16 * i + 2 ], value[16 * i + 3],
-            value[16 * i + 4 ], value[16 * i + 5 ], value[16 * i + 6 ], value[16 * i + 7],
-            value[16 * i + 8 ], value[16 * i + 9 ], value[16 * i + 10], value[16 * i + 11],
-            value[16 * i + 12], value[16 * i + 13], value[16 * i + 14], value[16 * i + 15]);
+            value[index     ], value[index +  1], value[index +  2], value[index +  3],
+            value[index +  4], value[index +  5], value[index +  6], value[index +  7],
+            value[index +  8], value[index +  9], value[index + 10], value[index + 11],
+            value[index + 12], value[index + 13], value[index + 14], value[index + 15]);
     }
 
     if (context->old_glUniformMatrix4fv) {
