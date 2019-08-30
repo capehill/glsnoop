@@ -18,8 +18,11 @@ static BOOL profilingStarted = TRUE;
 
 typedef enum Ogles2Function {
     ActiveTexture,
+    AttachShader,
+    BindAttribLocation,
     BindBuffer,
     BindFramebuffer,
+    BindRenderbuffer,
     BindTexture,
     BufferData,
     BufferSubData,
@@ -82,8 +85,11 @@ static const char* mapOgles2Function(const Ogles2Function func)
 
     switch (func) {
         MAP_ENUM(ActiveTexture)
+        MAP_ENUM(AttachShader)
+        MAP_ENUM(BindAttribLocation)
         MAP_ENUM(BindBuffer)
         MAP_ENUM(BindFramebuffer)
+        MAP_ENUM(BindRenderbuffer)
         MAP_ENUM(BindTexture)
         MAP_ENUM(BufferData)
         MAP_ENUM(BufferSubData)
@@ -177,8 +183,11 @@ struct Ogles2Context
 
     void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
     void (*old_glActiveTexture)(struct OGLES2IFace *Self, GLenum texture);
+    void (*old_glAttachShader)(struct OGLES2IFace *Self, GLuint program, GLuint shader);
+    void (*old_glBindAttribLocation)(struct OGLES2IFace *Self, GLuint program, GLuint index, const GLchar * name);
     void (*old_glBindBuffer)(struct OGLES2IFace *Self, GLenum target, GLuint buffer);
     void (*old_glBindFramebuffer)(struct OGLES2IFace *Self, GLenum target, GLuint framebuffer);
+    void (*old_glBindRenderbuffer)(struct OGLES2IFace *Self, GLenum target, GLuint renderbuffer);
     void (*old_glBindTexture)(struct OGLES2IFace *Self, GLenum target, GLuint texture);
     void (*old_glBufferData)(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage);
     void (*old_glBufferSubData)(struct OGLES2IFace *Self, GLenum target, GLintptr offset, GLsizeiptr size, const void * data);
@@ -517,6 +526,30 @@ static void OGLES2_glActiveTexture(struct OGLES2IFace *Self, GLenum texture)
     }
 }
 
+static void OGLES2_glAttachShader(struct OGLES2IFace *Self, GLuint program, GLuint shader)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: program %u, shader %u", context->name, __func__,
+        program, shader);
+
+    if (context->old_glAttachShader) {
+        CHECK(context->old_glAttachShader(Self, program, shader), AttachShader)
+    }
+}
+
+static void OGLES2_glBindAttribLocation(struct OGLES2IFace *Self, GLuint program, GLuint index, const GLchar * name)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: program %u, index %u, name '%s'", context->name, __func__,
+        program, index, name);
+
+    if (context->old_glBindAttribLocation) {
+        CHECK(context->old_glBindAttribLocation(Self, program, index, name), BindAttribLocation)
+    }
+}
+
 static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buffer)
 {
     GET_CONTEXT
@@ -538,6 +571,18 @@ static void OGLES2_glBindFramebuffer(struct OGLES2IFace *Self, GLenum target, GL
 
     if (context->old_glBindFramebuffer) {
         CHECK(context->old_glBindFramebuffer(Self, target, framebuffer), BindFramebuffer)
+    }
+}
+
+static void OGLES2_glBindRenderbuffer(struct OGLES2IFace *Self, GLenum target, GLuint renderbuffer)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, renderbuffer %u", context->name, __func__,
+        target, renderbuffer);
+
+    if (context->old_glBindRenderbuffer) {
+        CHECK(context->old_glBindRenderbuffer(Self, target, renderbuffer), BindRenderbuffer)
     }
 }
 
@@ -1293,8 +1338,11 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
 
 GENERATE_FILTERED_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glActiveTexture, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glAttachShader, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBindAttribLocation, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBindBuffer, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBindFramebuffer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBindRenderbuffer, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBindTexture, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBufferData, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBufferSubData, OGLES2, Ogles2Context)
@@ -1350,8 +1398,11 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Contex
 static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_aglSwapBuffers,
     patch_glActiveTexture,
+    patch_glAttachShader,
+    patch_glBindAttribLocation,
     patch_glBindBuffer,
     patch_glBindFramebuffer,
+    patch_glBindRenderbuffer,
     patch_glBindTexture,
     patch_glBufferData,
     patch_glBufferSubData,
