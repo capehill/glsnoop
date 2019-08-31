@@ -33,6 +33,9 @@ typedef enum Ogles2Function {
     BufferSubData,
     CheckFramebufferStatus,
     Clear,
+    ClearColor,
+    ClearDepthf,
+    ClearStencil,
     CompileShader,
     DeleteBuffers,
     DeleteFramebuffers,
@@ -105,6 +108,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(BufferSubData)
         MAP_ENUM(CheckFramebufferStatus)
         MAP_ENUM(Clear)
+        MAP_ENUM(ClearColor)
+        MAP_ENUM(ClearDepthf)
+        MAP_ENUM(ClearStencil)
         MAP_ENUM(CompileShader)
         MAP_ENUM(DeleteBuffers)
         MAP_ENUM(DeleteFramebuffers)
@@ -208,6 +214,9 @@ struct Ogles2Context
     void (*old_glBufferSubData)(struct OGLES2IFace *Self, GLenum target, GLintptr offset, GLsizeiptr size, const void * data);
     GLenum (*old_glCheckFramebufferStatus)(struct OGLES2IFace *Self, GLenum target);
     void (*old_glClear)(struct OGLES2IFace *Self, GLbitfield mask);
+    void (*old_glClearColor)(struct OGLES2IFace *Self, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+    void (*old_glClearDepthf)(struct OGLES2IFace *Self, GLfloat d);
+    void (*old_glClearStencil)(struct OGLES2IFace *Self, GLint s);
     void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
     void (*old_glDeleteBuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers);
     void (*old_glDeleteFramebuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers);
@@ -721,6 +730,42 @@ static void OGLES2_glClear(struct OGLES2IFace *Self, GLbitfield mask)
 
     if (context->old_glClear) {
         CHECK(context->old_glClear(Self, mask), Clear)
+    }
+}
+
+static void OGLES2_glClearColor(struct OGLES2IFace *Self, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s red %f, green %f, blue %f, alpha %f", context->name, __func__,
+        red, green, blue, alpha);
+
+    if (context->old_glClearColor) {
+        CHECK(context->old_glClearColor(Self, red, green, blue, alpha), ClearColor)
+    }
+}
+
+static void OGLES2_glClearDepthf(struct OGLES2IFace *Self, GLfloat d)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s d %f", context->name, __func__,
+        d);
+
+    if (context->old_glClearDepthf) {
+        CHECK(context->old_glClearDepthf(Self, d), ClearDepthf)
+    }
+}
+
+static void OGLES2_glClearStencil(struct OGLES2IFace *Self, GLint s)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s s %d", context->name, __func__,
+        s);
+
+    if (context->old_glClearStencil) {
+        CHECK(context->old_glClearStencil(Self, s), ClearStencil)
     }
 }
 
@@ -1427,6 +1472,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glBlendFuncSeparate, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBufferData, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBufferSubData, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glClear, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glClearColor, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glClearDepthf, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glClearStencil, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCheckFramebufferStatus, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
@@ -1493,6 +1541,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glBufferSubData,
     patch_glCheckFramebufferStatus,
     patch_glClear,
+    patch_glClearColor,
+    patch_glClearDepthf,
+    patch_glClearStencil,
     patch_glCompileShader,
     patch_glDeleteBuffers,
     patch_glDeleteFramebuffers,
