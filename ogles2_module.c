@@ -24,6 +24,11 @@ typedef enum Ogles2Function {
     BindFramebuffer,
     BindRenderbuffer,
     BindTexture,
+    BlendColor,
+    BlendEquation,
+    BlendEquationSeparate,
+    BlendFunc,
+    BlendFuncSeparate,
     BufferData,
     BufferSubData,
     CheckFramebufferStatus,
@@ -91,6 +96,11 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(BindFramebuffer)
         MAP_ENUM(BindRenderbuffer)
         MAP_ENUM(BindTexture)
+        MAP_ENUM(BlendColor)
+        MAP_ENUM(BlendEquation)
+        MAP_ENUM(BlendEquationSeparate)
+        MAP_ENUM(BlendFunc)
+        MAP_ENUM(BlendFuncSeparate)
         MAP_ENUM(BufferData)
         MAP_ENUM(BufferSubData)
         MAP_ENUM(CheckFramebufferStatus)
@@ -189,6 +199,11 @@ struct Ogles2Context
     void (*old_glBindFramebuffer)(struct OGLES2IFace *Self, GLenum target, GLuint framebuffer);
     void (*old_glBindRenderbuffer)(struct OGLES2IFace *Self, GLenum target, GLuint renderbuffer);
     void (*old_glBindTexture)(struct OGLES2IFace *Self, GLenum target, GLuint texture);
+    void (*old_glBlendColor)(struct OGLES2IFace *Self, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+    void (*old_glBlendEquation)(struct OGLES2IFace *Self, GLenum mode);
+    void (*old_glBlendEquationSeparate)(struct OGLES2IFace *Self, GLenum modeRGB, GLenum modeAlpha);
+    void (*old_glBlendFunc)(struct OGLES2IFace *Self, GLenum sfactor, GLenum dfactor);
+    void (*old_glBlendFuncSeparate)(struct OGLES2IFace *Self, GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha);
     void (*old_glBufferData)(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage);
     void (*old_glBufferSubData)(struct OGLES2IFace *Self, GLenum target, GLintptr offset, GLsizeiptr size, const void * data);
     GLenum (*old_glCheckFramebufferStatus)(struct OGLES2IFace *Self, GLenum target);
@@ -595,6 +610,66 @@ static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint
 
     if (context->old_glBindTexture) {
         CHECK(context->old_glBindTexture(Self, target, texture), BindTexture)
+    }
+}
+
+static void OGLES2_glBlendColor(struct OGLES2IFace *Self, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: red %f, green %f, blue %f, alpha %f", context->name, __func__,
+        red, green, blue, alpha);
+
+    if (context->old_glBlendColor) {
+        CHECK(context->old_glBlendColor(Self, red, green, blue, alpha), BlendColor)
+    }
+}
+
+static void OGLES2_glBlendEquation(struct OGLES2IFace *Self, GLenum mode)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: mode %d", context->name, __func__,
+        mode);
+
+    if (context->old_glBlendEquation) {
+        CHECK(context->old_glBlendEquation(Self, mode), BlendEquation)
+    }
+}
+
+static void OGLES2_glBlendEquationSeparate(struct OGLES2IFace *Self, GLenum modeRGB, GLenum modeAlpha)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: modeRGB %d, modeAlpha %d", context->name, __func__,
+        modeRGB, modeAlpha);
+
+    if (context->old_glBlendEquationSeparate) {
+        CHECK(context->old_glBlendEquationSeparate(Self, modeRGB, modeAlpha), BlendEquationSeparate)
+    }
+}
+
+static void OGLES2_glBlendFunc(struct OGLES2IFace *Self, GLenum sfactor, GLenum dfactor)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: sfactor %d, dfactor %d", context->name, __func__,
+        sfactor, dfactor);
+
+    if (context->old_glBlendFunc) {
+        CHECK(context->old_glBlendFunc(Self, sfactor, dfactor), BlendFunc)
+    }
+}
+
+static void OGLES2_glBlendFuncSeparate(struct OGLES2IFace *Self, GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: sfactorRGB %d, dfactorRGB %d, sfactorAlpha %d, dfactorAlpha %d", context->name, __func__,
+        sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
+
+    if (context->old_glBlendFuncSeparate) {
+        CHECK(context->old_glBlendFuncSeparate(Self, sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha), BlendFuncSeparate)
     }
 }
 
@@ -1344,6 +1419,11 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glBindBuffer, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBindFramebuffer, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBindRenderbuffer, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBindTexture, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBlendColor, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBlendEquation, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBlendEquationSeparate, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBlendFunc, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glBlendFuncSeparate, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBufferData, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glBufferSubData, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glClear, OGLES2, Ogles2Context)
@@ -1404,6 +1484,11 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glBindFramebuffer,
     patch_glBindRenderbuffer,
     patch_glBindTexture,
+    patch_glBlendColor,
+    patch_glBlendEquation,
+    patch_glBlendEquationSeparate,
+    patch_glBlendFunc,
+    patch_glBlendFuncSeparate,
     patch_glBufferData,
     patch_glBufferSubData,
     patch_glCheckFramebufferStatus,
