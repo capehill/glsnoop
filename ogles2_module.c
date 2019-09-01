@@ -519,10 +519,20 @@ x; \
 PROF_FINISH(id) \
 checkErrors(context, id);
 
-#define CHECK_STATUS(x, id) \
-PROF_START \
-status = x; \
-PROF_FINISH(id) \
+#define GL_CALL(id, ...) \
+if (context->old_gl ## id) { \
+    PROF_START \
+    context->old_gl ## id(Self, ##__VA_ARGS__); \
+    PROF_FINISH(id) \
+} \
+checkErrors(context, id);
+
+#define GL_CALL_STATUS(id, ...) \
+if (context->old_gl ## id) { \
+    PROF_START \
+    status = context->old_gl ## id(Self, ##__VA_ARGS__); \
+    PROF_FINISH(id) \
+} \
 checkErrors(context, id);
 
 // Wrap traced function calls
@@ -545,9 +555,7 @@ static void OGLES2_glActiveTexture(struct OGLES2IFace *Self, GLenum texture)
     logLine("%s: %s: texture %d", context->name, __func__,
         texture);
 
-    if (context->old_glActiveTexture) {
-        CHECK(context->old_glActiveTexture(Self, texture), ActiveTexture)
-    }
+    GL_CALL(ActiveTexture, texture)
 }
 
 static void OGLES2_glAttachShader(struct OGLES2IFace *Self, GLuint program, GLuint shader)
@@ -557,9 +565,7 @@ static void OGLES2_glAttachShader(struct OGLES2IFace *Self, GLuint program, GLui
     logLine("%s: %s: program %u, shader %u", context->name, __func__,
         program, shader);
 
-    if (context->old_glAttachShader) {
-        CHECK(context->old_glAttachShader(Self, program, shader), AttachShader)
-    }
+    GL_CALL(AttachShader, program, shader)
 }
 
 static void OGLES2_glBindAttribLocation(struct OGLES2IFace *Self, GLuint program, GLuint index, const GLchar * name)
@@ -569,9 +575,7 @@ static void OGLES2_glBindAttribLocation(struct OGLES2IFace *Self, GLuint program
     logLine("%s: %s: program %u, index %u, name '%s'", context->name, __func__,
         program, index, name);
 
-    if (context->old_glBindAttribLocation) {
-        CHECK(context->old_glBindAttribLocation(Self, program, index, name), BindAttribLocation)
-    }
+    GL_CALL(BindAttribLocation, program, index, name)
 }
 
 static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint buffer)
@@ -581,9 +585,7 @@ static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint 
     logLine("%s: %s: target %d, buffer %u", context->name, __func__,
         target, buffer);
 
-    if (context->old_glBindBuffer) {
-        CHECK(context->old_glBindBuffer(Self, target, buffer), BindBuffer)
-    }
+    GL_CALL(BindBuffer, target, buffer)
 }
 
 static void OGLES2_glBindFramebuffer(struct OGLES2IFace *Self, GLenum target, GLuint framebuffer)
@@ -593,9 +595,7 @@ static void OGLES2_glBindFramebuffer(struct OGLES2IFace *Self, GLenum target, GL
     logLine("%s: %s: target %u, framebuffer %u", context->name, __func__,
         target, framebuffer);
 
-    if (context->old_glBindFramebuffer) {
-        CHECK(context->old_glBindFramebuffer(Self, target, framebuffer), BindFramebuffer)
-    }
+    GL_CALL(BindFramebuffer, target, framebuffer)
 }
 
 static void OGLES2_glBindRenderbuffer(struct OGLES2IFace *Self, GLenum target, GLuint renderbuffer)
@@ -605,9 +605,7 @@ static void OGLES2_glBindRenderbuffer(struct OGLES2IFace *Self, GLenum target, G
     logLine("%s: %s: target %u, renderbuffer %u", context->name, __func__,
         target, renderbuffer);
 
-    if (context->old_glBindRenderbuffer) {
-        CHECK(context->old_glBindRenderbuffer(Self, target, renderbuffer), BindRenderbuffer)
-    }
+    GL_CALL(BindRenderbuffer, target, renderbuffer)
 }
 
 static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint texture)
@@ -617,9 +615,7 @@ static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint
     logLine("%s: %s: target %d, texture %d", context->name, __func__,
         target, texture);
 
-    if (context->old_glBindTexture) {
-        CHECK(context->old_glBindTexture(Self, target, texture), BindTexture)
-    }
+    GL_CALL(BindTexture, target, texture)
 }
 
 static void OGLES2_glBlendColor(struct OGLES2IFace *Self, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
@@ -629,9 +625,7 @@ static void OGLES2_glBlendColor(struct OGLES2IFace *Self, GLfloat red, GLfloat g
     logLine("%s: %s: red %f, green %f, blue %f, alpha %f", context->name, __func__,
         red, green, blue, alpha);
 
-    if (context->old_glBlendColor) {
-        CHECK(context->old_glBlendColor(Self, red, green, blue, alpha), BlendColor)
-    }
+    GL_CALL(BlendColor, red, green, blue, alpha)
 }
 
 static void OGLES2_glBlendEquation(struct OGLES2IFace *Self, GLenum mode)
@@ -641,9 +635,7 @@ static void OGLES2_glBlendEquation(struct OGLES2IFace *Self, GLenum mode)
     logLine("%s: %s: mode %d", context->name, __func__,
         mode);
 
-    if (context->old_glBlendEquation) {
-        CHECK(context->old_glBlendEquation(Self, mode), BlendEquation)
-    }
+    GL_CALL(BlendEquation, mode)
 }
 
 static void OGLES2_glBlendEquationSeparate(struct OGLES2IFace *Self, GLenum modeRGB, GLenum modeAlpha)
@@ -653,9 +645,7 @@ static void OGLES2_glBlendEquationSeparate(struct OGLES2IFace *Self, GLenum mode
     logLine("%s: %s: modeRGB %d, modeAlpha %d", context->name, __func__,
         modeRGB, modeAlpha);
 
-    if (context->old_glBlendEquationSeparate) {
-        CHECK(context->old_glBlendEquationSeparate(Self, modeRGB, modeAlpha), BlendEquationSeparate)
-    }
+    GL_CALL(BlendEquationSeparate, modeRGB, modeAlpha)
 }
 
 static void OGLES2_glBlendFunc(struct OGLES2IFace *Self, GLenum sfactor, GLenum dfactor)
@@ -665,9 +655,7 @@ static void OGLES2_glBlendFunc(struct OGLES2IFace *Self, GLenum sfactor, GLenum 
     logLine("%s: %s: sfactor %d, dfactor %d", context->name, __func__,
         sfactor, dfactor);
 
-    if (context->old_glBlendFunc) {
-        CHECK(context->old_glBlendFunc(Self, sfactor, dfactor), BlendFunc)
-    }
+    GL_CALL(BlendFunc, sfactor, dfactor)
 }
 
 static void OGLES2_glBlendFuncSeparate(struct OGLES2IFace *Self, GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha)
@@ -677,9 +665,7 @@ static void OGLES2_glBlendFuncSeparate(struct OGLES2IFace *Self, GLenum sfactorR
     logLine("%s: %s: sfactorRGB %d, dfactorRGB %d, sfactorAlpha %d, dfactorAlpha %d", context->name, __func__,
         sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
 
-    if (context->old_glBlendFuncSeparate) {
-        CHECK(context->old_glBlendFuncSeparate(Self, sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha), BlendFuncSeparate)
-    }
+    GL_CALL(BlendFuncSeparate, sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha)
 }
 
 static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizeiptr size, const void * data, GLenum usage)
@@ -689,9 +675,7 @@ static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizei
     logLine("%s: %s: target %d, size %u, data %p, usage %d", context->name, __func__,
         target, size, data, usage);
 
-    if (context->old_glBufferData) {
-        CHECK(context->old_glBufferData(Self, target, size, data, usage), BufferData)
-    }
+    GL_CALL(BufferData, target, size, data, usage)
 }
 
 static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLintptr offset, GLsizeiptr size, const void * data)
@@ -701,9 +685,7 @@ static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLin
     logLine("%s: %s: target %d, offset %u, size %u, data %p", context->name, __func__,
         target, offset, size, data);
 
-    if (context->old_glBufferSubData) {
-        CHECK(context->old_glBufferSubData(Self, target, offset, size, data), BufferSubData)
-    }
+    GL_CALL(BufferSubData, target, offset, size, data)
 }
 
 static GLenum OGLES2_glCheckFramebufferStatus(struct OGLES2IFace *Self, GLenum target)
@@ -712,9 +694,7 @@ static GLenum OGLES2_glCheckFramebufferStatus(struct OGLES2IFace *Self, GLenum t
 
     GLenum status = 0;
 
-    if (context->old_glCheckFramebufferStatus) {
-        CHECK_STATUS(context->old_glCheckFramebufferStatus(Self, target), CheckFramebufferStatus)
-    }
+    GL_CALL_STATUS(CheckFramebufferStatus, target)
 
     logLine("%s: %s: status %u", context->name, __func__,
         status);
@@ -728,9 +708,7 @@ static void OGLES2_glClear(struct OGLES2IFace *Self, GLbitfield mask)
 
     logLine("%s: %s mask 0x%X", context->name, __func__, mask);
 
-    if (context->old_glClear) {
-        CHECK(context->old_glClear(Self, mask), Clear)
-    }
+    GL_CALL(Clear, mask)
 }
 
 static void OGLES2_glClearColor(struct OGLES2IFace *Self, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
@@ -740,9 +718,7 @@ static void OGLES2_glClearColor(struct OGLES2IFace *Self, GLfloat red, GLfloat g
     logLine("%s: %s red %f, green %f, blue %f, alpha %f", context->name, __func__,
         red, green, blue, alpha);
 
-    if (context->old_glClearColor) {
-        CHECK(context->old_glClearColor(Self, red, green, blue, alpha), ClearColor)
-    }
+    GL_CALL(ClearColor, red, green, blue, alpha)
 }
 
 static void OGLES2_glClearDepthf(struct OGLES2IFace *Self, GLfloat d)
@@ -752,9 +728,7 @@ static void OGLES2_glClearDepthf(struct OGLES2IFace *Self, GLfloat d)
     logLine("%s: %s d %f", context->name, __func__,
         d);
 
-    if (context->old_glClearDepthf) {
-        CHECK(context->old_glClearDepthf(Self, d), ClearDepthf)
-    }
+    GL_CALL(ClearDepthf, d)
 }
 
 static void OGLES2_glClearStencil(struct OGLES2IFace *Self, GLint s)
@@ -764,9 +738,7 @@ static void OGLES2_glClearStencil(struct OGLES2IFace *Self, GLint s)
     logLine("%s: %s s %d", context->name, __func__,
         s);
 
-    if (context->old_glClearStencil) {
-        CHECK(context->old_glClearStencil(Self, s), ClearStencil)
-    }
+    GL_CALL(ClearStencil, s)
 }
 
 static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
@@ -776,9 +748,7 @@ static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
     logLine("%s: %s: shader %u", context->name, __func__,
         shader);
 
-    if (context->old_glCompileShader) {
-        CHECK(context->old_glCompileShader(Self, shader), CompileShader)
-    }
+    GL_CALL(CompileShader, shader)
 }
 
 static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
@@ -793,9 +763,7 @@ static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint *
         logLine("Deleting buffer[%u] = %u", i, buffers[i]);
     }
 
-    if (context->old_glDeleteBuffers) {
-        CHECK(context->old_glDeleteBuffers(Self, n, buffers), DeleteBuffers)
-    }
+    GL_CALL(DeleteBuffers, n, buffers)
 }
 
 static void OGLES2_glDeleteFramebuffers(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers)
@@ -810,9 +778,7 @@ static void OGLES2_glDeleteFramebuffers(struct OGLES2IFace *Self, GLsizei n, con
         logLine("Deleting framebuffer[%u] = %u", i, framebuffers[i]);
     }
 
-    if (context->old_glDeleteFramebuffers) {
-        CHECK(context->old_glDeleteFramebuffers(Self, n, framebuffers), DeleteFramebuffers)
-    }
+    GL_CALL(DeleteFramebuffers, n, framebuffers)
 }
 
 static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures)
@@ -827,9 +793,7 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
         logLine("Deleting texture[%u] = %u", i, textures[i]);
     }
 
-    if (context->old_glDeleteTextures) {
-        CHECK(context->old_glDeleteTextures(Self, n, textures), DeleteTextures)
-    }
+    GL_CALL(DeleteTextures, n, textures)
 }
 
 static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
@@ -839,9 +803,7 @@ static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
     logLine("%s: %s: cap %d", context->name, __func__,
         cap);
 
-    if (context->old_glDisable) {
-        CHECK(context->old_glDisable(Self, cap), Disable)
-    }
+    GL_CALL(Disable, cap)
 }
 
 static void countPrimitive(PrimitiveCounter * counter, const GLenum type, const size_t count)
@@ -882,11 +844,9 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
     logLine("%s: %s: mode %d, first %d, count %d", context->name, __func__,
         mode, first, count);
 
-    if (context->old_glDrawArrays) {
-        CHECK(context->old_glDrawArrays(Self, mode, first, count), DrawArrays)
+    GL_CALL(DrawArrays, mode, first, count)
 
-        countPrimitive(&context->counter, mode, count);
-    }
+    countPrimitive(&context->counter, mode, count);
 }
 
 static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices)
@@ -896,11 +856,9 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
     logLine("%s: %s: mode %d, count %d, type %d, indices %p", context->name, __func__,
         mode, count, type, indices);
 
-    if (context->old_glDrawElements) {
-        CHECK(context->old_glDrawElements(Self, mode, count, type, indices), DrawElements)
+    GL_CALL(DrawElements, mode, count, type, indices)
 
-        countPrimitive(&context->counter, mode, count);
-    }
+    countPrimitive(&context->counter, mode, count);
 }
 
 static void OGLES2_glEnable(struct OGLES2IFace *Self, GLenum cap)
@@ -910,9 +868,7 @@ static void OGLES2_glEnable(struct OGLES2IFace *Self, GLenum cap)
     logLine("%s: %s: cap %d", context->name, __func__,
         cap);
 
-    if (context->old_glEnable) {
-        CHECK(context->old_glEnable(Self, cap), Enable)
-    }
+    GL_CALL(Enable, cap)
 }
 
 static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint index)
@@ -922,9 +878,7 @@ static void OGLES2_glEnableVertexAttribArray(struct OGLES2IFace *Self, GLuint in
     logLine("%s: %s: index %u", context->name, __func__,
         index);
 
-    if (context->old_glEnableVertexAttribArray) {
-        CHECK(context->old_glEnableVertexAttribArray(Self, index), EnableVertexAttribArray)
-    }
+    GL_CALL(EnableVertexAttribArray, index)
 }
 
 static void OGLES2_glFinish(struct OGLES2IFace *Self)
@@ -933,9 +887,7 @@ static void OGLES2_glFinish(struct OGLES2IFace *Self)
 
     logLine("%s: %s", context->name, __func__);
 
-    if (context->old_glFinish) {
-        CHECK(context->old_glFinish(Self), Finish)
-    }
+    GL_CALL(Finish)
 }
 
 static void OGLES2_glFlush(struct OGLES2IFace *Self)
@@ -944,9 +896,7 @@ static void OGLES2_glFlush(struct OGLES2IFace *Self)
 
     logLine("%s: %s", context->name, __func__);
 
-    if (context->old_glFlush) {
-        CHECK(context->old_glFlush(Self), Flush)
-    }
+    GL_CALL(Flush)
 }
 
 static void OGLES2_glFramebufferRenderbuffer(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
@@ -956,9 +906,7 @@ static void OGLES2_glFramebufferRenderbuffer(struct OGLES2IFace *Self, GLenum ta
     logLine("%s: %s: target %u, attachment %u, renderbuffertarget %u, renderbuffer %u", context->name, __func__,
         target, attachment, renderbuffertarget, renderbuffer);
 
-    if (context->old_glFramebufferRenderbuffer) {
-        CHECK(context->old_glFramebufferRenderbuffer(Self, target, attachment, renderbuffertarget, renderbuffer), FramebufferRenderbuffer)
-    }
+    GL_CALL(FramebufferRenderbuffer, target, attachment, renderbuffertarget, renderbuffer)
 }
 
 static void OGLES2_glFramebufferTexture2D(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
@@ -968,9 +916,7 @@ static void OGLES2_glFramebufferTexture2D(struct OGLES2IFace *Self, GLenum targe
     logLine("%s: %s: target %u, attachment %u, textarget %u, texture %u, level %d", context->name, __func__,
         target, attachment, textarget, texture, level);
 
-    if (context->old_glFramebufferTexture2D) {
-        CHECK(context->old_glFramebufferTexture2D(Self, target, attachment, textarget, texture, level), FramebufferTexture2D)
-    }
+    GL_CALL(FramebufferTexture2D, target, attachment, textarget, texture, level)
 }
 
 static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
@@ -980,9 +926,7 @@ static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * bu
     logLine("%s: %s: n %d, buffers %p", context->name, __func__,
         n, buffers);
 
-    if (context->old_glGenBuffers) {
-        CHECK(context->old_glGenBuffers(Self, n, buffers), GenBuffers)
-    }
+    GL_CALL(GenBuffers, n, buffers)
 
     ssize_t i;
     for (i = 0; i < n; i++) {
@@ -997,9 +941,7 @@ static void OGLES2_glGenerateMipmap(struct OGLES2IFace *Self, GLenum target)
     logLine("%s: %s: target %d", context->name, __func__,
         target);
 
-    if (context->old_glGenerateMipmap) {
-        CHECK(context->old_glGenerateMipmap(Self, target), GenerateMipmap)
-    }
+    GL_CALL(GenerateMipmap, target)
 }
 
 static void OGLES2_glGenFramebuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * framebuffers)
@@ -1009,9 +951,7 @@ static void OGLES2_glGenFramebuffers(struct OGLES2IFace *Self, GLsizei n, GLuint
     logLine("%s: %s: n %u, framebuffers %p", context->name, __func__,
         n, framebuffers);
 
-    if (context->old_glGenFramebuffers) {
-        CHECK(context->old_glGenFramebuffers(Self, n, framebuffers), GenFramebuffers)
-    }
+    GL_CALL(GenFramebuffers, n, framebuffers)
 
     GLsizei i;
     for (i = 0; i < n; i++) {
@@ -1026,9 +966,7 @@ static void OGLES2_glGenTextures(struct OGLES2IFace *Self, GLsizei n, GLuint * t
     logLine("%s: %s: n %d, textures %p", context->name, __func__,
         n, textures);
 
-    if (context->old_glGenTextures) {
-        CHECK(context->old_glGenTextures(Self, n, textures), GenTextures)
-    }
+    GL_CALL(GenTextures, n, textures)
 
     GLsizei i;
     for (i = 0; i < n; i++) {
@@ -1043,9 +981,7 @@ static void OGLES2_glGetFramebufferAttachmentParameteriv(struct OGLES2IFace *Sel
     logLine("%s: %s: target %u, attachment %u pname %u, params %p", context->name, __func__,
         target, attachment, pname, params);
 
-    if (context->old_glGetFramebufferAttachmentParameteriv) {
-        CHECK(context->old_glGetFramebufferAttachmentParameteriv(Self, target, attachment, pname, params), GetFramebufferAttachmentParameteriv)
-    }
+    GL_CALL(GetFramebufferAttachmentParameteriv, target, attachment, pname, params)
 }
 
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
@@ -1067,9 +1003,7 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
         }
     }
 
-    if (context->old_glShaderSource) {
-        CHECK(context->old_glShaderSource(Self, shader, count, string, length), ShaderSource)
-    }
+    GL_CALL(ShaderSource, shader, count, string, length)
 }
 
 static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels)
@@ -1079,9 +1013,7 @@ static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint l
     logLine("%s: %s: target %d, level %d, internalformat %d, width %u, height %u, border %d, format %d, type %d, pixels %p", context->name, __func__,
         target, level, internalformat, width, height, border, format, type, pixels);
 
-    if (context->old_glTexImage2D) {
-        CHECK(context->old_glTexImage2D(Self, target, level, internalformat, width, height, border, format, type, pixels), TexImage2D)
-    }
+    GL_CALL(TexImage2D, target,  level, internalformat, width, height, border, format, type, pixels)
 }
 
 static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param)
@@ -1091,9 +1023,7 @@ static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLen
     logLine("%s: %s: target %d, pname %d, param %f", context->name, __func__,
         target, pname, param);
 
-    if (context->old_glTexParameterf) {
-        CHECK(context->old_glTexParameterf(Self, target, pname, param), TexParameterf)
-    }
+    GL_CALL(TexParameterf, target, pname, param)
 }
 
 static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLfloat * params)
@@ -1103,9 +1033,7 @@ static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLe
     logLine("%s: %s: target %d, pname %d, params %p", context->name, __func__,
         target, pname, params);
 
-    if (context->old_glTexParameterfv) {
-        CHECK(context->old_glTexParameterfv(Self, target, pname, params), TexParameterfv)
-    }
+    GL_CALL(TexParameterfv, target, pname, params)
 }
 
 static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint param)
@@ -1115,9 +1043,7 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
     logLine("%s: %s: target %d, pname %d, param %d", context->name, __func__,
         target, pname, param);
 
-    if (context->old_glTexParameteri) {
-        CHECK(context->old_glTexParameteri(Self, target, pname, param), TexParameteri)
-    }
+    GL_CALL(TexParameteri, target, pname, param)
 }
 
 static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLint * params)
@@ -1127,9 +1053,7 @@ static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLe
     logLine("%s: %s: target %d, pname %d, params %p", context->name, __func__,
         target, pname, params);
 
-    if (context->old_glTexParameteriv) {
-        CHECK(context->old_glTexParameteriv(Self, target, pname, params), TexParameteriv)
-    }
+    GL_CALL(TexParameteriv, target, pname, params)
 }
 
 static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels)
@@ -1139,9 +1063,7 @@ static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLin
     logLine("%s: %s: target %d, level %d, xoffset %d, yoffset %d, width %u, height %u, format %d, type %d, pixels %p", context->name, __func__,
         target, level, xoffset, yoffset, width, height, format, type, pixels);
 
-    if (context->old_glTexSubImage2D) {
-        CHECK(context->old_glTexSubImage2D(Self, target, level, xoffset, yoffset, width, height, format, type, pixels), TexSubImage2D)
-    }
+    GL_CALL(TexSubImage2D, target, level, xoffset, yoffset, width, height, format, type, pixels)
 }
 
 static void OGLES2_glUniform1f(struct OGLES2IFace *Self, GLint location, GLfloat v0)
@@ -1151,9 +1073,7 @@ static void OGLES2_glUniform1f(struct OGLES2IFace *Self, GLint location, GLfloat
     logLine("%s: %s: location %d, v0 %f", context->name, __func__,
         location, v0);
 
-    if (context->old_glUniform1f) {
-        CHECK(context->old_glUniform1f(Self, location, v0), Uniform1f)
-    }
+    GL_CALL(Uniform1f, location, v0)
 }
 
 static void OGLES2_glUniform1fv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value)
@@ -1167,9 +1087,7 @@ static void OGLES2_glUniform1fv(struct OGLES2IFace *Self, GLint location, GLsize
         logLine("v%d { %f }", i, value[i]);
     }
 
-    if (context->old_glUniform1fv) {
-        CHECK(context->old_glUniform1fv(Self, location, count, value), Uniform1fv)
-    }
+    GL_CALL(Uniform1fv, location, count, value)
 }
 
 static void OGLES2_glUniform1i(struct OGLES2IFace *Self, GLint location, GLint v0)
@@ -1179,9 +1097,7 @@ static void OGLES2_glUniform1i(struct OGLES2IFace *Self, GLint location, GLint v
     logLine("%s: %s: location %d, v0 %d", context->name, __func__,
         location, v0);
 
-    if (context->old_glUniform1i) {
-        CHECK(context->old_glUniform1i(Self, location, v0), Uniform1i)
-    }
+    GL_CALL(Uniform1i, location, v0)
 }
 
 static void OGLES2_glUniform1iv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value)
@@ -1195,9 +1111,7 @@ static void OGLES2_glUniform1iv(struct OGLES2IFace *Self, GLint location, GLsize
         logLine("v%d { %d }", i, value[i]);
     }
 
-    if (context->old_glUniform1iv) {
-        CHECK(context->old_glUniform1iv(Self, location, count, value), Uniform1iv)
-    }
+    GL_CALL(Uniform1iv, location, count, value)
 }
 
 static void OGLES2_glUniform2f(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1)
@@ -1207,9 +1121,7 @@ static void OGLES2_glUniform2f(struct OGLES2IFace *Self, GLint location, GLfloat
     logLine("%s: %s: location %d, v0 %f, v1 %f", context->name, __func__,
         location, v0, v1);
 
-    if (context->old_glUniform2f) {
-        CHECK(context->old_glUniform2f(Self, location, v0, v1), Uniform2f)
-    }
+    GL_CALL(Uniform2f, location, v0, v1)
 }
 
 static void OGLES2_glUniform2fv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value)
@@ -1224,9 +1136,7 @@ static void OGLES2_glUniform2fv(struct OGLES2IFace *Self, GLint location, GLsize
         logLine("v%d {%f, %f}", i, value[index], value[index + 1]);
     }
 
-    if (context->old_glUniform2fv) {
-        CHECK(context->old_glUniform2fv(Self, location, count, value), Uniform2fv)
-    }
+    GL_CALL(Uniform2fv, location, count, value)
 }
 
 static void OGLES2_glUniform2i(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1)
@@ -1236,9 +1146,7 @@ static void OGLES2_glUniform2i(struct OGLES2IFace *Self, GLint location, GLint v
     logLine("%s: %s: location %d, v0 %d, v1 %d", context->name, __func__,
         location, v0, v1);
 
-    if (context->old_glUniform2i) {
-        CHECK(context->old_glUniform2i(Self, location, v0, v1), Uniform2i)
-    }
+    GL_CALL(Uniform2i, location, v0, v1)
 }
 
 static void OGLES2_glUniform2iv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value)
@@ -1253,9 +1161,7 @@ static void OGLES2_glUniform2iv(struct OGLES2IFace *Self, GLint location, GLsize
         logLine("v%d {%d, %d}", i, value[index], value[index + 1]);
     }
 
-    if (context->old_glUniform2iv) {
-        CHECK(context->old_glUniform2iv(Self, location, count, value), Uniform2iv)
-    }
+    GL_CALL(Uniform2iv, location, count, value)
 }
 
 static void OGLES2_glUniform3f(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1, GLfloat v2)
@@ -1265,9 +1171,7 @@ static void OGLES2_glUniform3f(struct OGLES2IFace *Self, GLint location, GLfloat
     logLine("%s: %s: location %d, v0 %f, v1 %f, v2 %f", context->name, __func__,
         location, v0, v1, v2);
 
-    if (context->old_glUniform3f) {
-        CHECK(context->old_glUniform3f(Self, location, v0, v1, v2), Uniform3f)
-    }
+    GL_CALL(Uniform3f, location, v0, v1, v2)
 }
 
 static void OGLES2_glUniform3fv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value)
@@ -1282,9 +1186,7 @@ static void OGLES2_glUniform3fv(struct OGLES2IFace *Self, GLint location, GLsize
         logLine("v%d {%f, %f, %f}", i, value[index], value[index + 1], value[index + 2]);
     }
 
-    if (context->old_glUniform3fv) {
-        CHECK(context->old_glUniform3fv(Self, location, count, value), Uniform3fv)
-    }
+    GL_CALL(Uniform3fv, location, count, value)
 }
 
 static void OGLES2_glUniform3i(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1, GLint v2)
@@ -1294,9 +1196,7 @@ static void OGLES2_glUniform3i(struct OGLES2IFace *Self, GLint location, GLint v
     logLine("%s: %s: location %d, v0 %d, v1 %d, v2 %d", context->name, __func__,
         location, v0, v1, v2);
 
-    if (context->old_glUniform3i) {
-        CHECK(context->old_glUniform3i(Self, location, v0, v1, v2), Uniform3i)
-    }
+    GL_CALL(Uniform3i, location, v0, v1, v2)
 }
 
 static void OGLES2_glUniform3iv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value)
@@ -1311,9 +1211,7 @@ static void OGLES2_glUniform3iv(struct OGLES2IFace *Self, GLint location, GLsize
         logLine("v%d {%d, %d, %d}", i, value[index], value[index + 1], value[index + 2]);
     }
 
-    if (context->old_glUniform3iv) {
-        CHECK(context->old_glUniform3iv(Self, location, count, value), Uniform3iv)
-    }
+    GL_CALL(Uniform3iv, location, count, value)
 }
 
 static void OGLES2_glUniform4f(struct OGLES2IFace *Self, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)
@@ -1323,9 +1221,7 @@ static void OGLES2_glUniform4f(struct OGLES2IFace *Self, GLint location, GLfloat
     logLine("%s: %s: location %d, v0 %f, v1 %f, v2 %f, v3 %f", context->name, __func__,
         location, v0, v1, v2, v3);
 
-    if (context->old_glUniform4f) {
-        CHECK(context->old_glUniform4f(Self, location, v0, v1, v2, v3), Uniform4f)
-    }
+    GL_CALL(Uniform4f, location, v0, v1, v2, v3)
 }
 
 static void OGLES2_glUniform4fv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLfloat * value)
@@ -1340,9 +1236,7 @@ static void OGLES2_glUniform4fv(struct OGLES2IFace *Self, GLint location, GLsize
         logLine("v%d {%f, %f, %f, %f}", i, value[index], value[index + 1], value[index + 2], value[index + 3]);
     }
 
-    if (context->old_glUniform4fv) {
-        CHECK(context->old_glUniform4fv(Self, location, count, value), Uniform4fv)
-    }
+    GL_CALL(Uniform4fv, location, count, value)
 }
 
 static void OGLES2_glUniform4i(struct OGLES2IFace *Self, GLint location, GLint v0, GLint v1, GLint v2, GLint v3)
@@ -1352,9 +1246,7 @@ static void OGLES2_glUniform4i(struct OGLES2IFace *Self, GLint location, GLint v
     logLine("%s: %s: location %d, v0 %d, v1 %d, v2 %d, v3 %d", context->name, __func__,
         location, v0, v1, v2, v3);
 
-    if (context->old_glUniform4i) {
-        CHECK(context->old_glUniform4i(Self, location, v0, v1, v2, v3), Uniform4i)
-    }
+    GL_CALL(Uniform4i, location, v0, v1, v2, v3)
 }
 
 static void OGLES2_glUniform4iv(struct OGLES2IFace *Self, GLint location, GLsizei count, const GLint * value)
@@ -1369,9 +1261,7 @@ static void OGLES2_glUniform4iv(struct OGLES2IFace *Self, GLint location, GLsize
         logLine("v%d {%d, %d, %d, %d}", i, value[index], value[index + 1], value[index + 2], value[index + 3]);
     }
 
-    if (context->old_glUniform4iv) {
-        CHECK(context->old_glUniform4iv(Self, location, count, value), Uniform4iv)
-    }
+    GL_CALL(Uniform4iv, location, count, value)
 }
 
 static void OGLES2_glUniformMatrix2fv(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value)
@@ -1388,9 +1278,7 @@ static void OGLES2_glUniformMatrix2fv(struct OGLES2IFace *Self, GLint location, 
             value[index + 2], value[index + 3]);
     }
 
-    if (context->old_glUniformMatrix2fv) {
-        CHECK(context->old_glUniformMatrix2fv(Self, location, count, transpose, value), UniformMatrix2fv)
-    }
+    GL_CALL(UniformMatrix2fv, location, count, transpose, value)
 }
 
 static void OGLES2_glUniformMatrix3fv(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value)
@@ -1408,9 +1296,7 @@ static void OGLES2_glUniformMatrix3fv(struct OGLES2IFace *Self, GLint location, 
             value[index + 6], value[index + 7], value[index + 8]);
     }
 
-    if (context->old_glUniformMatrix3fv) {
-        CHECK(context->old_glUniformMatrix3fv(Self, location, count, transpose, value), UniformMatrix3fv)
-    }
+    GL_CALL(UniformMatrix3fv, location, count, transpose, value)
 }
 
 static void OGLES2_glUniformMatrix4fv(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value)
@@ -1429,9 +1315,7 @@ static void OGLES2_glUniformMatrix4fv(struct OGLES2IFace *Self, GLint location, 
             value[index + 12], value[index + 13], value[index + 14], value[index + 15]);
     }
 
-    if (context->old_glUniformMatrix4fv) {
-        CHECK(context->old_glUniformMatrix4fv(Self, location, count, transpose, value), UniformMatrix4fv)
-    }
+    GL_CALL(UniformMatrix4fv, location, count, transpose, value)
 }
 
 static void OGLES2_glUseProgram(struct OGLES2IFace *Self, GLuint program)
@@ -1440,7 +1324,7 @@ static void OGLES2_glUseProgram(struct OGLES2IFace *Self, GLuint program)
 
     logLine("%s: %s program %u", context->name, __func__, program);
 
-    CHECK(context->old_glUseProgram(Self, program), UseProgram)
+    GL_CALL(UseProgram, program);
 }
 
 static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)
@@ -1450,9 +1334,7 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
     logLine("%s: %s: index %u, size %d, type %d, normalized %d, stride %d, pointer %p", context->name, __func__,
         index, size, type, normalized, stride, pointer);
 
-    if (context->old_glVertexAttribPointer) {
-        CHECK(context->old_glVertexAttribPointer(Self, index, size, type, normalized, stride, pointer), VertexAttribPointer)
-    }
+    GL_CALL(VertexAttribPointer, index, size, type, normalized, stride, pointer)
 }
 
 
