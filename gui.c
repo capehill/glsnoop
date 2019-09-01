@@ -10,6 +10,7 @@
 #include <proto/exec.h>
 #include <proto/icon.h>
 
+#include <classes/requester.h>
 #include <classes/window.h>
 #include <gadgets/layout.h>
 #include <gadgets/button.h>
@@ -87,69 +88,19 @@ static struct DiskObject* getDiskObject()
     return diskObject;
 }
 
-static void handle_about_window_events()
-{
-    uint32 signal = 0;
-    IIntuition->GetAttr(WINDOW_SigMask, objects[OID_AboutWindow], &signal);
-
-    BOOL show = TRUE;
-
-    while (show) {
-        const uint32 wait = IExec->Wait(signal);
-
-        if (wait & signal) {
-            uint32 result;
-            int16 code = 0;
-
-            while ((result = IIntuition->IDoMethod(objects[OID_AboutWindow], WM_HANDLEINPUT, &code)) != WMHI_LASTMSG) {
-                switch (result & WMHI_CLASSMASK) {
-                    case WMHI_CLOSEWINDOW:
-                        show = FALSE;
-                        break;
-                }
-            }
-        }
-    }
-}
-
 static void show_about_window()
 {
-    const char* const immortals = "Capehill, kas1e, Mason, Samo79, Hans, Daytona675x";
-
-    objects[OID_AboutWindow] = IIntuition->NewObject(NULL, "window.class",
-        WA_ScreenTitle, VERSION_STRING DATE,
-        WA_Title, "About glSnoop",
-        WA_Activate, TRUE,
-        WA_DragBar, TRUE,
-        WA_CloseGadget, TRUE,
-        WA_Width, 100,
-        WA_Height, 100,
-        WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
-            LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
-            LAYOUT_BevelStyle, BVS_GROUP,
-            LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
-                GA_ReadOnly, TRUE,
-                GA_Text, VERSION_STRING DATE,
-                BUTTON_BevelStyle, BVS_NONE,
-                TAG_DONE),
-            LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
-                GA_ReadOnly, TRUE,
-                GA_Text, immortals,
-                BUTTON_BevelStyle, BVS_NONE,
-                TAG_DONE),
-            LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
-                GA_ReadOnly, TRUE,
-                GA_Text, "Keep the dream alive",
-                BUTTON_BevelStyle, BVS_NONE,
-                TAG_DONE),
-            TAG_DONE),
+    objects[OID_AboutWindow] = IIntuition->NewObject(NULL, "requester.class",
+        REQ_TitleText, "About glSnoop",
+        REQ_BodyText, VERSION_STRING DATE,
+        REQ_GadgetText, "_Ok",
+        REQ_Image, REQIMAGE_INFO,
         TAG_DONE);
 
     if (objects[OID_AboutWindow]) {
-        if (IIntuition->IDoMethod(objects[OID_AboutWindow], WM_OPEN)) {
-            handle_about_window_events();
-        }
-
+        IIntuition->SetAttrs(objects[OID_Window], WA_BusyPointer, TRUE, TAG_DONE);
+        IIntuition->IDoMethod(objects[OID_AboutWindow], RM_OPENREQ, NULL, window, NULL, TAG_DONE);
+        IIntuition->SetAttrs(objects[OID_Window], WA_BusyPointer, FALSE, TAG_DONE);
         IIntuition->DisposeObject(objects[OID_AboutWindow]);
         objects[OID_AboutWindow] = NULL;
     }
