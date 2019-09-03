@@ -38,6 +38,8 @@ typedef enum Ogles2Function {
     ClearStencil,
     ColorMask,
     CompileShader,
+    CompressedTexImage2D,
+    CompressedTexSubImage2D,
     DeleteBuffers,
     DeleteFramebuffers,
     DeleteTextures,
@@ -114,6 +116,8 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(ClearStencil)
         MAP_ENUM(ColorMask)
         MAP_ENUM(CompileShader)
+        MAP_ENUM(CompressedTexImage2D)
+        MAP_ENUM(CompressedTexSubImage2D)
         MAP_ENUM(DeleteBuffers)
         MAP_ENUM(DeleteFramebuffers)
         MAP_ENUM(DeleteTextures)
@@ -221,6 +225,8 @@ struct Ogles2Context
     void (*old_glClearStencil)(struct OGLES2IFace *Self, GLint s);
     void (*old_glColorMask)(struct OGLES2IFace *Self, GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
     void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
+    void (*old_glCompressedTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data);
+    void (*old_glCompressedTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data);
     void (*old_glDeleteBuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers);
     void (*old_glDeleteFramebuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers);
     void (*old_glDeleteTextures)(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures);
@@ -762,6 +768,26 @@ static void OGLES2_glCompileShader(struct OGLES2IFace *Self, GLuint shader)
         shader);
 
     GL_CALL(CompileShader, shader)
+}
+
+static void OGLES2_glCompressedTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, level %d, internalformat %u, width %d, height %d, border %d, imageSize %d, data %p", context->name, __func__,
+        target, level, internalformat, width, height, border, imageSize, data);
+
+    GL_CALL(CompressedTexImage2D, target, level, internalformat, width, height, border, imageSize, data)
+}
+
+static void OGLES2_glCompressedTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, level %d, xoffset %d, yoffset %d, width %d, height %d, format %u, imageSize %d, data %p", context->name, __func__,
+        target, level, xoffset, yoffset, width, height, format, imageSize, data);
+
+    GL_CALL(CompressedTexSubImage2D, target, level, xoffset, yoffset, width, height, format, imageSize, data)
 }
 
 static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
@@ -1373,6 +1399,8 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glClearStencil, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCheckFramebufferStatus, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glColorMask, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCompressedTexImage2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCompressedTexSubImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteFramebuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
@@ -1442,6 +1470,8 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glClearStencil,
     patch_glColorMask,
     patch_glCompileShader,
+    patch_glCompressedTexImage2D,
+    patch_glCompressedTexSubImage2D,
     patch_glDeleteBuffers,
     patch_glDeleteFramebuffers,
     patch_glDeleteTextures,
