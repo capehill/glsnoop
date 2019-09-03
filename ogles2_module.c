@@ -40,6 +40,8 @@ typedef enum Ogles2Function {
     CompileShader,
     CompressedTexImage2D,
     CompressedTexSubImage2D,
+    CopyTexImage2D,
+    CopyTexSubImage2D,
     DeleteBuffers,
     DeleteFramebuffers,
     DeleteTextures,
@@ -118,6 +120,8 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(CompileShader)
         MAP_ENUM(CompressedTexImage2D)
         MAP_ENUM(CompressedTexSubImage2D)
+        MAP_ENUM(CopyTexImage2D)
+        MAP_ENUM(CopyTexSubImage2D)
         MAP_ENUM(DeleteBuffers)
         MAP_ENUM(DeleteFramebuffers)
         MAP_ENUM(DeleteTextures)
@@ -227,6 +231,8 @@ struct Ogles2Context
     void (*old_glCompileShader)(struct OGLES2IFace *Self, GLuint shader);
     void (*old_glCompressedTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data);
     void (*old_glCompressedTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data);
+    void (*old_glCopyTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
+    void (*old_glCopyTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
     void (*old_glDeleteBuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers);
     void (*old_glDeleteFramebuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers);
     void (*old_glDeleteTextures)(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures);
@@ -788,6 +794,26 @@ static void OGLES2_glCompressedTexSubImage2D(struct OGLES2IFace *Self, GLenum ta
         target, level, xoffset, yoffset, width, height, format, imageSize, data);
 
     GL_CALL(CompressedTexSubImage2D, target, level, xoffset, yoffset, width, height, format, imageSize, data)
+}
+
+static void OGLES2_glCopyTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, level %d, internalformat %u, x %d, y %d, width %d, height %d, border %d", context->name, __func__,
+        target, level, internalformat, x, y, width, height, border);
+
+    GL_CALL(CopyTexImage2D, target, level, internalformat, x, y, width, height, border)
+}
+
+static void OGLES2_glCopyTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, level %d, xoffset %d, yoffset %d, x %d, y %d, width %d, height %d", context->name, __func__,
+        target, level, xoffset, yoffset, x, y, width, height);
+
+    GL_CALL(CopyTexSubImage2D, target, level, xoffset, yoffset, x, y, width, height)
 }
 
 static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
@@ -1401,6 +1427,8 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glColorMask, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCompileShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCompressedTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCompressedTexSubImage2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCopyTexImage2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCopyTexSubImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteFramebuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
@@ -1472,6 +1500,8 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glCompileShader,
     patch_glCompressedTexImage2D,
     patch_glCompressedTexSubImage2D,
+    patch_glCopyTexImage2D,
+    patch_glCopyTexSubImage2D,
     patch_glDeleteBuffers,
     patch_glDeleteFramebuffers,
     patch_glDeleteTextures,
