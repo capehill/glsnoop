@@ -42,8 +42,14 @@ typedef enum Ogles2Function {
     CompressedTexSubImage2D,
     CopyTexImage2D,
     CopyTexSubImage2D,
+    CreateProgram,
+    CreateShader,
+    CullFace,
     DeleteBuffers,
     DeleteFramebuffers,
+    DeleteProgram,
+    DeleteRenderbuffers,
+    DeleteShader,
     DeleteTextures,
     Disable,
     DrawArrays,
@@ -122,8 +128,14 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(CompressedTexSubImage2D)
         MAP_ENUM(CopyTexImage2D)
         MAP_ENUM(CopyTexSubImage2D)
+        MAP_ENUM(CreateProgram)
+        MAP_ENUM(CreateShader)
+        MAP_ENUM(CullFace)
         MAP_ENUM(DeleteBuffers)
         MAP_ENUM(DeleteFramebuffers)
+        MAP_ENUM(DeleteProgram)
+        MAP_ENUM(DeleteRenderbuffers)
+        MAP_ENUM(DeleteShader)
         MAP_ENUM(DeleteTextures)
         MAP_ENUM(Disable)
         MAP_ENUM(DrawArrays)
@@ -233,8 +245,14 @@ struct Ogles2Context
     void (*old_glCompressedTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data);
     void (*old_glCopyTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
     void (*old_glCopyTexSubImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+    GLuint (*old_glCreateProgram)(struct OGLES2IFace *Self);
+    GLuint (*old_glCreateShader)(struct OGLES2IFace *Self, GLenum type);
+    void (*old_glCullFace)(struct OGLES2IFace *Self, GLenum mode);
     void (*old_glDeleteBuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers);
     void (*old_glDeleteFramebuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * framebuffers);
+    void (*old_glDeleteProgram)(struct OGLES2IFace *Self, GLuint program);
+    void (*old_glDeleteRenderbuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * renderbuffers);
+    void (*old_glDeleteShader)(struct OGLES2IFace *Self, GLuint shader);
     void (*old_glDeleteTextures)(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures);
     void (*old_glDisable)(struct OGLES2IFace *Self, GLenum cap);
     void (*old_glDrawArrays)(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count);
@@ -816,6 +834,44 @@ static void OGLES2_glCopyTexSubImage2D(struct OGLES2IFace *Self, GLenum target, 
     GL_CALL(CopyTexSubImage2D, target, level, xoffset, yoffset, x, y, width, height)
 }
 
+static GLuint OGLES2_glCreateProgram(struct OGLES2IFace *Self)
+{
+    GET_CONTEXT
+
+    GLuint status = 0;
+
+    GL_CALL_STATUS(CreateProgram)
+
+    logLine("%s: %s: created program %u", context->name, __func__,
+        status);
+
+    return status;
+}
+
+static GLuint OGLES2_glCreateShader(struct OGLES2IFace *Self, GLenum type)
+{
+    GET_CONTEXT
+
+    GLuint status = 0;
+
+    GL_CALL_STATUS(CreateShader, type)
+
+    logLine("%s: %s: type %u. Created shader %u", context->name, __func__,
+        type, status);
+
+    return status;
+}
+
+static void OGLES2_glCullFace(struct OGLES2IFace *Self, GLenum mode)
+{
+    GET_CONTEXT
+
+    GL_CALL(CullFace, mode)
+
+    logLine("%s: %s: mode %u", context->name, __func__,
+        mode);
+}
+
 static void OGLES2_glDeleteBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
 {
     GET_CONTEXT
@@ -844,6 +900,41 @@ static void OGLES2_glDeleteFramebuffers(struct OGLES2IFace *Self, GLsizei n, con
     }
 
     GL_CALL(DeleteFramebuffers, n, framebuffers)
+}
+
+static void OGLES2_glDeleteProgram(struct OGLES2IFace *Self, GLuint program)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: program %u", context->name, __func__,
+        program);
+
+    GL_CALL(DeleteProgram, program)
+}
+
+static void OGLES2_glDeleteRenderbuffers(struct OGLES2IFace *Self, GLsizei n, const GLuint * renderbuffers)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: n %d, renderbuffers %p", context->name, __func__,
+        n, renderbuffers);
+
+    GLsizei i;
+    for (i = 0; i < n; i++) {
+        logLine("Deleting renderbuffer[%u] = %u", i, renderbuffers[i]);
+    }
+
+    GL_CALL(DeleteRenderbuffers, n, renderbuffers)
+}
+
+static void OGLES2_glDeleteShader(struct OGLES2IFace *Self, GLuint shader)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: shader %u", context->name, __func__,
+        shader);
+
+    GL_CALL(DeleteShader, shader)
 }
 
 static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures)
@@ -1429,8 +1520,14 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glCompressedTexImage2D, OGLES2, Ogles2Conte
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCompressedTexSubImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCopyTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glCopyTexSubImage2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCreateProgram, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCreateShader, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glCullFace, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteFramebuffers, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteProgram, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteRenderbuffers, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDisable, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
@@ -1502,8 +1599,14 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glCompressedTexSubImage2D,
     patch_glCopyTexImage2D,
     patch_glCopyTexSubImage2D,
+    patch_glCreateProgram,
+    patch_glCreateShader,
+    patch_glCullFace,
     patch_glDeleteBuffers,
     patch_glDeleteFramebuffers,
+    patch_glDeleteProgram,
+    patch_glDeleteRenderbuffers,
+    patch_glDeleteShader,
     patch_glDeleteTextures,
     patch_glDisable,
     patch_glDrawArrays,
