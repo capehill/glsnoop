@@ -69,6 +69,7 @@ typedef enum Ogles2Function {
     GenBuffers,
     GenerateMipmap,
     GenFramebuffers,
+    GenRenderbuffers,
     GenTextures,
     GetFramebufferAttachmentParameteriv,
     ShaderSource,
@@ -161,6 +162,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GenBuffers)
         MAP_ENUM(GenerateMipmap)
         MAP_ENUM(GenFramebuffers)
+        MAP_ENUM(GenRenderbuffers)
         MAP_ENUM(GenTextures)
         MAP_ENUM(GetFramebufferAttachmentParameteriv)
         MAP_ENUM(ShaderSource)
@@ -284,6 +286,7 @@ struct Ogles2Context
     void (*old_glGenBuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers);
     void (*old_glGenerateMipmap)(struct OGLES2IFace *Self, GLenum target);
     void (*old_glGenFramebuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * framebuffers);
+    void (*old_glGenRenderbuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * renderbuffers);
     void (*old_glGenTextures)(struct OGLES2IFace *Self, GLsizei n, GLuint * textures);
     void (*old_glGetFramebufferAttachmentParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
@@ -1193,6 +1196,21 @@ static void OGLES2_glGenFramebuffers(struct OGLES2IFace *Self, GLsizei n, GLuint
     }
 }
 
+static void OGLES2_glGenRenderbuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * renderbuffers)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: n %u, renderbuffers %p", context->name, __func__,
+        n, renderbuffers);
+
+    GL_CALL(GenRenderbuffers, n, renderbuffers)
+
+    GLsizei i;
+    for (i = 0; i < n; i++) {
+        logLine("Renderbuffer[%u] = %u", i, renderbuffers[i]);
+    }
+}
+
 static void OGLES2_glGenTextures(struct OGLES2IFace *Self, GLsizei n, GLuint * textures)
 {
     GET_CONTEXT
@@ -1625,6 +1643,7 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glFrontFace, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenerateMipmap, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenFramebuffers, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGenRenderbuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenTextures, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFramebufferAttachmentParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
@@ -1710,6 +1729,7 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGenBuffers,
     patch_glGenerateMipmap,
     patch_glGenFramebuffers,
+    patch_glGenRenderbuffers,
     patch_glGenTextures,
     patch_glGetFramebufferAttachmentParameteriv,
     patch_glShaderSource,
