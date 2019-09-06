@@ -51,6 +51,9 @@ typedef enum Ogles2Function {
     DeleteRenderbuffers,
     DeleteShader,
     DeleteTextures,
+    DepthFunc,
+    DepthMask,
+    DepthRangef,
     Disable,
     DrawArrays,
     DrawElements,
@@ -137,6 +140,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(DeleteRenderbuffers)
         MAP_ENUM(DeleteShader)
         MAP_ENUM(DeleteTextures)
+        MAP_ENUM(DepthFunc)
+        MAP_ENUM(DepthMask)
+        MAP_ENUM(DepthRangef)
         MAP_ENUM(Disable)
         MAP_ENUM(DrawArrays)
         MAP_ENUM(DrawElements)
@@ -254,6 +260,9 @@ struct Ogles2Context
     void (*old_glDeleteRenderbuffers)(struct OGLES2IFace *Self, GLsizei n, const GLuint * renderbuffers);
     void (*old_glDeleteShader)(struct OGLES2IFace *Self, GLuint shader);
     void (*old_glDeleteTextures)(struct OGLES2IFace *Self, GLsizei n, const GLuint * textures);
+    void (*old_glDepthFunc)(struct OGLES2IFace *Self, GLenum func);
+    void (*old_glDepthMask)(struct OGLES2IFace *Self, GLboolean flag);
+    void (*old_glDepthRangef)(struct OGLES2IFace *Self, GLfloat n, GLfloat f);
     void (*old_glDisable)(struct OGLES2IFace *Self, GLenum cap);
     void (*old_glDrawArrays)(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count);
     void (*old_glDrawElements)(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices);
@@ -952,6 +961,36 @@ static void OGLES2_glDeleteTextures(struct OGLES2IFace *Self, GLsizei n, const G
     GL_CALL(DeleteTextures, n, textures)
 }
 
+static void OGLES2_glDepthFunc(struct OGLES2IFace *Self, GLenum func)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: func %u", context->name, __func__,
+        func);
+
+    GL_CALL(DepthFunc, func)
+}
+
+static void OGLES2_glDepthMask(struct OGLES2IFace *Self, GLboolean flag)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: flag %d", context->name, __func__,
+        flag);
+
+    GL_CALL(DepthMask, flag)
+}
+
+static void OGLES2_glDepthRangef(struct OGLES2IFace *Self, GLfloat n, GLfloat f)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: n %f f %f", context->name, __func__,
+        n, f);
+
+    GL_CALL(DepthRangef, n, f)
+}
+
 static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
 {
     GET_CONTEXT
@@ -1529,6 +1568,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteProgram, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteRenderbuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDepthFunc, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDepthMask, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDepthRangef, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDisable, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawElements, OGLES2, Ogles2Context)
@@ -1608,6 +1650,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glDeleteRenderbuffers,
     patch_glDeleteShader,
     patch_glDeleteTextures,
+    patch_glDepthFunc,
+    patch_glDepthMask,
+    patch_glDepthRangef,
     patch_glDisable,
     patch_glDrawArrays,
     patch_glDrawElements,
