@@ -54,7 +54,9 @@ typedef enum Ogles2Function {
     DepthFunc,
     DepthMask,
     DepthRangef,
+    DetachShader,
     Disable,
+    DisableVertexAttribArray,
     DrawArrays,
     DrawElements,
     Enable,
@@ -63,6 +65,7 @@ typedef enum Ogles2Function {
     Flush,
     FramebufferRenderbuffer,
     FramebufferTexture2D,
+    FrontFace,
     GenBuffers,
     GenerateMipmap,
     GenFramebuffers,
@@ -143,7 +146,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(DepthFunc)
         MAP_ENUM(DepthMask)
         MAP_ENUM(DepthRangef)
+        MAP_ENUM(DetachShader)
         MAP_ENUM(Disable)
+        MAP_ENUM(DisableVertexAttribArray)
         MAP_ENUM(DrawArrays)
         MAP_ENUM(DrawElements)
         MAP_ENUM(Enable)
@@ -152,6 +157,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(Flush)
         MAP_ENUM(FramebufferRenderbuffer)
         MAP_ENUM(FramebufferTexture2D)
+        MAP_ENUM(FrontFace)
         MAP_ENUM(GenBuffers)
         MAP_ENUM(GenerateMipmap)
         MAP_ENUM(GenFramebuffers)
@@ -263,7 +269,9 @@ struct Ogles2Context
     void (*old_glDepthFunc)(struct OGLES2IFace *Self, GLenum func);
     void (*old_glDepthMask)(struct OGLES2IFace *Self, GLboolean flag);
     void (*old_glDepthRangef)(struct OGLES2IFace *Self, GLfloat n, GLfloat f);
+    void (*old_glDetachShader)(struct OGLES2IFace *Self, GLuint program, GLuint shader);
     void (*old_glDisable)(struct OGLES2IFace *Self, GLenum cap);
+    void (*old_glDisableVertexAttribArray)(struct OGLES2IFace *Self, GLuint index);
     void (*old_glDrawArrays)(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count);
     void (*old_glDrawElements)(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices);
     void (*old_glEnable)(struct OGLES2IFace *Self, GLenum cap);
@@ -272,6 +280,7 @@ struct Ogles2Context
     void (*old_glFlush)(struct OGLES2IFace *Self);
     void (*old_glFramebufferRenderbuffer)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
     void (*old_glFramebufferTexture2D)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+    void (*old_glFrontFace)(struct OGLES2IFace *Self, GLenum mode);
     void (*old_glGenBuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers);
     void (*old_glGenerateMipmap)(struct OGLES2IFace *Self, GLenum target);
     void (*old_glGenFramebuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * framebuffers);
@@ -991,6 +1000,16 @@ static void OGLES2_glDepthRangef(struct OGLES2IFace *Self, GLfloat n, GLfloat f)
     GL_CALL(DepthRangef, n, f)
 }
 
+static void OGLES2_glDetachShader(struct OGLES2IFace *Self, GLuint program, GLuint shader)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: program %u, shader %u", context->name, __func__,
+        program, shader);
+
+    GL_CALL(DetachShader, program, shader)
+}
+
 static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
 {
     GET_CONTEXT
@@ -999,6 +1018,16 @@ static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
         cap);
 
     GL_CALL(Disable, cap)
+}
+
+static void OGLES2_glDisableVertexAttribArray(struct OGLES2IFace *Self, GLuint index)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: index %u", context->name, __func__,
+        index);
+
+    GL_CALL(DisableVertexAttribArray, index)
 }
 
 static void countPrimitive(PrimitiveCounter * counter, const GLenum type, const size_t count)
@@ -1112,6 +1141,16 @@ static void OGLES2_glFramebufferTexture2D(struct OGLES2IFace *Self, GLenum targe
         target, attachment, textarget, texture, level);
 
     GL_CALL(FramebufferTexture2D, target, attachment, textarget, texture, level)
+}
+
+static void OGLES2_glFrontFace(struct OGLES2IFace *Self, GLenum mode)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: mode %d", context->name, __func__,
+        mode);
+
+    GL_CALL(FrontFace, mode)
 }
 
 static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * buffers)
@@ -1571,7 +1610,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glDeleteTextures, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDepthFunc, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDepthMask, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDepthRangef, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDetachShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDisable, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDisableVertexAttribArray, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawElements, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glEnable, OGLES2, Ogles2Context)
@@ -1580,6 +1621,7 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glFinish, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glFlush, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glFramebufferRenderbuffer, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glFramebufferTexture2D, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glFrontFace, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenerateMipmap, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenFramebuffers, OGLES2, Ogles2Context)
@@ -1653,7 +1695,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glDepthFunc,
     patch_glDepthMask,
     patch_glDepthRangef,
+    patch_glDetachShader,
     patch_glDisable,
+    patch_glDisableVertexAttribArray,
     patch_glDrawArrays,
     patch_glDrawElements,
     patch_glEnable,
@@ -1662,6 +1706,7 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glFlush,
     patch_glFramebufferRenderbuffer,
     patch_glFramebufferTexture2D,
+    patch_glFrontFace,
     patch_glGenBuffers,
     patch_glGenerateMipmap,
     patch_glGenFramebuffers,
