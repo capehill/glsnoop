@@ -71,6 +71,8 @@ typedef enum Ogles2Function {
     GenFramebuffers,
     GenRenderbuffers,
     GenTextures,
+    GetActiveAttrib,
+    GetActiveUniform,
     GetFramebufferAttachmentParameteriv,
     ShaderSource,
     SwapBuffers,
@@ -163,6 +165,8 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GenerateMipmap)
         MAP_ENUM(GenFramebuffers)
         MAP_ENUM(GenRenderbuffers)
+        MAP_ENUM(GetActiveAttrib)
+        MAP_ENUM(GetActiveUniform)
         MAP_ENUM(GenTextures)
         MAP_ENUM(GetFramebufferAttachmentParameteriv)
         MAP_ENUM(ShaderSource)
@@ -288,6 +292,8 @@ struct Ogles2Context
     void (*old_glGenFramebuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * framebuffers);
     void (*old_glGenRenderbuffers)(struct OGLES2IFace *Self, GLsizei n, GLuint * renderbuffers);
     void (*old_glGenTextures)(struct OGLES2IFace *Self, GLsizei n, GLuint * textures);
+    void (*old_glGetActiveAttrib)(struct OGLES2IFace *Self, GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name);
+    void (*old_glGetActiveUniform)(struct OGLES2IFace *Self, GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name);
     void (*old_glGetFramebufferAttachmentParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
@@ -1226,6 +1232,38 @@ static void OGLES2_glGenTextures(struct OGLES2IFace *Self, GLsizei n, GLuint * t
     }
 }
 
+static void OGLES2_glGetActiveAttrib(struct OGLES2IFace *Self, GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name)
+{
+    GET_CONTEXT
+
+    GLsizei tempLength = 0;
+
+    GL_CALL(GetActiveAttrib, program, index, bufSize, &tempLength, size, type, name)
+
+    logLine("%s: %s: program %u, index %u, bufSize %d, length %d, size %d, type %u, name '%s'", context->name, __func__,
+        program, index, bufSize, tempLength, *size, *type, name);
+
+    if (length) {
+        *length = tempLength;
+    }
+}
+
+static void OGLES2_glGetActiveUniform(struct OGLES2IFace *Self, GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name)
+{
+    GET_CONTEXT
+
+    GLsizei tempLength = 0;
+
+    GL_CALL(GetActiveUniform, program, index, bufSize, &tempLength, size, type, name)
+
+    logLine("%s: %s: program %u, index %u, bufSize %d, length %d, size %d, type %u, name '%s'", context->name, __func__,
+        program, index, bufSize, tempLength, *size, *type, name);
+
+    if (length) {
+        *length = tempLength;
+    }
+}
+
 static void OGLES2_glGetFramebufferAttachmentParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params)
 {
     GET_CONTEXT
@@ -1645,6 +1683,8 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glGenerateMipmap, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenFramebuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenRenderbuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenTextures, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetActiveAttrib, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetActiveUniform, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFramebufferAttachmentParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
@@ -1731,6 +1771,8 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGenFramebuffers,
     patch_glGenRenderbuffers,
     patch_glGenTextures,
+    patch_glGetActiveAttrib,
+    patch_glGetActiveUniform,
     patch_glGetFramebufferAttachmentParameteriv,
     patch_glShaderSource,
     patch_glTexImage2D,
