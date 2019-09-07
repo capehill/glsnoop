@@ -73,6 +73,11 @@ typedef enum Ogles2Function {
     GenTextures,
     GetActiveAttrib,
     GetActiveUniform,
+    GetAttachedShaders,
+    GetAttribLocation,
+    GetBooleanv,
+    GetBufferParameteriv,
+    GetError,
     GetFramebufferAttachmentParameteriv,
     ShaderSource,
     SwapBuffers,
@@ -165,9 +170,14 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GenerateMipmap)
         MAP_ENUM(GenFramebuffers)
         MAP_ENUM(GenRenderbuffers)
+        MAP_ENUM(GenTextures)
         MAP_ENUM(GetActiveAttrib)
         MAP_ENUM(GetActiveUniform)
-        MAP_ENUM(GenTextures)
+        MAP_ENUM(GetAttachedShaders)
+        MAP_ENUM(GetAttribLocation)
+        MAP_ENUM(GetBooleanv)
+        MAP_ENUM(GetBufferParameteriv)
+        MAP_ENUM(GetError)
         MAP_ENUM(GetFramebufferAttachmentParameteriv)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
@@ -294,6 +304,11 @@ struct Ogles2Context
     void (*old_glGenTextures)(struct OGLES2IFace *Self, GLsizei n, GLuint * textures);
     void (*old_glGetActiveAttrib)(struct OGLES2IFace *Self, GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name);
     void (*old_glGetActiveUniform)(struct OGLES2IFace *Self, GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name);
+    void (*old_glGetAttachedShaders)(struct OGLES2IFace *Self, GLuint program, GLsizei maxCount, GLsizei * count, GLuint * shaders);
+    GLint (*old_glGetAttribLocation)(struct OGLES2IFace *Self, GLuint program, const GLchar * name);
+    void (*old_glGetBooleanv)(struct OGLES2IFace *Self, GLenum pname, GLboolean * data);
+    void (*old_glGetBufferParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params);
+    GLenum (*old_glGetError)(struct OGLES2IFace *Self);
     void (*old_glGetFramebufferAttachmentParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
@@ -567,7 +582,17 @@ static struct Ogles2Context* find_context(struct OGLES2IFace *interface)
 static void checkErrors(struct Ogles2Context * context, const Ogles2Function id)
 {
     GLenum err;
-    while ((err = context->interface->glGetError()) != GL_NO_ERROR) {
+
+    GLenum (*func)(struct OGLES2IFace *Self);
+
+    // Don't use the wrapper function
+    if (context->old_glGetError) {
+        func = context->old_glGetError;
+    } else {
+        func = context->interface->glGetError;
+    }
+
+    while ((err = func(context->interface)) != GL_NO_ERROR) {
         logLine("%s: GL error %d (%s) detected", context->name, err, mapOgles2Error(err));
         context->profiling[id].errors++;
     }
@@ -1264,6 +1289,76 @@ static void OGLES2_glGetActiveUniform(struct OGLES2IFace *Self, GLuint program, 
     }
 }
 
+static void OGLES2_glGetAttachedShaders(struct OGLES2IFace *Self, GLuint program, GLsizei maxCount, GLsizei * count, GLuint * shaders)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: program %u, maxCount %d, count %p, shaders %p", context->name, __func__,
+        program, maxCount, count, shaders);
+
+    GLsizei tempCount = 0;
+
+    GL_CALL(GetAttachedShaders, program, maxCount, &tempCount, shaders)
+
+    GLsizei i;
+    for (i = 0; i < tempCount; i++) {
+        logLine("shader[%d] = %u", i, shaders[i]);
+    }
+
+    if (count) {
+        *count = tempCount;
+    }
+}
+
+static GLint OGLES2_glGetAttribLocation(struct OGLES2IFace *Self, GLuint program, const GLchar * name)
+{
+    GET_CONTEXT
+
+    GLint status = 0;
+
+    GL_CALL_STATUS(GetAttribLocation, program, name)
+
+    logLine("%s: %s: program %u, name '%s'. Location %d", context->name, __func__,
+        program, name, status);
+
+    return status;
+}
+
+static void OGLES2_glGetBooleanv(struct OGLES2IFace *Self, GLenum pname, GLboolean * data)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetBooleanv, pname, data)
+
+    logLine("%s: %s: pname %u, data %d", context->name, __func__,
+        pname, *data);
+}
+
+static void OGLES2_glGetBufferParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetBufferParameteriv, target, pname, params)
+
+    logLine("%s: %s: target %u, pname %u, params %d", context->name, __func__,
+        target, pname, *params);
+}
+
+// NOTE: each OpenGL call triggers error checking, so it's likely that this returns usually GL_NO_ERROR.
+static GLenum OGLES2_glGetError(struct OGLES2IFace *Self)
+{
+    GET_CONTEXT
+
+    GLenum status = 0;
+
+    GL_CALL_STATUS(GetError)
+
+    logLine("%s: %s: error %u (%s)", context->name, __func__,
+        status, (status == GL_NO_ERROR) ? "GL_NO_ERROR" : mapOgles2Error(status));
+
+    return status;
+}
+
 static void OGLES2_glGetFramebufferAttachmentParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params)
 {
     GET_CONTEXT
@@ -1685,6 +1780,11 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glGenRenderbuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGenTextures, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetActiveAttrib, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetActiveUniform, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetAttachedShaders, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetAttribLocation, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetBooleanv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetBufferParameteriv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetError, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFramebufferAttachmentParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
@@ -1773,6 +1873,11 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGenTextures,
     patch_glGetActiveAttrib,
     patch_glGetActiveUniform,
+    patch_glGetAttachedShaders,
+    patch_glGetAttribLocation,
+    patch_glGetBooleanv,
+    patch_glGetBufferParameteriv,
+    patch_glGetError,
     patch_glGetFramebufferAttachmentParameteriv,
     patch_glShaderSource,
     patch_glTexImage2D,
