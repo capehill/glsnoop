@@ -83,6 +83,11 @@ typedef enum Ogles2Function {
     GetIntegerv,
     GetProgramiv,
     GetProgramInfoLog,
+    GetRenderbufferParameteriv,
+    GetShaderiv,
+    GetShaderInfoLog,
+    GetShaderPrecisionFormat,
+    GetShaderSource,
     ShaderSource,
     SwapBuffers,
     TexImage2D,
@@ -187,6 +192,11 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GetIntegerv)
         MAP_ENUM(GetProgramiv)
         MAP_ENUM(GetProgramInfoLog)
+        MAP_ENUM(GetRenderbufferParameteriv)
+        MAP_ENUM(GetShaderiv)
+        MAP_ENUM(GetShaderInfoLog)
+        MAP_ENUM(GetShaderPrecisionFormat)
+        MAP_ENUM(GetShaderSource)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
@@ -322,6 +332,11 @@ struct Ogles2Context
     void (*old_glGetIntegerv)(struct OGLES2IFace *Self, GLenum pname, GLint * data);
     void (*old_glGetProgramiv)(struct OGLES2IFace *Self, GLuint program, GLenum pname, GLint * params);
     void (*old_glGetProgramInfoLog)(struct OGLES2IFace *Self, GLuint program, GLsizei bufSize, GLsizei * length, GLchar * infoLog);
+    void (*old_glGetRenderbufferParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params);
+    void (*old_glGetShaderiv)(struct OGLES2IFace *Self, GLuint shader, GLenum pname, GLint * params);
+    void (*old_glGetShaderInfoLog)(struct OGLES2IFace *Self, GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * infoLog);
+    void (*old_glGetShaderPrecisionFormat)(struct OGLES2IFace *Self, GLenum shadertype, GLenum precisiontype, GLint * range, GLint * precision);
+    void (*old_glGetShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * source);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
@@ -1427,6 +1442,68 @@ static void OGLES2_glGetProgramInfoLog(struct OGLES2IFace *Self, GLuint program,
     }
 }
 
+static void OGLES2_glGetRenderbufferParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetRenderbufferParameteriv, target, pname, params)
+
+    logLine("%s: %s: target %u, pname %u, params %d", context->name, __func__,
+        target, pname, *params);
+}
+
+static void OGLES2_glGetShaderiv(struct OGLES2IFace *Self, GLuint shader, GLenum pname, GLint * params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetShaderiv, shader, pname, params)
+
+    logLine("%s: %s: shader %u, pname %u, params %d", context->name, __func__,
+        shader, pname, *params);
+}
+
+static void OGLES2_glGetShaderInfoLog(struct OGLES2IFace *Self, GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * infoLog)
+{
+    GET_CONTEXT
+
+    GLsizei tempLength = 0;
+
+    GL_CALL(GetShaderInfoLog, shader, bufSize, &tempLength, infoLog)
+
+    logLine("%s: %s: shader %u, bufSize %u, length %u, infoLog '%s'", context->name, __func__,
+        shader, bufSize, tempLength, infoLog);
+
+    if (length) {
+        *length = tempLength;
+    }
+}
+
+static void OGLES2_glGetShaderPrecisionFormat(struct OGLES2IFace *Self, GLenum shadertype, GLenum precisiontype, GLint * range, GLint * precision)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetShaderPrecisionFormat, shadertype, precisiontype, range, precision)
+
+    logLine("%s: %s: shadertype %u, precisiontype %u, range [%d, %d], precision %d", context->name, __func__,
+        shadertype, precisiontype, range[0], range[1], *precision);
+}
+
+static void OGLES2_glGetShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * source)
+{
+    GET_CONTEXT
+
+    GLsizei tempLength = 0;
+
+    GL_CALL(GetShaderSource, shader, bufSize, &tempLength, source)
+
+    logLine("%s: %s: shader %u, bufSize %u, length %u, source '%s'", context->name, __func__,
+        shader, bufSize, tempLength, source);
+
+    if (length) {
+        *length = tempLength;
+    }
+}
+
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
 {
     GET_CONTEXT
@@ -1848,6 +1925,11 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFramebufferAttachmentParameteriv, OGLE
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetIntegerv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetProgramiv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetProgramInfoLog, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetRenderbufferParameteriv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderiv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderInfoLog, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderPrecisionFormat, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
@@ -1945,6 +2027,11 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGetIntegerv,
     patch_glGetProgramiv,
     patch_glGetProgramInfoLog,
+    patch_glGetRenderbufferParameteriv,
+    patch_glGetShaderiv,
+    patch_glGetShaderInfoLog,
+    patch_glGetShaderPrecisionFormat,
+    patch_glGetShaderSource,
     patch_glShaderSource,
     patch_glTexImage2D,
     patch_glTexParameterf,
