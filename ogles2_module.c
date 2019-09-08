@@ -78,7 +78,11 @@ typedef enum Ogles2Function {
     GetBooleanv,
     GetBufferParameteriv,
     GetError,
+    GetFloatv,
     GetFramebufferAttachmentParameteriv,
+    GetIntegerv,
+    GetProgramiv,
+    GetProgramInfoLog,
     ShaderSource,
     SwapBuffers,
     TexImage2D,
@@ -178,7 +182,11 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GetBooleanv)
         MAP_ENUM(GetBufferParameteriv)
         MAP_ENUM(GetError)
+        MAP_ENUM(GetFloatv)
         MAP_ENUM(GetFramebufferAttachmentParameteriv)
+        MAP_ENUM(GetIntegerv)
+        MAP_ENUM(GetProgramiv)
+        MAP_ENUM(GetProgramInfoLog)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
@@ -309,7 +317,11 @@ struct Ogles2Context
     void (*old_glGetBooleanv)(struct OGLES2IFace *Self, GLenum pname, GLboolean * data);
     void (*old_glGetBufferParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params);
     GLenum (*old_glGetError)(struct OGLES2IFace *Self);
+    void (*old_glGetFloatv)(struct OGLES2IFace *Self, GLenum pname, GLfloat * data);
     void (*old_glGetFramebufferAttachmentParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params);
+    void (*old_glGetIntegerv)(struct OGLES2IFace *Self, GLenum pname, GLint * data);
+    void (*old_glGetProgramiv)(struct OGLES2IFace *Self, GLuint program, GLenum pname, GLint * params);
+    void (*old_glGetProgramInfoLog)(struct OGLES2IFace *Self, GLuint program, GLsizei bufSize, GLsizei * length, GLchar * infoLog);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
@@ -1196,7 +1208,7 @@ static void OGLES2_glGenBuffers(struct OGLES2IFace *Self, GLsizei n, GLuint * bu
 
     GL_CALL(GenBuffers, n, buffers)
 
-    ssize_t i;
+    GLsizei i;
     for (i = 0; i < n; i++) {
         logLine("Buffer[%u] = %u", i, buffers[i]);
     }
@@ -1265,7 +1277,7 @@ static void OGLES2_glGetActiveAttrib(struct OGLES2IFace *Self, GLuint program, G
 
     GL_CALL(GetActiveAttrib, program, index, bufSize, &tempLength, size, type, name)
 
-    logLine("%s: %s: program %u, index %u, bufSize %d, length %d, size %d, type %u, name '%s'", context->name, __func__,
+    logLine("%s: %s: program %u, index %u, bufSize %u, length %u, size %d, type %u, name '%s'", context->name, __func__,
         program, index, bufSize, tempLength, *size, *type, name);
 
     if (length) {
@@ -1281,7 +1293,7 @@ static void OGLES2_glGetActiveUniform(struct OGLES2IFace *Self, GLuint program, 
 
     GL_CALL(GetActiveUniform, program, index, bufSize, &tempLength, size, type, name)
 
-    logLine("%s: %s: program %u, index %u, bufSize %d, length %d, size %d, type %u, name '%s'", context->name, __func__,
+    logLine("%s: %s: program %u, index %u, bufSize %u, length %u, size %d, type %u, name '%s'", context->name, __func__,
         program, index, bufSize, tempLength, *size, *type, name);
 
     if (length) {
@@ -1293,7 +1305,7 @@ static void OGLES2_glGetAttachedShaders(struct OGLES2IFace *Self, GLuint program
 {
     GET_CONTEXT
 
-    logLine("%s: %s: program %u, maxCount %d, count %p, shaders %p", context->name, __func__,
+    logLine("%s: %s: program %u, maxCount %u, count %p, shaders %p", context->name, __func__,
         program, maxCount, count, shaders);
 
     GLsizei tempCount = 0;
@@ -1302,7 +1314,7 @@ static void OGLES2_glGetAttachedShaders(struct OGLES2IFace *Self, GLuint program
 
     GLsizei i;
     for (i = 0; i < tempCount; i++) {
-        logLine("shader[%d] = %u", i, shaders[i]);
+        logLine("shader[%u] = %u", i, shaders[i]);
     }
 
     if (count) {
@@ -1359,14 +1371,60 @@ static GLenum OGLES2_glGetError(struct OGLES2IFace *Self)
     return status;
 }
 
+static void OGLES2_glGetFloatv(struct OGLES2IFace *Self, GLenum pname, GLfloat * data)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetFloatv, pname, data)
+
+    logLine("%s: %s: pname %u, data %f", context->name, __func__,
+        pname, *data);
+}
+
 static void OGLES2_glGetFramebufferAttachmentParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u, attachment %u pname %u, params %p", context->name, __func__,
-        target, attachment, pname, params);
-
     GL_CALL(GetFramebufferAttachmentParameteriv, target, attachment, pname, params)
+
+    logLine("%s: %s: target %u, attachment %u pname %u, params %d", context->name, __func__,
+        target, attachment, pname, *params);
+}
+
+static void OGLES2_glGetIntegerv(struct OGLES2IFace *Self, GLenum pname, GLint * data)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetIntegerv, pname, data)
+
+    logLine("%s: %s: pname %u, data %d", context->name, __func__,
+        pname, *data);
+}
+
+static void OGLES2_glGetProgramiv(struct OGLES2IFace *Self, GLuint program, GLenum pname, GLint * params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetProgramiv, program, pname, params)
+
+    logLine("%s: %s: program %u, pname %u, params %d", context->name, __func__,
+        program, pname, *params);
+}
+
+static void OGLES2_glGetProgramInfoLog(struct OGLES2IFace *Self, GLuint program, GLsizei bufSize, GLsizei * length, GLchar * infoLog)
+{
+    GET_CONTEXT
+
+    GLsizei tempLength = 0;
+
+    GL_CALL(GetProgramInfoLog, program, bufSize, &tempLength, infoLog)
+
+    logLine("%s: %s: program %u, bufSize %u, length %u, infoLog '%s'", context->name, __func__,
+        program, bufSize, tempLength, infoLog);
+
+    if (length) {
+        *length = tempLength;
+    }
 }
 
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
@@ -1785,7 +1843,11 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glGetAttribLocation, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetBooleanv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetBufferParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetError, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFloatv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFramebufferAttachmentParameteriv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetIntegerv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetProgramiv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetProgramInfoLog, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
@@ -1878,7 +1940,11 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGetBooleanv,
     patch_glGetBufferParameteriv,
     patch_glGetError,
+    patch_glGetFloatv,
     patch_glGetFramebufferAttachmentParameteriv,
+    patch_glGetIntegerv,
+    patch_glGetProgramiv,
+    patch_glGetProgramInfoLog,
     patch_glShaderSource,
     patch_glTexImage2D,
     patch_glTexParameterf,
