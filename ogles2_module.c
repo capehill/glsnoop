@@ -88,6 +88,9 @@ typedef enum Ogles2Function {
     GetShaderInfoLog,
     GetShaderPrecisionFormat,
     GetShaderSource,
+    GetString,
+    GetTexParameterfv,
+    GetTexParameteriv,
     ShaderSource,
     SwapBuffers,
     TexImage2D,
@@ -197,6 +200,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GetShaderInfoLog)
         MAP_ENUM(GetShaderPrecisionFormat)
         MAP_ENUM(GetShaderSource)
+        MAP_ENUM(GetString)
+        MAP_ENUM(GetTexParameterfv)
+        MAP_ENUM(GetTexParameteriv)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
@@ -337,6 +343,9 @@ struct Ogles2Context
     void (*old_glGetShaderInfoLog)(struct OGLES2IFace *Self, GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * infoLog);
     void (*old_glGetShaderPrecisionFormat)(struct OGLES2IFace *Self, GLenum shadertype, GLenum precisiontype, GLint * range, GLint * precision);
     void (*old_glGetShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * source);
+    const GLubyte * (*old_glGetString)(struct OGLES2IFace *Self, GLenum name);
+    void (*old_glGetTexParameterfv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat * params);
+    void (*old_glGetTexParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
@@ -1504,6 +1513,40 @@ static void OGLES2_glGetShaderSource(struct OGLES2IFace *Self, GLuint shader, GL
     }
 }
 
+static const GLubyte * OGLES2_glGetString(struct OGLES2IFace *Self, GLenum name)
+{
+    GET_CONTEXT
+
+    const GLubyte *status = NULL;
+
+    GL_CALL_STATUS(GetString, name)
+
+    logLine("%s: %s: name %u. String '%s'", context->name, __func__,
+        name, status);
+
+    return status;
+}
+
+static void OGLES2_glGetTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat * params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetTexParameterfv, target, pname, params)
+
+    logLine("%s: %s: target %u, pname %u, params %f", context->name, __func__,
+        target, pname, *params);
+}
+
+static void OGLES2_glGetTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetTexParameteriv, target, pname, params)
+
+    logLine("%s: %s: target %u, pname %u, params %d", context->name, __func__,
+        target, pname, *params);
+}
+
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
 {
     GET_CONTEXT
@@ -1930,6 +1973,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderiv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderInfoLog, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderPrecisionFormat, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderSource, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetString, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetTexParameterfv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetTexParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
@@ -2032,6 +2078,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGetShaderInfoLog,
     patch_glGetShaderPrecisionFormat,
     patch_glGetShaderSource,
+    patch_glGetString,
+    patch_glGetTexParameterfv,
+    patch_glGetTexParameteriv,
     patch_glShaderSource,
     patch_glTexImage2D,
     patch_glTexParameterf,
