@@ -91,6 +91,9 @@ typedef enum Ogles2Function {
     GetString,
     GetTexParameterfv,
     GetTexParameteriv,
+    GetUniformfv,
+    GetUniformiv,
+    GetUniformLocation,
     ShaderSource,
     SwapBuffers,
     TexImage2D,
@@ -203,6 +206,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GetString)
         MAP_ENUM(GetTexParameterfv)
         MAP_ENUM(GetTexParameteriv)
+        MAP_ENUM(GetUniformfv)
+        MAP_ENUM(GetUniformiv)
+        MAP_ENUM(GetUniformLocation)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
@@ -346,6 +352,9 @@ struct Ogles2Context
     const GLubyte * (*old_glGetString)(struct OGLES2IFace *Self, GLenum name);
     void (*old_glGetTexParameterfv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat * params);
     void (*old_glGetTexParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params);
+    void (*old_glGetUniformfv)(struct OGLES2IFace *Self, GLuint program, GLint location, GLfloat * params);
+    void (*old_glGetUniformiv)(struct OGLES2IFace *Self, GLuint program, GLint location, GLint * params);
+    GLint (*old_glGetUniformLocation)(struct OGLES2IFace *Self, GLuint program, const GLchar * name);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
@@ -1547,6 +1556,40 @@ static void OGLES2_glGetTexParameteriv(struct OGLES2IFace *Self, GLenum target, 
         target, pname, *params);
 }
 
+static void OGLES2_glGetUniformfv(struct OGLES2IFace *Self, GLuint program, GLint location, GLfloat * params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetUniformfv, program, location, params)
+
+    logLine("%s: %s: program %u, location %u, params %f", context->name, __func__,
+        program, location, *params);
+}
+
+static void OGLES2_glGetUniformiv(struct OGLES2IFace *Self, GLuint program, GLint location, GLint * params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetUniformiv, program, location, params)
+
+    logLine("%s: %s: program %u, location %u, params %d", context->name, __func__,
+        program, location, *params);
+}
+
+static GLint OGLES2_glGetUniformLocation(struct OGLES2IFace *Self, GLuint program, const GLchar * name)
+{
+    GET_CONTEXT
+
+    GLint status = 0;
+
+    GL_CALL_STATUS(GetUniformLocation, program, name)
+
+    logLine("%s: %s: program %u, name '%s'. Location %d", context->name, __func__,
+        program, name, status);
+
+    return status;
+}
+
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
 {
     GET_CONTEXT
@@ -1976,6 +2019,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glGetShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetString, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetTexParameterfv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetTexParameteriv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetUniformfv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetUniformiv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetUniformLocation, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
@@ -2081,6 +2127,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGetString,
     patch_glGetTexParameterfv,
     patch_glGetTexParameteriv,
+    patch_glGetUniformfv,
+    patch_glGetUniformiv,
+    patch_glGetUniformLocation,
     patch_glShaderSource,
     patch_glTexImage2D,
     patch_glTexParameterf,
