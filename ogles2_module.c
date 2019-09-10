@@ -97,6 +97,14 @@ typedef enum Ogles2Function {
     GetVertexAttribfv,
     GetVertexAttribiv,
     GetVertexAttribPointerv,
+    Hint,
+    IsBuffer,
+    IsEnabled,
+    IsFramebuffer,
+    IsProgram,
+    IsRenderbuffer,
+    IsShader,
+    IsTexture,
     ShaderSource,
     SwapBuffers,
     TexImage2D,
@@ -215,6 +223,14 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GetVertexAttribfv)
         MAP_ENUM(GetVertexAttribiv)
         MAP_ENUM(GetVertexAttribPointerv)
+        MAP_ENUM(Hint)
+        MAP_ENUM(IsBuffer)
+        MAP_ENUM(IsEnabled)
+        MAP_ENUM(IsFramebuffer)
+        MAP_ENUM(IsProgram)
+        MAP_ENUM(IsRenderbuffer)
+        MAP_ENUM(IsShader)
+        MAP_ENUM(IsTexture)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
@@ -364,6 +380,14 @@ struct Ogles2Context
     void (*old_glGetVertexAttribfv)(struct OGLES2IFace *Self, GLuint index, GLenum pname, GLfloat * params);
     void (*old_glGetVertexAttribiv)(struct OGLES2IFace *Self, GLuint index, GLenum pname, GLint * params);
     void (*old_glGetVertexAttribPointerv)(struct OGLES2IFace *Self, GLuint index, GLenum pname, void ** pointer);
+    void (*old_glHint)(struct OGLES2IFace *Self, GLenum target, GLenum mode);
+    GLboolean (*old_glIsBuffer)(struct OGLES2IFace *Self, GLuint buffer);
+    GLboolean (*old_glIsEnabled)(struct OGLES2IFace *Self, GLenum cap);
+    GLboolean (*old_glIsFramebuffer)(struct OGLES2IFace *Self, GLuint framebuffer);
+    GLboolean (*old_glIsProgram)(struct OGLES2IFace *Self, GLuint program);
+    GLboolean (*old_glIsRenderbuffer)(struct OGLES2IFace *Self, GLuint renderbuffer);
+    GLboolean (*old_glIsShader)(struct OGLES2IFace *Self, GLuint shader);
+    GLboolean (*old_glIsTexture)(struct OGLES2IFace *Self, GLuint texture);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
@@ -1629,6 +1653,114 @@ static void OGLES2_glGetVertexAttribPointerv(struct OGLES2IFace *Self, GLuint in
         index, pname, *pointer);
 }
 
+static void OGLES2_glHint(struct OGLES2IFace *Self, GLenum target, GLenum mode)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, mode %u", context->name, __func__,
+        target, mode);
+
+    GL_CALL(Hint, target, mode)
+}
+
+static GLboolean OGLES2_glIsBuffer(struct OGLES2IFace *Self, GLuint buffer)
+{
+    GET_CONTEXT
+
+    GLboolean status = GL_FALSE;
+
+    GL_CALL_STATUS(IsBuffer, buffer)
+
+    logLine("%s: %s: buffer %u. Result %d", context->name, __func__,
+        buffer, status);
+
+    return status;
+}
+
+static GLboolean OGLES2_glIsEnabled(struct OGLES2IFace *Self, GLenum cap)
+{
+    GET_CONTEXT
+
+    GLboolean status = GL_FALSE;
+
+    GL_CALL_STATUS(IsEnabled, cap)
+
+    logLine("%s: %s: cap %u. Result %d", context->name, __func__,
+        cap, status);
+
+    return status;
+}
+
+static GLboolean OGLES2_glIsFramebuffer(struct OGLES2IFace *Self, GLuint framebuffer)
+{
+    GET_CONTEXT
+
+    GLboolean status = GL_FALSE;
+
+    GL_CALL_STATUS(IsFramebuffer, framebuffer)
+
+    logLine("%s: %s: framebuffer %u. Result %d", context->name, __func__,
+        framebuffer, status);
+
+    return status;
+}
+
+static GLboolean OGLES2_glIsProgram(struct OGLES2IFace *Self, GLuint program)
+{
+    GET_CONTEXT
+
+    GLboolean status = GL_FALSE;
+
+    GL_CALL_STATUS(IsProgram, program)
+
+    logLine("%s: %s: program %u. Result %d", context->name, __func__,
+        program, status);
+
+    return status;
+}
+
+static GLboolean OGLES2_glIsRenderbuffer(struct OGLES2IFace *Self, GLuint renderbuffer)
+{
+    GET_CONTEXT
+
+    GLboolean status = GL_FALSE;
+
+    GL_CALL_STATUS(IsRenderbuffer, renderbuffer)
+
+    logLine("%s: %s: renderbuffer %u. Result %d", context->name, __func__,
+        renderbuffer, status);
+
+    return status;
+}
+
+static GLboolean OGLES2_glIsShader(struct OGLES2IFace *Self, GLuint shader)
+{
+    GET_CONTEXT
+
+    GLboolean status = GL_FALSE;
+
+    GL_CALL_STATUS(IsShader, shader)
+
+    logLine("%s: %s: shader %u. Result %d", context->name, __func__,
+        shader, status);
+
+    return status;
+}
+
+static GLboolean OGLES2_glIsTexture(struct OGLES2IFace *Self, GLuint texture)
+{
+    GET_CONTEXT
+
+    GLboolean status = GL_FALSE;
+
+    GL_CALL_STATUS(IsTexture, texture)
+
+    logLine("%s: %s: texture %u. Result %d", context->name, __func__,
+        texture, status);
+
+    return status;
+}
+
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
 {
     GET_CONTEXT
@@ -2064,6 +2196,14 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glGetUniformLocation, OGLES2, Ogles2Context
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetVertexAttribfv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetVertexAttribiv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetVertexAttribPointerv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glHint, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glIsBuffer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glIsEnabled, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glIsFramebuffer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glIsProgram, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glIsRenderbuffer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glIsShader, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glIsTexture, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
@@ -2175,6 +2315,14 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGetVertexAttribfv,
     patch_glGetVertexAttribiv,
     patch_glGetVertexAttribPointerv,
+    patch_glHint,
+    patch_glIsBuffer,
+    patch_glIsEnabled,
+    patch_glIsFramebuffer,
+    patch_glIsProgram,
+    patch_glIsRenderbuffer,
+    patch_glIsShader,
+    patch_glIsTexture,
     patch_glShaderSource,
     patch_glTexImage2D,
     patch_glTexParameterf,
