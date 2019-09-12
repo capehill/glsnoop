@@ -107,6 +107,8 @@ typedef enum Ogles2Function {
     IsTexture,
     LineWidth,
     LinkProgram,
+    PixelStorei,
+    PolygonOffset,
     ShaderSource,
     SwapBuffers,
     TexImage2D,
@@ -235,6 +237,8 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(IsTexture)
         MAP_ENUM(LineWidth)
         MAP_ENUM(LinkProgram)
+        MAP_ENUM(PixelStorei)
+        MAP_ENUM(PolygonOffset)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
@@ -394,6 +398,8 @@ struct Ogles2Context
     GLboolean (*old_glIsTexture)(struct OGLES2IFace *Self, GLuint texture);
     void (*old_glLineWidth)(struct OGLES2IFace *Self, GLfloat width);
     void (*old_glLinkProgram)(struct OGLES2IFace *Self, GLuint program);
+    void (*old_glPixelStorei)(struct OGLES2IFace *Self, GLenum pname, GLint param);
+    void (*old_glPolygonOffset)(struct OGLES2IFace *Self, GLfloat factor, GLfloat units);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
@@ -1787,6 +1793,26 @@ static void OGLES2_glLinkProgram(struct OGLES2IFace *Self, GLuint program)
     GL_CALL(LinkProgram, program)
 }
 
+static void OGLES2_glPixelStorei(struct OGLES2IFace *Self, GLenum pname, GLint param)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: pname %u, param %d", context->name, __func__,
+        pname, param);
+
+    GL_CALL(PixelStorei, pname, param)
+}
+
+static void OGLES2_glPolygonOffset(struct OGLES2IFace *Self, GLfloat factor, GLfloat units)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: factor %f, units %f", context->name, __func__,
+        factor, units);
+
+    GL_CALL(PolygonOffset, factor, units)
+}
+
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
 {
     GET_CONTEXT
@@ -2232,6 +2258,8 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glIsShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glIsTexture, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glLineWidth, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glLinkProgram, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glPixelStorei, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glPolygonOffset, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
@@ -2353,6 +2381,8 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glIsTexture,
     patch_glLineWidth,
     patch_glLinkProgram,
+    patch_glPixelStorei,
+    patch_glPolygonOffset,
     patch_glShaderSource,
     patch_glTexImage2D,
     patch_glTexParameterf,
