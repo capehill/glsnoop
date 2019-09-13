@@ -109,6 +109,9 @@ typedef enum Ogles2Function {
     LinkProgram,
     PixelStorei,
     PolygonOffset,
+    ReadPixels,
+    ReleaseShaderCompiler,
+    RenderbufferStorage,
     ShaderSource,
     SwapBuffers,
     TexImage2D,
@@ -239,6 +242,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(LinkProgram)
         MAP_ENUM(PixelStorei)
         MAP_ENUM(PolygonOffset)
+        MAP_ENUM(ReadPixels)
+        MAP_ENUM(ReleaseShaderCompiler)
+        MAP_ENUM(RenderbufferStorage)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
@@ -400,6 +406,9 @@ struct Ogles2Context
     void (*old_glLinkProgram)(struct OGLES2IFace *Self, GLuint program);
     void (*old_glPixelStorei)(struct OGLES2IFace *Self, GLenum pname, GLint param);
     void (*old_glPolygonOffset)(struct OGLES2IFace *Self, GLfloat factor, GLfloat units);
+    void (*old_glReadPixels)(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels);
+    void (*old_glReleaseShaderCompiler)(struct OGLES2IFace *Self);
+    void (*old_glRenderbufferStorage)(struct OGLES2IFace *Self, GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
@@ -1813,6 +1822,35 @@ static void OGLES2_glPolygonOffset(struct OGLES2IFace *Self, GLfloat factor, GLf
     GL_CALL(PolygonOffset, factor, units)
 }
 
+static void OGLES2_glReadPixels(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: x %d, y %d, width %u, height %u, format %u, type %u, pixels %p", context->name, __func__,
+        x, y, width, height, format, type, pixels);
+
+    GL_CALL(ReadPixels, x, y, width, height, format, type, pixels)
+}
+
+static void OGLES2_glReleaseShaderCompiler(struct OGLES2IFace *Self)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s", context->name, __func__);
+
+    GL_CALL(ReleaseShaderCompiler)
+}
+
+static void OGLES2_glRenderbufferStorage(struct OGLES2IFace *Self, GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: target %u, internalformat %u, width %u, height %u", context->name, __func__,
+        target, internalformat, width, height);
+
+    GL_CALL(RenderbufferStorage, target, internalformat, width, height)
+}
+
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
 {
     GET_CONTEXT
@@ -2260,6 +2298,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glLineWidth, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glLinkProgram, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glPixelStorei, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glPolygonOffset, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glReadPixels, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glReleaseShaderCompiler, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glRenderbufferStorage, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
@@ -2383,6 +2424,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glLinkProgram,
     patch_glPixelStorei,
     patch_glPolygonOffset,
+    patch_glReadPixels,
+    patch_glReleaseShaderCompiler,
+    patch_glRenderbufferStorage,
     patch_glShaderSource,
     patch_glTexImage2D,
     patch_glTexParameterf,
