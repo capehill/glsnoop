@@ -36,6 +36,13 @@ cannot be profiled either.
 - GUI: launch the graphical user interface
 - PROFILE: disable function tracing in serial logs but keep profiling stats
 - FILTER filename: define a subset of patched functions
+- STARTTIME time: set a time in seconds for profiler start
+- DURATION time: set a profiling time in seconds
+
+Example 1) glSnoop PROFILE STARTTIME 5 DURATION 10
+- profile only
+- initialize counters 5 seconds after context creation
+- profile for 10 seconds
 
 ## Tips
 
@@ -52,8 +59,10 @@ PUBLIC DOMAIN
 
 ## Thanks
 
-- Kas1e for ideas, testing and AmigaGuide document
+- kas1e for ideas, testing and AmigaGuide document
 - Mason for icons
 - samo79 for ideas
 - Hans for ideas
+- jabirulo for ideas
+- Daniel for ideas
 

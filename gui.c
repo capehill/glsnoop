@@ -57,6 +57,11 @@ static Object* objects[OID_Count];
 static struct Window* window;
 static struct MsgPort* port;
 
+static const ULONG seconds = 1;
+static const ULONG micros = 0;
+
+TimerContext timer;
+
 static char* getApplicationName()
 {
     #define maxPathLen 255
@@ -326,7 +331,7 @@ static void handle_events(void)
     uint32 signal = 0;
     IIntuition->GetAttr(WINDOW_SigMask, objects[OID_Window], &signal);
 
-    const uint32 timerSignal = timer_signal();
+    const uint32 timerSignal = timer_signal(&timer);
 
     BOOL running = TRUE;
 
@@ -365,10 +370,11 @@ static void handle_events(void)
         }
 
         if (wait & timerSignal) {
-            timer_handle_events();
+            timer_handle_events(&timer);
             if (window) {
                 refresh_errors();
             }
+            timer_start(&timer, seconds, micros);
         }
     }
 }
@@ -384,13 +390,13 @@ void run_gui(LONG profiling)
 
     if (objects[OID_Window]) {
         if ((window = (struct Window *)IIntuition->IDoMethod(objects[OID_Window], WM_OPEN))) {
-            timer_start();
+            timer_start(&timer, seconds, micros);
             handle_events();
         } else {
             puts("Failed to open window");
         }
 
-        timer_stop();
+        timer_stop(&timer);
 
         IIntuition->DisposeObject(objects[OID_Window]);
     } else {

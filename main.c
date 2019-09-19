@@ -8,6 +8,7 @@
 
 #include <proto/exec.h>
 #include <proto/dos.h>
+#include <proto/icon.h>
 
 #include <stdio.h>
 #include <string.H>
@@ -18,15 +19,20 @@ struct Params {
     LONG nova;
     LONG gui;
     LONG profiling;
+    LONG *startTime;
+    LONG *duration;
     char *filter;
 };
 
 static const char* const version __attribute__((used)) = "$VER: " VERSION_STRING DATE "\0";
 static const char* const portName = "glSnoop port";
 static char* filterFile;
-static struct Params params = { 0, 0, 0, 0, NULL };
+static struct Params params = { 0, 0, 0, 0, NULL, NULL, NULL };
 
 static struct MsgPort* port;
+
+static ULONG startTime;
+static ULONG duration;
 
 static BOOL already_running(void)
 {
@@ -62,13 +68,28 @@ static BOOL parse_args(void)
 {
     const char* const enabled = "enabled";
     const char* const disabled = "disabled";
-    const char* const pattern = "OGLES2/S,NOVA/S,GUI/S,PROFILE/S,FILTER/K";
+    const char* const pattern = "OGLES2/S,NOVA/S,GUI/S,PROFILE/S,STARTTIME/N,DURATION/N,FILTER/K";
+
+    // how-to handle both tooltypes and args?
 
     struct RDArgs *result = IDOS->ReadArgs(pattern, (int32 *)&params, NULL);
 
     if (result) {
         if (params.filter) {
             filterFile = strdup(params.filter);
+        }
+
+        if (params.startTime) {
+            startTime = *params.startTime;
+        }
+
+        if (params.duration) {
+            duration = *params.duration;
+        }
+
+        if (startTime > 0 && duration < 1) {
+            puts("Duration should be > 0 seconds. Forcing to 1 second");
+            duration = 1;
         }
 
         IDOS->FreeArgs(result);
@@ -88,6 +109,8 @@ static BOOL parse_args(void)
     printf("  GUI: [%s]\n", params.gui ? enabled : disabled);
     printf("  Tracing mode: [%s]\n", params.profiling ? disabled : enabled);
     printf("  Filter file name: [%s]\n", filterFile ? filterFile : disabled);
+    printf("  Start time: [%lu] seconds\n", startTime);
+    printf("  Duration: [%lu] seconds\n", duration);
     puts("---------------------");
 
     return TRUE;
@@ -100,7 +123,7 @@ static void install_patches(void)
     }
 
     if (params.nova) {
-        warp3dnova_install_patches();
+        warp3dnova_install_patches(startTime);
     }
 }
 
@@ -127,12 +150,48 @@ static void remove_patches(void)
     ogles2_free();
 }
 
+typedef enum ESignalType {
+    ESignalType_Break,
+    ESignalType_Timer
+} ESignalType;
+
+static ESignalType wait_for_signal()
+{
+    const uint32 timerSig = (startTime > 0) ? timer_signal(&triggerTimer) : 0;
+    const uint32 wait = IExec->Wait(SIGBREAKF_CTRL_C | timerSig);
+
+    if (wait & SIGBREAKF_CTRL_C) {
+        puts("*** Break ***");
+        return ESignalType_Break;
+    }
+
+    if (wait & timerSig) {
+        //puts("*** Timer triggered ***");
+        timer_handle_events(&triggerTimer);
+    }
+
+    return ESignalType_Timer;
+}
+
 static void run(void)
 {
     if (params.gui) {
         run_gui(params.profiling);
     } else {
-        IExec->Wait(SIGBREAKF_CTRL_C);
+        if (wait_for_signal() == ESignalType_Timer) {
+            puts("First timer signal - start profiling");
+
+            ogles2_start_profiling();
+            warp3dnova_start_profiling();
+
+            timer_start(&triggerTimer, duration, 0);
+
+            puts("Waiting...");
+
+            wait_for_signal();
+
+            puts("Second timer signal - stop profiling");
+        }
     }
 }
 
@@ -149,8 +208,14 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
         goto out;
     }
 
-    if (!timer_init()) {
+    if (!timer_init(&timer)) {
         goto out;
+    }
+
+    if (startTime) {
+        if (!timer_init(&triggerTimer)) {
+             goto out;
+        }
     }
 
     create_port();
@@ -180,7 +245,11 @@ out:
     free_filters();
     free(filterFile);
 
-    timer_quit();
+    if (startTime) {
+        timer_quit(&triggerTimer);
+    }
+
+    timer_quit(&timer);
 
     logLine("glSnoop exiting");
 

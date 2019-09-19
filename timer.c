@@ -6,10 +6,10 @@
 
 #include <stdio.h>
 
-static struct MsgPort* port = NULL;
-static struct TimeRequest* request = NULL;
-static BYTE device = -1;
 static ULONG frequency = 0;
+static int users = 0;
+
+TimerContext triggerTimer;
 
 static void read_frequency(void)
 {
@@ -19,120 +19,154 @@ static void read_frequency(void)
     logLine("Timer frequency %lu ticks / second", frequency);
 }
 
-BOOL timer_init(void)
+BOOL timer_init(TimerContext * tc)
 {
-	port = IExec->AllocSysObjectTags(ASOT_PORT,
+    tc->port = NULL;
+    tc->request = NULL;
+    tc->device = -1;
+
+	tc->port = IExec->AllocSysObjectTags(ASOT_PORT,
 		ASOPORT_Name, "timer_port",
 		TAG_DONE);
 
-	if (!port) {
+	if (!tc->port) {
 		puts("Couldn't create timer port");
 		goto out;
 	}
 
-	request = IExec->AllocSysObjectTags(ASOT_IOREQUEST,
+	tc->request = IExec->AllocSysObjectTags(ASOT_IOREQUEST,
 		ASOIOR_Size, sizeof(struct TimeRequest),
-		ASOIOR_ReplyPort, port,
+		ASOIOR_ReplyPort, tc->port,
 		TAG_DONE);
 
-	if (!request) {
+	if (!tc->request) {
 		puts("Couldn't create timer IO request");
 		goto out;
 	}
 
-	device = IExec->OpenDevice(TIMERNAME, UNIT_WAITUNTIL,
-		(struct IORequest *) request, 0);
+	tc->device = IExec->OpenDevice(TIMERNAME, UNIT_WAITUNTIL,
+		(struct IORequest *) tc->request, 0);
 
-	if (device) {
+	if (tc->device) {
 		puts("Couldn't open timer.device");
 		goto out;
 	}
 
-	ITimer = (struct TimerIFace *) IExec->GetInterface(
-		(struct Library *) request->Request.io_Device, "main", 1, NULL);
+    if (!ITimer) {
+    	ITimer = (struct TimerIFace *) IExec->GetInterface(
+    		(struct Library *) tc->request->Request.io_Device, "main", 1, NULL);
 
-	if (!ITimer) {
-		puts("Couldn't get Timer interface");
-		goto out;
-	}
+    	if (!ITimer) {
+    		puts("Couldn't get Timer interface");
+    		goto out;
+    	}
+    }
 
-    read_frequency();
+    if (!frequency) {
+        read_frequency();
+    }
+
+    users++;
 
     return TRUE;
 
 out:
-    timer_quit();
+    timer_quit(tc);
 
     return FALSE;
 }
 
-void timer_quit(void)
+void timer_quit(TimerContext * tc)
 {
-	if (ITimer) {
+	if ((--users <= 0) && ITimer) {
+        logLine("ITimer user count %d, dropping it", users);
 		IExec->DropInterface((struct Interface *) ITimer);
         ITimer = NULL;
 	}
 
-	if (device == 0 && request) {
-		IExec->CloseDevice((struct IORequest *) request);
-        device = -1;
+	if (tc->device == 0 && tc->request) {
+		IExec->CloseDevice((struct IORequest *) tc->request);
+        tc->device = -1;
 	}
 
-	if (request) {
-		IExec->FreeSysObject(ASOT_IOREQUEST, request);
-        request = NULL;
+	if (tc->request) {
+		IExec->FreeSysObject(ASOT_IOREQUEST, tc->request);
+        tc->request = NULL;
 	}
 
-	if (port) {
-		IExec->FreeSysObject(ASOT_PORT, port);
-        port = NULL;
+	if (tc->port) {
+		IExec->FreeSysObject(ASOT_PORT, tc->port);
+        tc->port = NULL;
 	}
 }
 
-uint32 timer_signal(void)
+uint32 timer_signal(TimerContext * tc)
 {
-    return 1L << port->mp_SigBit;
+    if (!tc->port) {
+        logLine("%s: timer port NULL", __func__);
+        return 0;
+    }
+
+    return 1L << tc->port->mp_SigBit;
 }
 
-void timer_start(void)
+void timer_start(TimerContext * tc, ULONG seconds, ULONG micros)
 {
     struct TimeVal tv;
 	struct TimeVal increment;
 
+    if (!tc->request) {
+        logLine("%s: timer request NULL", __func__);
+        return;
+    }
+
+    if (!ITimer) {
+        logLine("%s: ITimer NULL", __func__);
+        return;
+    }
+
 	ITimer->GetSysTime(&tv);
 
-	increment.Seconds = 1;
-	increment.Microseconds = 0;
+	increment.Seconds = seconds;
+	increment.Microseconds = micros;
 
 	ITimer->AddTime(&tv, &increment);
 
-	request->Request.io_Command = TR_ADDREQUEST;
-	request->Time.Seconds = tv.Seconds;
-	request->Time.Microseconds = tv.Microseconds;
+	tc->request->Request.io_Command = TR_ADDREQUEST;
+	tc->request->Time.Seconds = tv.Seconds;
+	tc->request->Time.Microseconds = tv.Microseconds;
 
-	IExec->SendIO((struct IORequest *) request);
+	IExec->SendIO((struct IORequest *) tc->request);
 }
 
-void timer_handle_events(void)
+void timer_handle_events(TimerContext * tc)
 {
 	struct Message *msg;
 
-	while ((msg = IExec->GetMsg(port))) {
+    if (!tc->port) {
+        logLine("%s: timer port NULL", __func__);
+        return;
+    }
+
+	while ((msg = IExec->GetMsg(tc->port))) {
 		const int8 error = ((struct IORequest *)msg)->io_Error;
 
 		if (error) {
 			printf("Timer message received with code %d\n", error);
 		}
 	}
-
-	timer_start();
 }
 
-void timer_stop(void)
+void timer_stop(TimerContext * tc)
 {
-	if (!IExec->CheckIO((struct IORequest *) request)) {
-		IExec->AbortIO((struct IORequest *) request);
-		IExec->WaitIO((struct IORequest *) request);
+    if (!tc->request) {
+        logLine("%s: timer request NULL", __func__);
+        return;
+    }
+
+	if (!IExec->CheckIO((struct IORequest *) tc->request)) {
+		IExec->AbortIO((struct IORequest *) tc->request);
+		IExec->WaitIO((struct IORequest *) tc->request);
 	}
 }
 

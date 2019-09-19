@@ -1,7 +1,9 @@
 #ifndef WARP3DNOVA_MODULE_H
 #define WARP3DNOVA_MODULE_H
 
-void warp3dnova_install_patches(void);
+#include <exec/types.h>
+
+void warp3dnova_install_patches(ULONG startTimeInSeconds);
 void warp3dnova_remove_patches(void);
 void warp3dnova_free(void);
 

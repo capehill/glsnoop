@@ -3,14 +3,23 @@
 
 #include <exec/types.h>
 
-BOOL timer_init(void);
-void timer_quit(void);
+typedef struct TimerContext
+{
+    struct MsgPort* port;
+    struct TimeRequest* request;
+    BYTE device;
+} TimerContext;
 
-uint32 timer_signal(void);
+extern TimerContext triggerTimer;
 
-void timer_start(void);
-void timer_stop(void);
-void timer_handle_events(void);
+BOOL timer_init(TimerContext * tc);
+void timer_quit(TimerContext * tc);
+
+uint32 timer_signal(TimerContext * tc);
+
+void timer_start(TimerContext * tc, ULONG seconds, ULONG micros);
+void timer_stop(TimerContext * tc);
+void timer_handle_events(TimerContext * tc);
 
 double timer_ticks_to_s(const uint64 ticks);
 double timer_ticks_to_ms(const uint64 ticks);
