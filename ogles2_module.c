@@ -149,6 +149,15 @@ typedef enum Ogles2Function {
     UniformMatrix3fv,
     UniformMatrix4fv,
     UseProgram,
+    ValidateProgram,
+    VertexAttrib1f,
+    VertexAttrib1fv,
+    VertexAttrib2f,
+    VertexAttrib2fv,
+    VertexAttrib3f,
+    VertexAttrib3fv,
+    VertexAttrib4f,
+    VertexAttrib4fv,
     VertexAttribPointer,
     // Keep last
     Ogles2FunctionCount
@@ -258,13 +267,13 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(Scissor)
         MAP_ENUM(ShaderBinary)
         MAP_ENUM(ShaderSource)
-        MAP_ENUM(SwapBuffers)
         MAP_ENUM(StencilFunc)
         MAP_ENUM(StencilFuncSeparate)
         MAP_ENUM(StencilMask)
         MAP_ENUM(StencilMaskSeparate)
         MAP_ENUM(StencilOp)
         MAP_ENUM(StencilOpSeparate)
+        MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
         MAP_ENUM(TexParameterf)
         MAP_ENUM(TexParameterfv)
@@ -291,6 +300,15 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(UniformMatrix3fv)
         MAP_ENUM(UniformMatrix4fv)
         MAP_ENUM(UseProgram)
+        MAP_ENUM(ValidateProgram)
+        MAP_ENUM(VertexAttrib1f)
+        MAP_ENUM(VertexAttrib1fv)
+        MAP_ENUM(VertexAttrib2f)
+        MAP_ENUM(VertexAttrib2fv)
+        MAP_ENUM(VertexAttrib3f)
+        MAP_ENUM(VertexAttrib3fv)
+        MAP_ENUM(VertexAttrib4f)
+        MAP_ENUM(VertexAttrib4fv)
         MAP_ENUM(VertexAttribPointer)
 
         case Ogles2FunctionCount: break;
@@ -463,7 +481,15 @@ struct Ogles2Context
     void (*old_glUniformMatrix3fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
     void (*old_glUniformMatrix4fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
     void (*old_glUseProgram)(struct OGLES2IFace *Self, GLuint program);
-    // void (*old_glVertexAttrib3fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
+    void (*old_glValidateProgram)(struct OGLES2IFace *Self, GLuint program);
+    void (*old_glVertexAttrib1f)(struct OGLES2IFace *Self, GLuint index, GLfloat x);
+    void (*old_glVertexAttrib1fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
+    void (*old_glVertexAttrib2f)(struct OGLES2IFace *Self, GLuint index, GLfloat x, GLfloat y);
+    void (*old_glVertexAttrib2fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
+    void (*old_glVertexAttrib3f)(struct OGLES2IFace *Self, GLuint index, GLfloat x, GLfloat y, GLfloat z);
+    void (*old_glVertexAttrib3fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
+    void (*old_glVertexAttrib4f)(struct OGLES2IFace *Self, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+    void (*old_glVertexAttrib4fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
     void (*old_glVertexAttribPointer)(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer);
 };
 
@@ -2306,9 +2332,100 @@ static void OGLES2_glUseProgram(struct OGLES2IFace *Self, GLuint program)
 {
     GET_CONTEXT
 
-    logLine("%s: %s program %u", context->name, __func__, program);
+    logLine("%s: %s program %u", context->name, __func__,
+        program);
 
     GL_CALL(UseProgram, program);
+}
+
+static void OGLES2_glValidateProgram(struct OGLES2IFace *Self, GLuint program)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s program %u", context->name, __func__,
+        program);
+
+    GL_CALL(ValidateProgram, program);
+}
+
+static void OGLES2_glVertexAttrib1f(struct OGLES2IFace *Self, GLuint index, GLfloat x)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s index %u, x %f", context->name, __func__,
+        index, x);
+
+    GL_CALL(VertexAttrib1f, index, x);
+}
+
+static void OGLES2_glVertexAttrib1fv(struct OGLES2IFace *Self, GLuint index, const GLfloat * v)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s index %u, v { %f }", context->name, __func__,
+        index, v[0]);
+
+    GL_CALL(VertexAttrib1fv, index, v);
+}
+
+static void OGLES2_glVertexAttrib2f(struct OGLES2IFace *Self, GLuint index, GLfloat x, GLfloat y)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s index %u, x %f, y %f", context->name, __func__,
+        index, x, y);
+
+    GL_CALL(VertexAttrib2f, index, x, y);
+}
+
+static void OGLES2_glVertexAttrib2fv(struct OGLES2IFace *Self, GLuint index, const GLfloat * v)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s index %u, v { %f, %f }", context->name, __func__,
+        index, v[0], v[1]);
+
+    GL_CALL(VertexAttrib2fv, index, v);
+}
+
+static void OGLES2_glVertexAttrib3f(struct OGLES2IFace *Self, GLuint index, GLfloat x, GLfloat y, GLfloat z)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s index %u, x %f, y %f, z %f", context->name, __func__,
+        index, x, y, z);
+
+    GL_CALL(VertexAttrib3f, index, x, y, z);
+}
+
+static void OGLES2_glVertexAttrib3fv(struct OGLES2IFace *Self, GLuint index, const GLfloat * v)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s index %u, v { %f, %f, %f }", context->name, __func__,
+        index, v[0], v[1], v[2]);
+
+    GL_CALL(VertexAttrib3fv, index, v);
+}
+
+static void OGLES2_glVertexAttrib4f(struct OGLES2IFace *Self, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s index %u, x %f, y %f, z %f, w %f", context->name, __func__,
+        index, x, y, z, w);
+
+    GL_CALL(VertexAttrib4f, index, x, y, z, w);
+}
+
+static void OGLES2_glVertexAttrib4fv(struct OGLES2IFace *Self, GLuint index, const GLfloat * v)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s index %u, v { %f, %f, %f, %f }", context->name, __func__,
+        index, v[0], v[1], v[2], v[3]);
+
+    GL_CALL(VertexAttrib4fv, index, v);
 }
 
 static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer)
@@ -2454,6 +2571,15 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix2fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix3fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix4fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUseProgram, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glValidateProgram, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib1f, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib1fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib2f, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib2fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib3f, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib3fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib4f, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib4fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Context)
 
 static void (*patches[])(BOOL, struct Ogles2Context *) = {
@@ -2589,6 +2715,15 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glUniformMatrix3fv,
     patch_glUniformMatrix4fv,
     patch_glUseProgram,
+    patch_glValidateProgram,
+    patch_glVertexAttrib1f,
+    patch_glVertexAttrib1fv,
+    patch_glVertexAttrib2f,
+    patch_glVertexAttrib2fv,
+    patch_glVertexAttrib3f,
+    patch_glVertexAttrib3fv,
+    patch_glVertexAttrib4f,
+    patch_glVertexAttrib4fv,
     patch_glVertexAttribPointer,
 };
 
