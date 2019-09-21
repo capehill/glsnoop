@@ -59,6 +59,7 @@ typedef enum Ogles2Function {
     DisableVertexAttribArray,
     DrawArrays,
     DrawElements,
+    DrawElementsBaseVertexOES,
     Enable,
     EnableVertexAttribArray,
     Finish,
@@ -108,7 +109,9 @@ typedef enum Ogles2Function {
     LineWidth,
     LinkProgram,
     PixelStorei,
+    PolygonMode,
     PolygonOffset,
+    ProvokingVertex,
     ReadPixels,
     ReleaseShaderCompiler,
     RenderbufferStorage,
@@ -159,6 +162,7 @@ typedef enum Ogles2Function {
     VertexAttrib4f,
     VertexAttrib4fv,
     VertexAttribPointer,
+    Viewport,
     // Keep last
     Ogles2FunctionCount
 } Ogles2Function;
@@ -210,6 +214,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(DisableVertexAttribArray)
         MAP_ENUM(DrawArrays)
         MAP_ENUM(DrawElements)
+        MAP_ENUM(DrawElementsBaseVertexOES)
         MAP_ENUM(Enable)
         MAP_ENUM(EnableVertexAttribArray)
         MAP_ENUM(Finish)
@@ -259,7 +264,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(LineWidth)
         MAP_ENUM(LinkProgram)
         MAP_ENUM(PixelStorei)
+        MAP_ENUM(PolygonMode)
         MAP_ENUM(PolygonOffset)
+        MAP_ENUM(ProvokingVertex)
         MAP_ENUM(ReadPixels)
         MAP_ENUM(ReleaseShaderCompiler)
         MAP_ENUM(RenderbufferStorage)
@@ -310,6 +317,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(VertexAttrib4f)
         MAP_ENUM(VertexAttrib4fv)
         MAP_ENUM(VertexAttribPointer)
+        MAP_ENUM(Viewport)
 
         case Ogles2FunctionCount: break;
     }
@@ -392,6 +400,7 @@ struct Ogles2Context
     void (*old_glDisableVertexAttribArray)(struct OGLES2IFace *Self, GLuint index);
     void (*old_glDrawArrays)(struct OGLES2IFace *Self, GLenum mode, GLint first, GLsizei count);
     void (*old_glDrawElements)(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices);
+    void (*old_glDrawElementsBaseVertexOES)(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices, GLint basevertex);
     void (*old_glEnable)(struct OGLES2IFace *Self, GLenum cap);
     void (*old_glEnableVertexAttribArray)(struct OGLES2IFace *Self, GLuint index);
     void (*old_glFinish)(struct OGLES2IFace *Self);
@@ -441,7 +450,9 @@ struct Ogles2Context
     void (*old_glLineWidth)(struct OGLES2IFace *Self, GLfloat width);
     void (*old_glLinkProgram)(struct OGLES2IFace *Self, GLuint program);
     void (*old_glPixelStorei)(struct OGLES2IFace *Self, GLenum pname, GLint param);
+    void (*old_glPolygonMode)(struct OGLES2IFace *Self, GLenum face, GLenum mode);
     void (*old_glPolygonOffset)(struct OGLES2IFace *Self, GLfloat factor, GLfloat units);
+    void (*old_glProvokingVertex)(struct OGLES2IFace *Self, GLenum provokeMode);
     void (*old_glReadPixels)(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels);
     void (*old_glReleaseShaderCompiler)(struct OGLES2IFace *Self);
     void (*old_glRenderbufferStorage)(struct OGLES2IFace *Self, GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
@@ -491,6 +502,7 @@ struct Ogles2Context
     void (*old_glVertexAttrib4f)(struct OGLES2IFace *Self, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
     void (*old_glVertexAttrib4fv)(struct OGLES2IFace *Self, GLuint index, const GLfloat * v);
     void (*old_glVertexAttribPointer)(struct OGLES2IFace *Self, GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer);
+    void (*old_glViewport)(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height);
 };
 
 static struct Ogles2Context* contexts[MAX_CLIENTS];
@@ -549,7 +561,9 @@ static void profileResults(struct Ogles2Context* const context)
 
     PROF_FINISH_CONTEXT
 
-    const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
+    const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount +
+        context->profiling[DrawElementsBaseVertexOES].callCount;
+
     const uint64 swaps = context->profiling[SwapBuffers].callCount;
 
     // Copy items, otherwise sorthing will ruin the further profiling
@@ -1251,7 +1265,7 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %d, first %d, count %d", context->name, __func__,
+    logLine("%s: %s: mode %u, first %d, count %u", context->name, __func__,
         mode, first, count);
 
     GL_CALL(DrawArrays, mode, first, count)
@@ -1263,10 +1277,22 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %d, count %d, type %d, indices %p", context->name, __func__,
+    logLine("%s: %s: mode %u, count %u, type %u, indices %p", context->name, __func__,
         mode, count, type, indices);
 
     GL_CALL(DrawElements, mode, count, type, indices)
+
+    countPrimitive(&context->counter, mode, count);
+}
+
+static void OGLES2_glDrawElementsBaseVertexOES(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices, GLint basevertex)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: mode %u, count %u, type %u, indices %p, basevertex %d", context->name, __func__,
+        mode, count, type, indices, basevertex);
+
+    GL_CALL(DrawElementsBaseVertexOES, mode, count, type, indices, basevertex)
 
     countPrimitive(&context->counter, mode, count);
 }
@@ -1865,6 +1891,16 @@ static void OGLES2_glPixelStorei(struct OGLES2IFace *Self, GLenum pname, GLint p
     GL_CALL(PixelStorei, pname, param)
 }
 
+static void OGLES2_glPolygonMode(struct OGLES2IFace *Self, GLenum face, GLenum mode)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: face %u, mode %u", context->name, __func__,
+        face, mode);
+
+    GL_CALL(PolygonMode, face, mode)
+}
+
 static void OGLES2_glPolygonOffset(struct OGLES2IFace *Self, GLfloat factor, GLfloat units)
 {
     GET_CONTEXT
@@ -1873,6 +1909,16 @@ static void OGLES2_glPolygonOffset(struct OGLES2IFace *Self, GLfloat factor, GLf
         factor, units);
 
     GL_CALL(PolygonOffset, factor, units)
+}
+
+static void OGLES2_glProvokingVertex(struct OGLES2IFace *Self, GLenum provokeMode)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: provokeMode %u", context->name, __func__,
+        provokeMode);
+
+    GL_CALL(ProvokingVertex, provokeMode)
 }
 
 static void OGLES2_glReadPixels(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels)
@@ -2438,6 +2484,15 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
     GL_CALL(VertexAttribPointer, index, size, type, normalized, stride, pointer)
 }
 
+static void OGLES2_glViewport(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: x %d, y %d, width %u, height %u", context->name, __func__,
+        x, y, width, height);
+
+    GL_CALL(Viewport, x, y, width, height)
+}
 
 GENERATE_FILTERED_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glActiveTexture, OGLES2, Ogles2Context)
@@ -2482,6 +2537,7 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glDisable, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDisableVertexAttribArray, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawArrays, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawElements, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glDrawElementsBaseVertexOES, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glEnable, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glEnableVertexAttribArray, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glFinish, OGLES2, Ogles2Context)
@@ -2531,7 +2587,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glIsTexture, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glLineWidth, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glLinkProgram, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glPixelStorei, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glPolygonMode, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glPolygonOffset, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glProvokingVertex, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glReadPixels, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glReleaseShaderCompiler, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glRenderbufferStorage, OGLES2, Ogles2Context)
@@ -2581,6 +2639,7 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib3fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib4f, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib4fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glViewport, OGLES2, Ogles2Context)
 
 static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_aglSwapBuffers,
@@ -2626,6 +2685,7 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glDisableVertexAttribArray,
     patch_glDrawArrays,
     patch_glDrawElements,
+    patch_glDrawElementsBaseVertexOES,
     patch_glEnable,
     patch_glEnableVertexAttribArray,
     patch_glFinish,
@@ -2675,7 +2735,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glLineWidth,
     patch_glLinkProgram,
     patch_glPixelStorei,
+    patch_glPolygonMode,
     patch_glPolygonOffset,
+    patch_glProvokingVertex,
     patch_glReadPixels,
     patch_glReleaseShaderCompiler,
     patch_glRenderbufferStorage,
@@ -2725,6 +2787,7 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glVertexAttrib4f,
     patch_glVertexAttrib4fv,
     patch_glVertexAttribPointer,
+    patch_glViewport
 };
 
 void ogles2_install_patches(void)
