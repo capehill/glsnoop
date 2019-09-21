@@ -112,6 +112,9 @@ typedef enum Ogles2Function {
     ReadPixels,
     ReleaseShaderCompiler,
     RenderbufferStorage,
+    SampleCoverage,
+    Scissor,
+    ShaderBinary,
     ShaderSource,
     SwapBuffers,
     TexImage2D,
@@ -245,6 +248,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(ReadPixels)
         MAP_ENUM(ReleaseShaderCompiler)
         MAP_ENUM(RenderbufferStorage)
+        MAP_ENUM(SampleCoverage)
+        MAP_ENUM(Scissor)
+        MAP_ENUM(ShaderBinary)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
         MAP_ENUM(TexImage2D)
@@ -409,6 +415,9 @@ struct Ogles2Context
     void (*old_glReadPixels)(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels);
     void (*old_glReleaseShaderCompiler)(struct OGLES2IFace *Self);
     void (*old_glRenderbufferStorage)(struct OGLES2IFace *Self, GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+    void (*old_glSampleCoverage)(struct OGLES2IFace *Self, GLfloat value, GLboolean invert);
+    void (*old_glScissor)(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height);
+    void (*old_glShaderBinary)(struct OGLES2IFace *Self, GLsizei count, const GLuint * shaders, GLenum binaryformat, const void * binary, GLsizei length);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
@@ -1851,6 +1860,36 @@ static void OGLES2_glRenderbufferStorage(struct OGLES2IFace *Self, GLenum target
     GL_CALL(RenderbufferStorage, target, internalformat, width, height)
 }
 
+static void OGLES2_glSampleCoverage(struct OGLES2IFace *Self, GLfloat value, GLboolean invert)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: value %f, invert %d", context->name, __func__,
+        value, invert);
+
+    GL_CALL(SampleCoverage, value, invert)
+}
+
+static void OGLES2_glScissor(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: x %d, y %d, width %u, height %u", context->name, __func__,
+        x, y, width, height);
+
+    GL_CALL(Scissor, x, y, width, height)
+}
+
+static void OGLES2_glShaderBinary(struct OGLES2IFace *Self, GLsizei count, const GLuint * shaders, GLenum binaryformat, const void * binary, GLsizei length)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: count %u, shaders %p, binaryformat %u, binary %p, length %u", context->name, __func__,
+        count, shaders, binaryformat, binary, length);
+
+    GL_CALL(ShaderBinary, count, shaders, binaryformat, binary, length)
+}
+
 static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length)
 {
     GET_CONTEXT
@@ -2301,6 +2340,9 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glPolygonOffset, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glReadPixels, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glReleaseShaderCompiler, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glRenderbufferStorage, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glSampleCoverage, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glScissor, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderBinary, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
@@ -2427,6 +2469,9 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glReadPixels,
     patch_glReleaseShaderCompiler,
     patch_glRenderbufferStorage,
+    patch_glSampleCoverage,
+    patch_glScissor,
+    patch_glShaderBinary,
     patch_glShaderSource,
     patch_glTexImage2D,
     patch_glTexParameterf,
