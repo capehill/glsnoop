@@ -116,6 +116,12 @@ typedef enum Ogles2Function {
     Scissor,
     ShaderBinary,
     ShaderSource,
+    StencilFunc,
+    StencilFuncSeparate,
+    StencilMask,
+    StencilMaskSeparate,
+    StencilOp,
+    StencilOpSeparate,
     SwapBuffers,
     TexImage2D,
     TexParameterf,
@@ -253,6 +259,12 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(ShaderBinary)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(SwapBuffers)
+        MAP_ENUM(StencilFunc)
+        MAP_ENUM(StencilFuncSeparate)
+        MAP_ENUM(StencilMask)
+        MAP_ENUM(StencilMaskSeparate)
+        MAP_ENUM(StencilOp)
+        MAP_ENUM(StencilOpSeparate)
         MAP_ENUM(TexImage2D)
         MAP_ENUM(TexParameterf)
         MAP_ENUM(TexParameterfv)
@@ -419,6 +431,12 @@ struct Ogles2Context
     void (*old_glScissor)(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height);
     void (*old_glShaderBinary)(struct OGLES2IFace *Self, GLsizei count, const GLuint * shaders, GLenum binaryformat, const void * binary, GLsizei length);
     void (*old_glShaderSource)(struct OGLES2IFace *Self, GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
+    void (*old_glStencilFunc)(struct OGLES2IFace *Self, GLenum func, GLint ref, GLuint mask);
+    void (*old_glStencilFuncSeparate)(struct OGLES2IFace *Self, GLenum face, GLenum func, GLint ref, GLuint mask);
+    void (*old_glStencilMask)(struct OGLES2IFace *Self, GLuint mask);
+    void (*old_glStencilMaskSeparate)(struct OGLES2IFace *Self, GLenum face, GLuint mask);
+    void (*old_glStencilOp)(struct OGLES2IFace *Self, GLenum fail, GLenum zfail, GLenum zpass);
+    void (*old_glStencilOpSeparate)(struct OGLES2IFace *Self, GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
     void (*old_glTexImage2D)(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
     void (*old_glTexParameterf)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLfloat param);
     void (*old_glTexParameterfv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, const GLfloat * params);
@@ -1912,6 +1930,66 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
     GL_CALL(ShaderSource, shader, count, string, length)
 }
 
+static void OGLES2_glStencilFunc(struct OGLES2IFace *Self, GLenum func, GLint ref, GLuint mask)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: func %u, ref %d, mask %u", context->name, __func__,
+        func, ref, mask);
+
+    GL_CALL(StencilFunc, func, ref, mask)
+}
+
+static void OGLES2_glStencilFuncSeparate(struct OGLES2IFace *Self, GLenum face, GLenum func, GLint ref, GLuint mask)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: face %u, func %u, ref %d, mask %u", context->name, __func__,
+        face, func, ref, mask);
+
+    GL_CALL(StencilFuncSeparate, face, func, ref, mask)
+}
+
+static void OGLES2_glStencilMask(struct OGLES2IFace *Self, GLuint mask)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: mask %u", context->name, __func__,
+        mask);
+
+    GL_CALL(StencilMask, mask)
+}
+
+static void OGLES2_glStencilMaskSeparate(struct OGLES2IFace *Self, GLenum face, GLuint mask)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: face %u, mask %u", context->name, __func__,
+        face, mask);
+
+    GL_CALL(StencilMaskSeparate, face, mask)
+}
+
+static void OGLES2_glStencilOp(struct OGLES2IFace *Self, GLenum fail, GLenum zfail, GLenum zpass)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: fail %u, zfail %u, zpass %u", context->name, __func__,
+        fail, zfail, zpass);
+
+    GL_CALL(StencilOp, fail, zfail, zpass)
+}
+
+static void OGLES2_glStencilOpSeparate(struct OGLES2IFace *Self, GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: face %u, sfail %u, dpfail %u, dppass %u", context->name, __func__,
+        face, sfail, dpfail, dppass);
+
+    GL_CALL(StencilOpSeparate, face, sfail, dpfail, dppass)
+}
+
 static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels)
 {
     GET_CONTEXT
@@ -2344,6 +2422,12 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glSampleCoverage, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glScissor, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderBinary, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glShaderSource, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glStencilFunc, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glStencilFuncSeparate, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glStencilMask, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glStencilMaskSeparate, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glStencilOp, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glStencilOpSeparate, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexImage2D, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterf, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glTexParameterfv, OGLES2, Ogles2Context)
@@ -2473,6 +2557,12 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glScissor,
     patch_glShaderBinary,
     patch_glShaderSource,
+    patch_glStencilFunc,
+    patch_glStencilFuncSeparate,
+    patch_glStencilMask,
+    patch_glStencilMaskSeparate,
+    patch_glStencilOp,
+    patch_glStencilOpSeparate,
     patch_glTexImage2D,
     patch_glTexParameterf,
     patch_glTexParameterfv,
