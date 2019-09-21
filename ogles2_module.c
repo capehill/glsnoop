@@ -78,10 +78,13 @@ typedef enum Ogles2Function {
     GetAttribLocation,
     GetBooleanv,
     GetBufferParameteriv,
+    GetBufferParameterivOES,
+    GetBufferPointervOES,
     GetError,
     GetFloatv,
     GetFramebufferAttachmentParameteriv,
     GetIntegerv,
+    GetProgramBinaryOES,
     GetProgramiv,
     GetProgramInfoLog,
     GetRenderbufferParameteriv,
@@ -108,9 +111,11 @@ typedef enum Ogles2Function {
     IsTexture,
     LineWidth,
     LinkProgram,
+    MapBufferOES,
     PixelStorei,
     PolygonMode,
     PolygonOffset,
+    ProgramBinaryOES,
     ProvokingVertex,
     ReadPixels,
     ReleaseShaderCompiler,
@@ -151,6 +156,7 @@ typedef enum Ogles2Function {
     UniformMatrix2fv,
     UniformMatrix3fv,
     UniformMatrix4fv,
+    UnmapBufferOES,
     UseProgram,
     ValidateProgram,
     VertexAttrib1f,
@@ -233,10 +239,13 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GetAttribLocation)
         MAP_ENUM(GetBooleanv)
         MAP_ENUM(GetBufferParameteriv)
+        MAP_ENUM(GetBufferParameterivOES)
+        MAP_ENUM(GetBufferPointervOES)
         MAP_ENUM(GetError)
         MAP_ENUM(GetFloatv)
         MAP_ENUM(GetFramebufferAttachmentParameteriv)
         MAP_ENUM(GetIntegerv)
+        MAP_ENUM(GetProgramBinaryOES)
         MAP_ENUM(GetProgramiv)
         MAP_ENUM(GetProgramInfoLog)
         MAP_ENUM(GetRenderbufferParameteriv)
@@ -263,9 +272,11 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(IsTexture)
         MAP_ENUM(LineWidth)
         MAP_ENUM(LinkProgram)
+        MAP_ENUM(MapBufferOES)
         MAP_ENUM(PixelStorei)
         MAP_ENUM(PolygonMode)
         MAP_ENUM(PolygonOffset)
+        MAP_ENUM(ProgramBinaryOES)
         MAP_ENUM(ProvokingVertex)
         MAP_ENUM(ReadPixels)
         MAP_ENUM(ReleaseShaderCompiler)
@@ -306,6 +317,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(UniformMatrix2fv)
         MAP_ENUM(UniformMatrix3fv)
         MAP_ENUM(UniformMatrix4fv)
+        MAP_ENUM(UnmapBufferOES)
         MAP_ENUM(UseProgram)
         MAP_ENUM(ValidateProgram)
         MAP_ENUM(VertexAttrib1f)
@@ -419,10 +431,13 @@ struct Ogles2Context
     GLint (*old_glGetAttribLocation)(struct OGLES2IFace *Self, GLuint program, const GLchar * name);
     void (*old_glGetBooleanv)(struct OGLES2IFace *Self, GLenum pname, GLboolean * data);
     void (*old_glGetBufferParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params);
+    void (*old_glGetBufferParameterivOES)(struct OGLES2IFace *Self, GLenum target, GLenum value, GLint *data);
+    void (*old_glGetBufferPointervOES)(struct OGLES2IFace *Self, GLenum target, GLenum pname, void **params);
     GLenum (*old_glGetError)(struct OGLES2IFace *Self);
     void (*old_glGetFloatv)(struct OGLES2IFace *Self, GLenum pname, GLfloat * data);
     void (*old_glGetFramebufferAttachmentParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum attachment, GLenum pname, GLint * params);
     void (*old_glGetIntegerv)(struct OGLES2IFace *Self, GLenum pname, GLint * data);
+    void (*old_glGetProgramBinaryOES)(struct OGLES2IFace *Self, GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, void *binary);
     void (*old_glGetProgramiv)(struct OGLES2IFace *Self, GLuint program, GLenum pname, GLint * params);
     void (*old_glGetProgramInfoLog)(struct OGLES2IFace *Self, GLuint program, GLsizei bufSize, GLsizei * length, GLchar * infoLog);
     void (*old_glGetRenderbufferParameteriv)(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params);
@@ -449,9 +464,11 @@ struct Ogles2Context
     GLboolean (*old_glIsTexture)(struct OGLES2IFace *Self, GLuint texture);
     void (*old_glLineWidth)(struct OGLES2IFace *Self, GLfloat width);
     void (*old_glLinkProgram)(struct OGLES2IFace *Self, GLuint program);
+    void* (*old_glMapBufferOES)(struct OGLES2IFace *Self, GLenum target, GLenum access);
     void (*old_glPixelStorei)(struct OGLES2IFace *Self, GLenum pname, GLint param);
     void (*old_glPolygonMode)(struct OGLES2IFace *Self, GLenum face, GLenum mode);
     void (*old_glPolygonOffset)(struct OGLES2IFace *Self, GLfloat factor, GLfloat units);
+    void (*old_glProgramBinaryOES)(struct OGLES2IFace *Self, GLuint program, GLenum binaryFormat, const void *binary, GLint length);
     void (*old_glProvokingVertex)(struct OGLES2IFace *Self, GLenum provokeMode);
     void (*old_glReadPixels)(struct OGLES2IFace *Self, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels);
     void (*old_glReleaseShaderCompiler)(struct OGLES2IFace *Self);
@@ -491,6 +508,7 @@ struct Ogles2Context
     void (*old_glUniformMatrix2fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
     void (*old_glUniformMatrix3fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
     void (*old_glUniformMatrix4fv)(struct OGLES2IFace *Self, GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
+    GLboolean (*old_glUnmapBufferOES)(struct OGLES2IFace *Self, GLenum target);
     void (*old_glUseProgram)(struct OGLES2IFace *Self, GLuint program);
     void (*old_glValidateProgram)(struct OGLES2IFace *Self, GLuint program);
     void (*old_glVertexAttrib1f)(struct OGLES2IFace *Self, GLuint index, GLfloat x);
@@ -549,6 +567,15 @@ static void close_ogles2_library(void)
     if (OGLES2Base) {
         IExec->CloseLibrary(OGLES2Base);
         OGLES2Base = NULL;
+    }
+}
+
+static void checkPointer(struct Ogles2Context* context, const Ogles2Function id, const void* ptr)
+{
+    if (!ptr) {
+        logLine("%s: Warning: NULL pointer detected", context->name);
+        context->profiling[id].errors++;
+        errorCount++;
     }
 }
 
@@ -1522,6 +1549,28 @@ static void OGLES2_glGetBufferParameteriv(struct OGLES2IFace *Self, GLenum targe
         target, pname, *params);
 }
 
+static void OGLES2_glGetBufferParameterivOES(struct OGLES2IFace *Self, GLenum target, GLenum value, GLint *data)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetBufferParameterivOES, target, value, data)
+
+    logLine("%s: %s: target %u, value %u, data %d", context->name, __func__,
+        target, value, *data);
+}
+
+static void OGLES2_glGetBufferPointervOES(struct OGLES2IFace *Self, GLenum target, GLenum pname, void **params)
+{
+    GET_CONTEXT
+
+    GL_CALL(GetBufferPointervOES, target, pname, params)
+
+    logLine("%s: %s: target %u, pname %u, params %p", context->name, __func__,
+        target, pname, *params);
+
+    checkPointer(context, GetBufferPointervOES, *params);
+}
+
 // NOTE: each OpenGL call triggers error checking, so it's likely that this returns usually GL_NO_ERROR.
 static GLenum OGLES2_glGetError(struct OGLES2IFace *Self)
 {
@@ -1565,6 +1614,22 @@ static void OGLES2_glGetIntegerv(struct OGLES2IFace *Self, GLenum pname, GLint *
 
     logLine("%s: %s: pname %u, data %d", context->name, __func__,
         pname, *data);
+}
+
+static void OGLES2_glGetProgramBinaryOES(struct OGLES2IFace *Self, GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, void *binary)
+{
+    GET_CONTEXT
+
+    GLsizei tempLength = 0;
+
+    GL_CALL(GetProgramBinaryOES, program, bufSize, &tempLength, binaryFormat, binary)
+
+    logLine("%s: %s: program %u, bufSize %u, length %u, binaryFormat %u, binary %p", context->name, __func__,
+        program, bufSize, tempLength, *binaryFormat, binary);
+
+    if (length) {
+        *length = tempLength;
+    }
 }
 
 static void OGLES2_glGetProgramiv(struct OGLES2IFace *Self, GLuint program, GLenum pname, GLint * params)
@@ -1881,6 +1946,22 @@ static void OGLES2_glLinkProgram(struct OGLES2IFace *Self, GLuint program)
     GL_CALL(LinkProgram, program)
 }
 
+static void* OGLES2_glMapBufferOES(struct OGLES2IFace *Self, GLenum target, GLenum access)
+{
+    GET_CONTEXT
+
+    void* status = NULL;
+
+    GL_CALL_STATUS(MapBufferOES, target, access)
+
+    logLine("%s: %s: target %u, access %u. Returned address %p", context->name, __func__,
+        target, access, status);
+
+    checkPointer(context, MapBufferOES, status);
+
+    return status;
+}
+
 static void OGLES2_glPixelStorei(struct OGLES2IFace *Self, GLenum pname, GLint param)
 {
     GET_CONTEXT
@@ -1909,6 +1990,16 @@ static void OGLES2_glPolygonOffset(struct OGLES2IFace *Self, GLfloat factor, GLf
         factor, units);
 
     GL_CALL(PolygonOffset, factor, units)
+}
+
+static void OGLES2_glProgramBinaryOES(struct OGLES2IFace *Self, GLuint program, GLenum binaryFormat, const void *binary, GLint length)
+{
+    GET_CONTEXT
+
+    GL_CALL(ProgramBinaryOES, program, binaryFormat, binary, length)
+
+    logLine("%s: %s: program %u, binaryFormat %u, binary %p, length %d", context->name, __func__,
+        program, binaryFormat, binary, length);
 }
 
 static void OGLES2_glProvokingVertex(struct OGLES2IFace *Self, GLenum provokeMode)
@@ -2374,6 +2465,20 @@ static void OGLES2_glUniformMatrix4fv(struct OGLES2IFace *Self, GLint location, 
     GL_CALL(UniformMatrix4fv, location, count, transpose, value)
 }
 
+static GLboolean OGLES2_glUnmapBufferOES(struct OGLES2IFace *Self, GLenum target)
+{
+    GET_CONTEXT
+
+    GLboolean status = GL_FALSE;
+
+    GL_CALL_STATUS(UnmapBufferOES, target)
+
+    logLine("%s: %s: target %u. Return value %d", context->name, __func__,
+        target, status);
+
+    return status;
+}
+
 static void OGLES2_glUseProgram(struct OGLES2IFace *Self, GLuint program)
 {
     GET_CONTEXT
@@ -2556,10 +2661,13 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glGetAttachedShaders, OGLES2, Ogles2Context
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetAttribLocation, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetBooleanv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetBufferParameteriv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetBufferParameterivOES, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetBufferPointervOES, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetError, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFloatv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetFramebufferAttachmentParameteriv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetIntegerv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glGetProgramBinaryOES, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetProgramiv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetProgramInfoLog, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glGetRenderbufferParameteriv, OGLES2, Ogles2Context)
@@ -2586,9 +2694,11 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glIsShader, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glIsTexture, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glLineWidth, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glLinkProgram, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glMapBufferOES, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glPixelStorei, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glPolygonMode, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glPolygonOffset, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glProgramBinaryOES, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glProvokingVertex, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glReadPixels, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glReleaseShaderCompiler, OGLES2, Ogles2Context)
@@ -2628,6 +2738,7 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glUniform4iv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix2fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix3fv, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUniformMatrix4fv, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, glUnmapBufferOES, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glUseProgram, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glValidateProgram, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttrib1f, OGLES2, Ogles2Context)
@@ -2704,10 +2815,13 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glGetAttribLocation,
     patch_glGetBooleanv,
     patch_glGetBufferParameteriv,
+    patch_glGetBufferParameterivOES,
+    patch_glGetBufferPointervOES,
     patch_glGetError,
     patch_glGetFloatv,
     patch_glGetFramebufferAttachmentParameteriv,
     patch_glGetIntegerv,
+    patch_glGetProgramBinaryOES,
     patch_glGetProgramiv,
     patch_glGetProgramInfoLog,
     patch_glGetRenderbufferParameteriv,
@@ -2734,9 +2848,11 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glIsTexture,
     patch_glLineWidth,
     patch_glLinkProgram,
+    patch_glMapBufferOES,
     patch_glPixelStorei,
     patch_glPolygonMode,
     patch_glPolygonOffset,
+    patch_glProgramBinaryOES,
     patch_glProvokingVertex,
     patch_glReadPixels,
     patch_glReleaseShaderCompiler,
@@ -2776,6 +2892,7 @@ static void (*patches[])(BOOL, struct Ogles2Context *) = {
     patch_glUniformMatrix2fv,
     patch_glUniformMatrix3fv,
     patch_glUniformMatrix4fv,
+    patch_glUnmapBufferOES,
     patch_glUseProgram,
     patch_glValidateProgram,
     patch_glVertexAttrib1f,
