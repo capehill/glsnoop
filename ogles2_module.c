@@ -42,6 +42,8 @@ typedef enum Ogles2Function {
     CompressedTexSubImage2D,
     CopyTexImage2D,
     CopyTexSubImage2D,
+    CreateContext_AVOID,
+    CreateContext2,
     CreateProgram,
     CreateShader,
     CullFace,
@@ -54,6 +56,7 @@ typedef enum Ogles2Function {
     DepthFunc,
     DepthMask,
     DepthRangef,
+    DestroyContext,
     DetachShader,
     Disable,
     DisableVertexAttribArray,
@@ -84,6 +87,7 @@ typedef enum Ogles2Function {
     GetFloatv,
     GetFramebufferAttachmentParameteriv,
     GetIntegerv,
+    GetProcAddress,
     GetProgramBinaryOES,
     GetProgramiv,
     GetProgramInfoLog,
@@ -111,6 +115,7 @@ typedef enum Ogles2Function {
     IsTexture,
     LineWidth,
     LinkProgram,
+    MakeCurrent,
     MapBufferOES,
     PixelStorei,
     PolygonMode,
@@ -122,6 +127,9 @@ typedef enum Ogles2Function {
     RenderbufferStorage,
     SampleCoverage,
     Scissor,
+    SetBitmap,
+    SetParams_AVOID,
+    SetParams2,
     ShaderBinary,
     ShaderSource,
     StencilFunc,
@@ -203,6 +211,8 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(CompressedTexSubImage2D)
         MAP_ENUM(CopyTexImage2D)
         MAP_ENUM(CopyTexSubImage2D)
+        MAP_ENUM(CreateContext_AVOID)
+        MAP_ENUM(CreateContext2)
         MAP_ENUM(CreateProgram)
         MAP_ENUM(CreateShader)
         MAP_ENUM(CullFace)
@@ -215,6 +225,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(DepthFunc)
         MAP_ENUM(DepthMask)
         MAP_ENUM(DepthRangef)
+        MAP_ENUM(DestroyContext)
         MAP_ENUM(DetachShader)
         MAP_ENUM(Disable)
         MAP_ENUM(DisableVertexAttribArray)
@@ -245,6 +256,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(GetFloatv)
         MAP_ENUM(GetFramebufferAttachmentParameteriv)
         MAP_ENUM(GetIntegerv)
+        MAP_ENUM(GetProcAddress)
         MAP_ENUM(GetProgramBinaryOES)
         MAP_ENUM(GetProgramiv)
         MAP_ENUM(GetProgramInfoLog)
@@ -272,6 +284,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(IsTexture)
         MAP_ENUM(LineWidth)
         MAP_ENUM(LinkProgram)
+        MAP_ENUM(MakeCurrent)
         MAP_ENUM(MapBufferOES)
         MAP_ENUM(PixelStorei)
         MAP_ENUM(PolygonMode)
@@ -283,6 +296,9 @@ static const char* mapOgles2Function(const Ogles2Function func)
         MAP_ENUM(RenderbufferStorage)
         MAP_ENUM(SampleCoverage)
         MAP_ENUM(Scissor)
+        MAP_ENUM(SetBitmap)
+        MAP_ENUM(SetParams_AVOID)
+        MAP_ENUM(SetParams2)
         MAP_ENUM(ShaderBinary)
         MAP_ENUM(ShaderSource)
         MAP_ENUM(StencilFunc)
@@ -369,6 +385,14 @@ struct Ogles2Context
 
     PrimitiveCounter counter;
 
+    void* (*old_aglCreateContext_AVOID)(struct OGLES2IFace *Self, ULONG * errcode, struct TagItem * tags);
+    void* (*old_aglCreateContext2)(struct OGLES2IFace *Self, ULONG * errcode, struct TagItem * tags);
+    void (*old_aglDestroyContext)(struct OGLES2IFace *Self, void* context);
+    void* (*old_aglGetProcAddress)(struct OGLES2IFace *Self,const char *name);
+    void (*old_aglMakeCurrent)(struct OGLES2IFace *Self, void* context);
+    void (*old_aglSetBitmap)(struct OGLES2IFace *Self, struct BitMap *bitmap);
+    void (*old_aglSetParams_AVOID)(struct OGLES2IFace *Self, struct TagItem * tags);
+    void (*old_aglSetParams2)(struct OGLES2IFace *Self, struct TagItem * tags);
     void (*old_aglSwapBuffers)(struct OGLES2IFace *Self);
     void (*old_glActiveTexture)(struct OGLES2IFace *Self, GLenum texture);
     void (*old_glAttachShader)(struct OGLES2IFace *Self, GLuint program, GLuint shader);
@@ -807,6 +831,16 @@ if (context->old_gl ## id) { \
     logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
 }
 
+#define AGL_CALL(id, ...) \
+if (context->old_agl ## id) { \
+    PROF_START \
+    context->old_agl ## id(Self, ##__VA_ARGS__); \
+    PROF_FINISH(id) \
+    checkErrors(context, id); \
+} else { \
+    logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
+}
+
 #define GL_CALL_STATUS(id, ...) \
 if (context->old_gl ## id) { \
     PROF_START \
@@ -817,8 +851,109 @@ if (context->old_gl ## id) { \
     logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
 }
 
+#define AGL_CALL_STATUS(id, ...) \
+if (context->old_agl ## id) { \
+    PROF_START \
+    status = context->old_agl ## id(Self, ##__VA_ARGS__); \
+    PROF_FINISH(id) \
+    checkErrors(context, id); \
+} else { \
+    logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
+}
 
 // Wrap traced function calls
+
+static void* OGLES2_aglCreateContext_AVOID(struct OGLES2IFace *Self, ULONG * errcode, struct TagItem * tags)
+{
+    GET_CONTEXT
+
+    void* status = NULL;
+
+    AGL_CALL_STATUS(CreateContext_AVOID, errcode, tags)
+
+    logLine("%s: %s: errcode %lu, tags %p. Context address %p", context->name, __func__,
+        *errcode, tags, status);
+
+    return status;
+}
+
+static void* OGLES2_aglCreateContext2(struct OGLES2IFace *Self, ULONG * errcode, struct TagItem * tags)
+{
+    GET_CONTEXT
+
+    void* status = NULL;
+
+    AGL_CALL_STATUS(CreateContext2, errcode, tags)
+
+    logLine("%s: %s: errcode %lu, tags %p. Context address %p", context->name, __func__,
+        *errcode, tags, status);
+
+    return status;
+}
+
+static void OGLES2_aglDestroyContext(struct OGLES2IFace *Self, void* context_)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: context %p", context->name, __func__,
+        context_);
+
+    AGL_CALL(DestroyContext, context_)
+}
+
+static void* OGLES2_aglGetProcAddress(struct OGLES2IFace *Self,const char *name)
+{
+    GET_CONTEXT
+
+    void* status = NULL;
+
+    AGL_CALL_STATUS(GetProcAddress, name)
+
+    logLine("%s: %s: name '%s'. Address %p", context->name, __func__,
+        name, status);
+
+    return status;
+}
+
+static void OGLES2_aglMakeCurrent(struct OGLES2IFace *Self, void* context_)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: context %p", context->name, __func__,
+        context_);
+
+    AGL_CALL(MakeCurrent, context_)
+}
+
+static void OGLES2_aglSetBitmap(struct OGLES2IFace *Self, struct BitMap *bitmap)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: bitmap %p", context->name, __func__,
+        bitmap);
+
+    AGL_CALL(SetBitmap, bitmap)
+}
+
+static void OGLES2_aglSetParams_AVOID(struct OGLES2IFace *Self, struct TagItem * tags)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: tags %p", context->name, __func__,
+        tags);
+
+    AGL_CALL(SetParams_AVOID, tags)
+}
+
+static void OGLES2_aglSetParams2(struct OGLES2IFace *Self, struct TagItem * tags)
+{
+    GET_CONTEXT
+
+    logLine("%s: %s: tags %p", context->name, __func__,
+        tags);
+
+    AGL_CALL(SetParams2, tags)
+}
 
 static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
 {
@@ -826,9 +961,7 @@ static void OGLES2_aglSwapBuffers(struct OGLES2IFace *Self)
 
     logLine("%s: %s", context->name, __func__);
 
-    if (context->old_aglSwapBuffers) {
-        CHECK(context->old_aglSwapBuffers(Self), SwapBuffers)
-    }
+    AGL_CALL(SwapBuffers)
 }
 
 static void OGLES2_glActiveTexture(struct OGLES2IFace *Self, GLenum texture)
@@ -2604,6 +2737,14 @@ static void OGLES2_glViewport(struct OGLES2IFace *Self, GLint x, GLint y, GLsize
     GL_CALL(Viewport, x, y, width, height)
 }
 
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglCreateContext_AVOID, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglCreateContext2, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglDestroyContext, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglGetProcAddress, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglMakeCurrent, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglSetBitmap, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglSetParams_AVOID, OGLES2, Ogles2Context)
+GENERATE_FILTERED_PATCH(OGLES2IFace, aglSetParams2, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, aglSwapBuffers, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glActiveTexture, OGLES2, Ogles2Context)
 GENERATE_FILTERED_PATCH(OGLES2IFace, glAttachShader, OGLES2, Ogles2Context)
@@ -2758,6 +2899,14 @@ GENERATE_FILTERED_PATCH(OGLES2IFace, glVertexAttribPointer, OGLES2, Ogles2Contex
 GENERATE_FILTERED_PATCH(OGLES2IFace, glViewport, OGLES2, Ogles2Context)
 
 static void (*patches[])(BOOL, struct Ogles2Context *) = {
+    patch_aglCreateContext_AVOID,
+    patch_aglCreateContext2,
+    patch_aglDestroyContext,
+    patch_aglGetProcAddress,
+    patch_aglMakeCurrent,
+    patch_aglSetBitmap,
+    patch_aglSetParams_AVOID,
+    patch_aglSetParams2,
     patch_aglSwapBuffers,
     patch_glActiveTexture,
     patch_glAttachShader,
