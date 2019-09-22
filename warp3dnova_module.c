@@ -768,20 +768,34 @@ static void checkSuccess(struct NovaContext* context, const NovaFunction id, con
 
 #define GET_CONTEXT struct NovaContext* context = find_context(self);
 
-#define GET_CONTEXT_AND_START_PROFILING \
-    GET_CONTEXT \
-    PROF_START
+#define NOVA_CALL(id, ...) \
+GET_CONTEXT \
+if (context->old_ ## id) { \
+    PROF_START \
+    context->old_ ## id(self, ##__VA_ARGS__); \
+    PROF_FINISH(id) \
+} else { \
+    logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
+}
+
+#define NOVA_CALL_RESULT(result, id, ...) \
+GET_CONTEXT \
+if (context->old_ ## id) { \
+    PROF_START \
+    result = context->old_ ## id(self, ##__VA_ARGS__); \
+    PROF_FINISH(id) \
+} else { \
+    logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
+}
 
 // Wrap traced calls
 
 static W3DN_ErrorCode W3DN_BindBitMapAsTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 texUnit, struct BitMap *bitMap, W3DN_TextureSampler *texSampler)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_BindBitMapAsTexture(self, renderState, texUnit, bitMap, texSampler);
-
-    PROF_FINISH(BindBitMapAsTexture)
+    NOVA_CALL_RESULT(result, BindBitMapAsTexture, renderState, texUnit, bitMap, texSampler)
 
     logLine("%s: %s: renderState %p, texUnit %lu, bitMap %p, texSampler %p. Result %d (%s)",
         context->name, __func__,
@@ -795,11 +809,9 @@ static W3DN_ErrorCode W3DN_BindBitMapAsTexture(struct W3DN_Context_s *self, W3DN
 static W3DN_ErrorCode W3DN_BindShaderDataBuffer(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_ShaderType shaderType, W3DN_DataBuffer *buffer, uint32 bufferIdx)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_BindShaderDataBuffer(self, renderState, shaderType, buffer, bufferIdx);
-
-    PROF_FINISH(BindShaderDataBuffer)
+    NOVA_CALL_RESULT(result, BindShaderDataBuffer, renderState, shaderType, buffer, bufferIdx)
 
     logLine("%s: %s: renderState %p, shaderType %d, buffer %p, bufferIdx %lu. Result %d (%s)",
         context->name, __func__,
@@ -813,11 +825,9 @@ static W3DN_ErrorCode W3DN_BindShaderDataBuffer(struct W3DN_Context_s *self, W3D
 static W3DN_ErrorCode W3DN_BindTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 texUnit, W3DN_Texture *texture, W3DN_TextureSampler *texSampler)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_BindTexture(self, renderState, texUnit, texture, texSampler);
-
-    PROF_FINISH(BindTexture)
+    NOVA_CALL_RESULT(result, BindTexture, renderState, texUnit, texture, texSampler)
 
     logLine("%s: %s: renderState %p, texUnit %lu, texture %p, texSampler %p. Result %d (%s)",
         context->name, __func__,
@@ -832,11 +842,9 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, uint32 attribNum,
 		W3DN_VertexBuffer *buffer, uint32 arrayIdx)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_BindVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
-
-    PROF_FINISH(BindVertexAttribArray)
+    NOVA_CALL_RESULT(result, BindVertexAttribArray, renderState, attribNum, buffer, arrayIdx)
 
     logLine("%s: %s: renderState %p, attribNum %lu, buffer %p, arrayIdx %lu. Result %d (%s)", context->name, __func__,
         renderState, attribNum, buffer, arrayIdx, result, mapNovaError(result));
@@ -849,11 +857,9 @@ static W3DN_ErrorCode W3DN_BindVertexAttribArray(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 		W3DN_BufferLock *bufferLock, uint64 writeOffset, uint64 writeSize)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_BufferUnlock(self, bufferLock, writeOffset, writeSize);
-
-    PROF_FINISH(BufferUnlock)
+    NOVA_CALL_RESULT(result, BufferUnlock, bufferLock, writeOffset, writeSize)
 
     logLine("%s: %s: bufferLock %p, writeOffset %llu, writeSize %llu. Result %d (%s)", context->name, __func__,
         bufferLock, writeOffset, writeSize, result, mapNovaError(result));
@@ -866,11 +872,9 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     const float *colour, const double *depth, const uint32* stencil)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_Clear(self, renderState, colour, depth, stencil);
-
-    PROF_FINISH(Clear)
+    NOVA_CALL_RESULT(result, Clear, renderState, colour, depth, stencil)
 
     logLine("%s: %s: renderState %p, colour %p, depth %p, stencil %p. Result %d (%s)",
         context->name, __func__,
@@ -884,11 +888,9 @@ static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *
 static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
     W3DN_ErrorCode *errCode, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_Shader *shader = NULL;
 
-    W3DN_Shader *shader = context->old_CompileShader(self, errCode, tags);
-
-    PROF_FINISH(CompileShader)
+    NOVA_CALL_RESULT(shader, CompileShader, errCode, tags)
 
     logLine("%s: %s: errCode %d (%s), tags %p. Shader address %p",
         context->name, __func__,
@@ -906,11 +908,9 @@ static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
 static W3DN_DataBuffer* W3DN_CreateDataBufferObject(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
     uint64 size, W3DN_BufferUsage usage, uint32 maxBuffers, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_DataBuffer *buffer = NULL;
 
-    W3DN_DataBuffer *buffer = context->old_CreateDataBufferObject(self, errCode, size, usage, maxBuffers, tags);
-
-    PROF_FINISH(CreateDataBufferObject);
+    NOVA_CALL_RESULT(buffer, CreateDataBufferObject, errCode, size, usage, maxBuffers, tags)
 
     logLine("%s: %s: errCode %d (%s), size %llu, usage %d, maxBuffers %lu, tags %p. Data buffer object address %p",
         context->name, __func__,
@@ -930,11 +930,9 @@ static W3DN_DataBuffer* W3DN_CreateDataBufferObject(struct W3DN_Context_s *self,
 
 static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_FrameBuffer* buffer = NULL;
 
-    W3DN_FrameBuffer* buffer = context->old_CreateFrameBuffer(self, errCode);
-
-    PROF_FINISH(CreateFrameBuffer)
+    NOVA_CALL_RESULT(buffer, CreateFrameBuffer, errCode)
 
     logLine("%s: %s: errCode %d (%s). Frame buffer address %p",
         context->name, __func__,
@@ -950,11 +948,9 @@ static W3DN_FrameBuffer* W3DN_CreateFrameBuffer(struct W3DN_Context_s *self, W3D
 
 static W3DN_RenderState* W3DN_CreateRenderStateObject(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_RenderState* state = NULL;
 
-    W3DN_RenderState* state = context->old_CreateRenderStateObject(self, errCode);
-
-    PROF_FINISH(CreateRenderStateObject)
+    NOVA_CALL_RESULT(state, CreateRenderStateObject, errCode)
 
     logLine("%s: %s: errCode %d (%s). Render state object address %p",
         context->name, __func__,
@@ -970,11 +966,9 @@ static W3DN_RenderState* W3DN_CreateRenderStateObject(struct W3DN_Context_s *sel
 
 static W3DN_ShaderPipeline* W3DN_CreateShaderPipeline(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ShaderPipeline* pipeline = NULL;
 
-    W3DN_ShaderPipeline* pipeline = context->old_CreateShaderPipeline(self, errCode, tags);
-
-    PROF_FINISH(CreateShaderPipeline)
+    NOVA_CALL_RESULT(pipeline, CreateShaderPipeline, errCode, tags)
 
     logLine("%s: %s: errCode %d (%s), tags %p. Shader pipeline address %p",
         context->name, __func__,
@@ -991,11 +985,9 @@ static W3DN_ShaderPipeline* W3DN_CreateShaderPipeline(struct W3DN_Context_s *sel
 
 static W3DN_TextureSampler* W3DN_CreateTexSampler(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_TextureSampler* sampler = NULL;
 
-    W3DN_TextureSampler* sampler = context->old_CreateTexSampler(self, errCode);
-
-    PROF_FINISH(CreateTexSampler)
+    NOVA_CALL_RESULT(sampler, CreateTexSampler, errCode)
 
     logLine("%s: %s: errCode %d (%s). Texture sampler address %p",
         context->name, __func__,
@@ -1013,12 +1005,10 @@ static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorC
     W3DN_PixelFormat pixelFormat, W3DN_ElementFormat elementFormat, uint32 width, uint32 height, uint32 depth,
     BOOL mipmapped, W3DN_BufferUsage usage)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_Texture* texture = NULL;
 
-    W3DN_Texture* texture = context->old_CreateTexture(self, errCode, texType, pixelFormat, elementFormat,
-        width, height, depth, mipmapped, usage);
-
-    PROF_FINISH(CreateTexture)
+    NOVA_CALL_RESULT(texture, CreateTexture, errCode, texType, pixelFormat, elementFormat,
+        width, height, depth, mipmapped, usage)
 
     logLine("%s: %s: errCode %d (%s), texType %d, pixelFormat %d, elementFormat %d, width %lu, height %lu, depth %lu, "
         "mipmapped %d, usage %d. Texture address %p",
@@ -1044,11 +1034,9 @@ static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorC
 static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *self,
 		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_VertexBuffer* result = NULL;
 
-    W3DN_VertexBuffer* result = context->old_CreateVertexBufferObject(self, errCode, size, usage, maxArrays, tags);
-
-    PROF_FINISH(CreateVertexBufferObject)
+    NOVA_CALL_RESULT(result, CreateVertexBufferObject, errCode, size, usage, maxArrays, tags)
 
     logLine("%s: %s: size %llu, usage %d, maxArrays %lu, tags %p. Buffer address %p, errCode %d (%s)",
         context->name, __func__,
@@ -1064,11 +1052,9 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
 static uint64 W3DN_DBOGetAttr(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, W3DN_BufferAttribute attr)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint64 result = 0;
 
-    const uint64 result = context->old_DBOGetAttr(self, dataBuffer, attr);
-
-    PROF_FINISH(DBOGetAttr)
+    NOVA_CALL_RESULT(result, DBOGetAttr, dataBuffer, attr)
 
     logLine("%s: %s: dataBuffer %p, attr %d. Result %llu",
         context->name, __func__,
@@ -1080,11 +1066,9 @@ static uint64 W3DN_DBOGetAttr(struct W3DN_Context_s *self, W3DN_DataBuffer *data
 static W3DN_ErrorCode W3DN_DBOGetBuffer(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, uint32 bufferIdx,
     uint64 *offset, uint64 *size, W3DN_Shader **targetShader, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_DBOGetBuffer(self, dataBuffer, bufferIdx, offset, size, targetShader, tags);
-
-    PROF_FINISH(DBOGetBuffer)
+    NOVA_CALL_RESULT(result, DBOGetBuffer, dataBuffer, bufferIdx, offset, size, targetShader, tags)
 
     logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu, size %llu, targetShader %p, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -1097,11 +1081,9 @@ static W3DN_ErrorCode W3DN_DBOGetBuffer(struct W3DN_Context_s *self, W3DN_DataBu
 
 static W3DN_BufferLock* W3DN_DBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_DataBuffer *buffer, uint64 readOffset, uint64 readSize)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_BufferLock* lock = NULL;
 
-    W3DN_BufferLock* lock = context->old_DBOLock(self, errCode, buffer, readOffset, readSize);
-
-    PROF_FINISH(DBOLock)
+    NOVA_CALL_RESULT(lock, DBOLock, errCode, buffer, readOffset, readSize)
 
     logLine("%s: %s: errCode %d (%s), buffer %p, readOffset %llu, readSize %llu. Buffer lock address %p",
         context->name, __func__,
@@ -1118,11 +1100,9 @@ static W3DN_BufferLock* W3DN_DBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 static W3DN_ErrorCode W3DN_DBOSetBuffer(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer, uint32 bufferIdx,
     uint64 offset, uint64 size, W3DN_Shader *targetShader, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_DBOSetBuffer(self, dataBuffer, bufferIdx, offset, size, targetShader, tags);
-
-    PROF_FINISH(DBOSetBuffer)
+    NOVA_CALL_RESULT(result, DBOSetBuffer, dataBuffer, bufferIdx, offset, size, targetShader, tags)
 
     logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu. size %llu, targetShader %p, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -1135,11 +1115,7 @@ static W3DN_ErrorCode W3DN_DBOSetBuffer(struct W3DN_Context_s *self, W3DN_DataBu
 
 static void W3DN_Destroy(struct W3DN_Context_s *self)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_Destroy(self);
-
-    PROF_FINISH(Destroy)
+    NOVA_CALL(Destroy)
 
     logLine("%s: %s",
         context->name, __func__);
@@ -1165,11 +1141,7 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
 
 static void W3DN_DestroyDataBufferObject(struct W3DN_Context_s *self, W3DN_DataBuffer *dataBuffer)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyDataBufferObject(self, dataBuffer);
-
-    PROF_FINISH(DestroyDataBufferObject);
+    NOVA_CALL(DestroyDataBufferObject, dataBuffer)
 
     logLine("%s: %s: dataBuffer %p",
         context->name, __func__,
@@ -1178,11 +1150,7 @@ static void W3DN_DestroyDataBufferObject(struct W3DN_Context_s *self, W3DN_DataB
 
 static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyFrameBuffer(self, frameBuffer);
-
-    PROF_FINISH(DestroyFrameBuffer);
+    NOVA_CALL(DestroyFrameBuffer, frameBuffer)
 
     logLine("%s: %s: frameBuffer %p",
         context->name, __func__,
@@ -1191,11 +1159,7 @@ static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffe
 
 static void W3DN_DestroyRenderStateObject(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyRenderStateObject(self, renderState);
-
-    PROF_FINISH(DestroyRenderStateObject);
+    NOVA_CALL(DestroyRenderStateObject, renderState)
 
     logLine("%s: %s: renderState %p",
         context->name, __func__,
@@ -1204,11 +1168,7 @@ static void W3DN_DestroyRenderStateObject(struct W3DN_Context_s *self, W3DN_Rend
 
 static void W3DN_DestroyShader(struct W3DN_Context_s *self, W3DN_Shader *shader)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyShader(self, shader);
-
-    PROF_FINISH(DestroyShader);
+    NOVA_CALL(DestroyShader, shader)
 
     logLine("%s: %s: shader %p",
         context->name, __func__,
@@ -1217,11 +1177,7 @@ static void W3DN_DestroyShader(struct W3DN_Context_s *self, W3DN_Shader *shader)
 
 static void W3DN_DestroyShaderLog(struct W3DN_Context_s *self, const char *shaderLog)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyShaderLog(self, shaderLog);
-
-    PROF_FINISH(DestroyShaderLog);
+    NOVA_CALL(DestroyShaderLog, shaderLog)
 
     logLine("%s: %s: shaderLog %p",
         context->name, __func__,
@@ -1230,11 +1186,7 @@ static void W3DN_DestroyShaderLog(struct W3DN_Context_s *self, const char *shade
 
 static void W3DN_DestroyShaderPipeline(struct W3DN_Context_s *self, W3DN_ShaderPipeline *shaderPipeline)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyShaderPipeline(self, shaderPipeline);
-
-    PROF_FINISH(DestroyShaderPipeline);
+    NOVA_CALL(DestroyShaderPipeline, shaderPipeline)
 
     logLine("%s: %s: shaderPipeline %p",
         context->name, __func__,
@@ -1243,11 +1195,7 @@ static void W3DN_DestroyShaderPipeline(struct W3DN_Context_s *self, W3DN_ShaderP
 
 static void W3DN_DestroyTexSampler(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyTexSampler(self, texSampler);
-
-    PROF_FINISH(DestroyTexSampler);
+    NOVA_CALL(DestroyTexSampler, texSampler)
 
     logLine("%s: %s: texSampler %p",
         context->name, __func__,
@@ -1256,11 +1204,7 @@ static void W3DN_DestroyTexSampler(struct W3DN_Context_s *self, W3DN_TextureSamp
 
 static void W3DN_DestroyTexture(struct W3DN_Context_s *self, W3DN_Texture *texture)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyTexture(self, texture);
-
-    PROF_FINISH(DestroyTexture);
+    NOVA_CALL(DestroyTexture, texture)
 
     logLine("%s: %s: texture %p",
         context->name, __func__,
@@ -1269,11 +1213,7 @@ static void W3DN_DestroyTexture(struct W3DN_Context_s *self, W3DN_Texture *textu
 
 static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
-    context->old_DestroyVertexBufferObject(self, vertexBuffer);
-
-    PROF_FINISH(DestroyVertexBufferObject)
+    NOVA_CALL(DestroyVertexBufferObject, vertexBuffer)
 
     logLine("%s: %s: vertexBuffer %p", context->name, __func__,
         vertexBuffer);
@@ -1312,11 +1252,9 @@ static void countPrimitive(PrimitiveCounter * counter, const W3DN_Primitive prim
 static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 base, uint32 count)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_DrawArrays(self, renderState, primitive, base, count);
-
-    PROF_FINISH(DrawArrays)
+    NOVA_CALL_RESULT(result, DrawArrays, renderState, primitive, base, count)
 
     logLine("%s: %s: renderState %p, primitive %d, base %lu, count %lu. Result %d (%s)", context->name, __func__,
         renderState, primitive, base, count, result, mapNovaError(result));
@@ -1331,11 +1269,9 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 		W3DN_RenderState *renderState, W3DN_Primitive primitive, uint32 baseVertex, uint32 count,
 		W3DN_VertexBuffer *indexBuffer, uint32 arrayIdx)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_DrawElements(self, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx);
-
-    PROF_FINISH(DrawElements)
+    NOVA_CALL_RESULT(result, DrawElements, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx)
 
     logLine("%s: %s: renderState %p, primitive %d, baseVertex %lu, count %lu, indexBuffer %p, arrayIdx %lu. Result %d (%s)",
         context->name, __func__,
@@ -1350,11 +1286,9 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, int32 attachmentPt, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_FBBindBuffer(self, frameBuffer, attachmentPt, tags);
-
-    PROF_FINISH(FBBindBuffer)
+    NOVA_CALL_RESULT(result, FBBindBuffer, frameBuffer, attachmentPt, tags);
 
     logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -1368,11 +1302,9 @@ static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, W3DN_FrameBufferAttribute attrib)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint64 result = 0;
 
-    const uint64 result = context->old_FBGetAttr(self, frameBuffer, attrib);
-
-    PROF_FINISH(FBGetAttr)
+    NOVA_CALL_RESULT(result, FBGetAttr, frameBuffer, attrib)
 
     logLine("%s: %s: frameBuffer %p, attrib %d. Result %llu",
         context->name, __func__,
@@ -1384,11 +1316,9 @@ static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
 static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    struct BitMap* bitmap = NULL;
 
-    struct BitMap* bitmap = context->old_FBGetBufferBM(self, frameBuffer, attachmentPt, errCode);
-
-    PROF_FINISH(FBGetBufferBM)
+    NOVA_CALL_RESULT(bitmap, FBGetBufferBM, frameBuffer, attachmentPt, errCode)
 
     logLine("%s: %s: frameBuffer %p, attachmentPt %lu. Bitmap address %p. Result %d (%s)",
         context->name, __func__,
@@ -1403,11 +1333,9 @@ static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 	W3DN_FrameBuffer *frameBuffer, uint32 attachmentPt, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_Texture * texture = NULL;
 
-    W3DN_Texture * texture = context->old_FBGetBufferTex(self, frameBuffer, attachmentPt, errCode);
-
-    PROF_FINISH(FBGetBufferTex)
+    NOVA_CALL_RESULT(texture, FBGetBufferTex, frameBuffer, attachmentPt, errCode)
 
     logLine("%s: %s: frameBuffer %p, attachmentPt %lu. Texture address %p. Result %d (%s)",
         context->name, __func__,
@@ -1421,11 +1349,9 @@ static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 
 static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_FBGetStatus(self, frameBuffer);
-
-    PROF_FINISH(FBGetStatus)
+    NOVA_CALL_RESULT(result, FBGetStatus, frameBuffer)
 
     logLine("%s: %s: frameBuffer %p. Result %d (%s)",
         context->name, __func__,
@@ -1438,11 +1364,9 @@ static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBu
 
 static struct BitMap* W3DN_GetBitMapTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    struct BitMap* bitmap = NULL;
 
-    struct BitMap* bitmap = context->old_GetBitMapTexture(self, renderState, texUnit);
-
-    PROF_FINISH(GetBitMapTexture)
+    NOVA_CALL_RESULT(bitmap, GetBitMapTexture, renderState, texUnit)
 
     logLine("%s: %s: renderState %p, texUnit %lu. Bitmap address %p",
         context->name, __func__,
@@ -1456,11 +1380,9 @@ static struct BitMap* W3DN_GetBitMapTexture(struct W3DN_Context_s *self, W3DN_Re
 static W3DN_ErrorCode W3DN_GetBlendColour(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     float *red, float *green, float *blue, float *alpha)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetBlendColour(self, renderState, red, green, blue, alpha);
-
-    PROF_FINISH(GetBlendColour)
+    NOVA_CALL_RESULT(result, GetBlendColour, renderState, red, green, blue, alpha);
 
     logLine("%s: %s: renderState %p, red %f, green %f, blue %f, alpha %f. Result %d (%s)",
         context->name, __func__,
@@ -1476,11 +1398,9 @@ static W3DN_ErrorCode W3DN_GetBlendColour(struct W3DN_Context_s *self, W3DN_Rend
 static W3DN_ErrorCode W3DN_GetBlendEquation(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 buffIdx, W3DN_BlendEquation *colEquation, W3DN_BlendEquation *alphaEquation)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetBlendEquation(self, renderState, buffIdx, colEquation, alphaEquation);
-
-    PROF_FINISH(GetBlendEquation)
+    NOVA_CALL_RESULT(result, GetBlendEquation, renderState, buffIdx, colEquation, alphaEquation);
 
     logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %d, alphaEquation %d. Result %d (%s)",
         context->name, __func__,
@@ -1499,11 +1419,9 @@ static W3DN_ErrorCode W3DN_GetBlendEquation(struct W3DN_Context_s *self, W3DN_Re
 static W3DN_ErrorCode W3DN_GetBlendMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendMode *colSrc,
     W3DN_BlendMode *colDst, W3DN_BlendMode *alphaSrc, W3DN_BlendMode *alphaDst)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetBlendMode(self, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst);
-
-    PROF_FINISH(GetBlendMode)
+    NOVA_CALL_RESULT(result, GetBlendMode, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst)
 
     logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %d, colDst %d, alphaSrc %d, alphaDst %d. Result %d (%s)",
         context->name, __func__,
@@ -1523,11 +1441,9 @@ static W3DN_ErrorCode W3DN_GetBlendMode(struct W3DN_Context_s *self, W3DN_Render
 
 static uint8 W3DN_GetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 index)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint8 mask = 0;
 
-    const uint8 mask = context->old_GetColourMask(self, renderState, index);
-
-    PROF_FINISH(GetColourMask)
+    NOVA_CALL_RESULT(mask, GetColourMask, renderState, index)
 
     logLine("%s: %s: renderState %p, index %lu. Mask value 0x%x",
         context->name, __func__,
@@ -1540,11 +1456,9 @@ static uint8 W3DN_GetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *r
 
 static W3DN_CompareFunc W3DN_GetDepthCompareFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_CompareFunc function = 0;
 
-    const W3DN_CompareFunc function = context->old_GetDepthCompareFunc(self, renderState);
-
-    PROF_FINISH(GetDepthCompareFunc)
+    NOVA_CALL_RESULT(function, GetDepthCompareFunc, renderState)
 
     logLine("%s: %s: renderState %p. Compare function %d",
         context->name, __func__,
@@ -1556,11 +1470,9 @@ static W3DN_CompareFunc W3DN_GetDepthCompareFunc(struct W3DN_Context_s *self, W3
 
 static W3DN_Face W3DN_GetFrontFace(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_Face face = 0;
 
-    const W3DN_Face face = context->old_GetFrontFace(self, renderState);
-
-    PROF_FINISH(GetFrontFace)
+    NOVA_CALL_RESULT(face, GetFrontFace, renderState)
 
     logLine("%s: %s: renderState %p. Front face %d",
         context->name, __func__,
@@ -1572,11 +1484,9 @@ static W3DN_Face W3DN_GetFrontFace(struct W3DN_Context_s *self, W3DN_RenderState
 
 static float W3DN_GetLineWidth(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    float width = 0.0f;
 
-    const float width = context->old_GetLineWidth(self, renderState);
-
-    PROF_FINISH(GetLineWidth)
+    NOVA_CALL_RESULT(width, GetLineWidth, renderState);
 
     logLine("%s: %s: renderState %p. Line width %f",
         context->name, __func__,
@@ -1589,11 +1499,9 @@ static float W3DN_GetLineWidth(struct W3DN_Context_s *self, W3DN_RenderState *re
 static W3DN_FrameBuffer* W3DN_GetRenderTarget(
     struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_FrameBuffer* buffer = NULL;
 
-    W3DN_FrameBuffer* buffer = context->old_GetRenderTarget(self, renderState);
-
-    PROF_FINISH(GetRenderTarget)
+    NOVA_CALL_RESULT(buffer, GetRenderTarget, renderState)
 
     logLine("%s: %s: renderState %p. Frame buffer address %p",
         context->name, __func__,
@@ -1607,11 +1515,9 @@ static W3DN_FrameBuffer* W3DN_GetRenderTarget(
 static W3DN_PolygonMode W3DN_GetPolygonMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_PolygonMode mode = 0;
 
-    const W3DN_PolygonMode mode = context->old_GetPolygonMode(self, renderState, face);
-
-    PROF_FINISH(GetPolygonMode)
+    NOVA_CALL_RESULT(mode, GetPolygonMode, renderState, face)
 
     logLine("%s: %s: renderState %p, face %d. Polygon mode %d",
         context->name, __func__,
@@ -1622,15 +1528,12 @@ static W3DN_PolygonMode W3DN_GetPolygonMode(struct W3DN_Context_s *self, W3DN_Re
     return mode;
 }
 
-
 static W3DN_ErrorCode W3DN_GetPolygonOffset(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     float *factor, float *units, float *clamp)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetPolygonOffset(self, renderState, factor, units, clamp);
-
-    PROF_FINISH(GetPolygonOffset)
+    NOVA_CALL_RESULT(result, GetPolygonOffset, renderState, factor, units, clamp);
 
     logLine("%s: %s: renderState %p, factor %f, units %f, clamp %f. Result %d (%s)",
         context->name, __func__,
@@ -1648,11 +1551,9 @@ static W3DN_ErrorCode W3DN_GetPolygonOffset(struct W3DN_Context_s *self, W3DN_Re
 
 static W3DN_ProvokingVertexMode W3DN_GetProvokingVertex(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ProvokingVertexMode mode = 0;
 
-    const W3DN_ProvokingVertexMode mode = context->old_GetProvokingVertex(self, renderState);
-
-    PROF_FINISH(GetProvokingVertex)
+    NOVA_CALL_RESULT(mode, GetProvokingVertex, renderState)
 
     logLine("%s: %s: renderState %p. Vertex mode %d",
         context->name, __func__,
@@ -1665,11 +1566,9 @@ static W3DN_ProvokingVertexMode W3DN_GetProvokingVertex(struct W3DN_Context_s *s
 static W3DN_ErrorCode W3DN_GetScissor(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 *x, uint32 *y, uint32 *width, uint32 *height)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetScissor(self, renderState, x, y, width, height);
-
-    PROF_FINISH(GetScissor)
+    NOVA_CALL_RESULT(result, GetScissor, renderState, x, y, width, height);
 
     logLine("%s: %s: renderState %p, x %lu, y %lu, width %lu, height %lu. Result %d (%s)",
         context->name, __func__,
@@ -1689,11 +1588,9 @@ static W3DN_ErrorCode W3DN_GetScissor(struct W3DN_Context_s *self, W3DN_RenderSt
 static W3DN_ErrorCode W3DN_GetShaderDataBuffer(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_ShaderType shaderType, W3DN_DataBuffer **buffer, uint32 *bufferIdx)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetShaderDataBuffer(self, renderState, shaderType, buffer, bufferIdx);
-
-    PROF_FINISH(GetShaderDataBuffer)
+    NOVA_CALL_RESULT(result, GetShaderDataBuffer, renderState, shaderType, buffer, bufferIdx)
 
     logLine("%s: %s: renderState %p, shaderType %d, buffer %p, bufferIdx %lu. Result %d (%s)",
         context->name, __func__,
@@ -1711,11 +1608,9 @@ static W3DN_ErrorCode W3DN_GetShaderDataBuffer(struct W3DN_Context_s *self, W3DN
 
 static W3DN_ShaderPipeline* W3DN_GetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ShaderPipeline* pipeline = NULL;
 
-    W3DN_ShaderPipeline* pipeline = context->old_GetShaderPipeline(self, renderState);
-
-    PROF_FINISH(GetShaderPipeline)
+    NOVA_CALL_RESULT(pipeline, GetShaderPipeline, renderState)
 
     logLine("%s: %s: renderState %p. Shader pipeline address %p",
         context->name, __func__,
@@ -1729,11 +1624,9 @@ static W3DN_ShaderPipeline* W3DN_GetShaderPipeline(struct W3DN_Context_s *self, 
 
 static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_StateFlag stateFlag)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_State state = 0;
 
-    const W3DN_State state = context->old_GetState(self, renderState, stateFlag);
-
-    PROF_FINISH(GetState)
+    NOVA_CALL_RESULT(state, GetState, renderState, stateFlag)
 
     logLine("%s: %s: renderState %p, stateFlag %d. State %d",
         context->name, __func__,
@@ -1745,11 +1638,9 @@ static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *r
 static W3DN_ErrorCode W3DN_GetStencilFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face, W3DN_CompareFunc *func, uint32 *ref, uint32 *mask)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetStencilFunc(self, renderState, face, func, ref, mask);
-
-    PROF_FINISH(GetStencilFunc)
+    NOVA_CALL_RESULT(result, GetStencilFunc, renderState, face, func, ref, mask);
 
     logLine("%s: %s: renderState %p, face %d, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
@@ -1769,11 +1660,9 @@ static W3DN_ErrorCode W3DN_GetStencilFunc(struct W3DN_Context_s *self, W3DN_Rend
 static W3DN_ErrorCode W3DN_GetStencilOp(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face, W3DN_StencilOp *sFail, W3DN_StencilOp *dpFail, W3DN_StencilOp *dpPass)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetStencilOp(self, renderState, face, sFail, dpFail, dpPass);
-
-    PROF_FINISH(GetStencilOp)
+    NOVA_CALL_RESULT(result, GetStencilOp, renderState, face, sFail, dpFail, dpPass);
 
     logLine("%s: %s: renderState %p, face %d, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
         context->name, __func__,
@@ -1793,11 +1682,9 @@ static W3DN_ErrorCode W3DN_GetStencilOp(struct W3DN_Context_s *self, W3DN_Render
 static uint32 W3DN_GetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint32 mask = 0;
 
-    const uint32 mask = context->old_GetStencilWriteMask(self, renderState, face, errCode);
-
-    PROF_FINISH(GetStencilWriteMask)
+    NOVA_CALL_RESULT(mask, GetStencilWriteMask, renderState, face, errCode)
 
     logLine("%s: %s: renderState %p, face %d, errCode %d (%s). Stencil write mask 0x%lx",
         context->name, __func__,
@@ -1814,11 +1701,9 @@ static uint32 W3DN_GetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderS
 
 static W3DN_TextureSampler* W3DN_GetTexSampler(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_TextureSampler* sampler = NULL;
 
-    W3DN_TextureSampler* sampler = context->old_GetTexSampler(self, renderState, texUnit);
-
-    PROF_FINISH(GetTexSampler)
+    NOVA_CALL_RESULT(sampler, GetTexSampler, renderState, texUnit)
 
     logLine("%s: %s: renderState %p, texUnit %lu. Texture sampler address %p",
         context->name, __func__,
@@ -1833,11 +1718,9 @@ static W3DN_TextureSampler* W3DN_GetTexSampler(struct W3DN_Context_s *self, W3DN
 
 static W3DN_Texture* W3DN_GetTexture(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 texUnit)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_Texture* texture = NULL;
 
-    W3DN_Texture* texture = context->old_GetTexture(self, renderState, texUnit);
-
-    PROF_FINISH(GetTexture)
+    NOVA_CALL_RESULT(texture, GetTexture, renderState, texUnit)
 
     logLine("%s: %s: renderState %p, texUnit %lu. Texture address %p",
         context->name, __func__,
@@ -1853,11 +1736,9 @@ static W3DN_Texture* W3DN_GetTexture(struct W3DN_Context_s *self, W3DN_RenderSta
 static W3DN_ErrorCode W3DN_GetVertexAttribArray(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 attribNum, W3DN_VertexBuffer **buffer, uint32 *arrayIdx)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetVertexAttribArray(self, renderState, attribNum, buffer, arrayIdx);
-
-    PROF_FINISH(GetVertexAttribArray)
+    NOVA_CALL_RESULT(result, GetVertexAttribArray, renderState, attribNum, buffer, arrayIdx);
 
     logLine("%s: %s: renderState %p, attribNum %lu, buffer %p, arrayIdx %lu. Result %d (%s)",
         context->name, __func__,
@@ -1876,11 +1757,9 @@ static W3DN_ErrorCode W3DN_GetVertexAttribArray(struct W3DN_Context_s *self, W3D
 static W3DN_ErrorCode W3DN_GetViewport(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     double *x, double *y, double *width, double *height, double *zNear, double *zFar)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_GetViewport(self, renderState, x, y, width, height, zNear, zFar);
-
-    PROF_FINISH(GetViewport)
+    NOVA_CALL_RESULT(result, GetViewport, renderState, x, y, width, height, zNear, zFar);
 
     logLine("%s: %s: renderState %p, x %f, y %f, width %f, height %f, zNear %f, zFar %f. Result %d (%s)",
         context->name, __func__,
@@ -1901,11 +1780,9 @@ static W3DN_ErrorCode W3DN_GetViewport(struct W3DN_Context_s *self, W3DN_RenderS
 
 static BOOL W3DN_IsDone(struct W3DN_Context_s *self, uint32 submitID)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    BOOL result = TRUE;
 
-    const BOOL result = context->old_IsDone(self, submitID);
-
-    PROF_FINISH(IsDone)
+    NOVA_CALL_RESULT(result, IsDone, submitID)
 
     logLine("%s: %s: submitID %lu. Result %d",
         context->name, __func__,
@@ -1917,11 +1794,9 @@ static BOOL W3DN_IsDone(struct W3DN_Context_s *self, uint32 submitID)
 
 static uint32 W3DN_Query(struct W3DN_Context_s *self, W3DN_CapQuery query)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint32 result = 0;
 
-    const uint32 result = context->old_Query(self, query);
-
-    PROF_FINISH(Query)
+    NOVA_CALL_RESULT(result, Query, query)
 
     logLine("%s: %s: query %d. Result %lu",
         context->name, __func__,
@@ -1933,11 +1808,9 @@ static uint32 W3DN_Query(struct W3DN_Context_s *self, W3DN_CapQuery query)
 
 static W3DN_ErrorCode W3DN_RSOCopy(struct W3DN_Context_s *self, W3DN_RenderState *dest, const W3DN_RenderState *src)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_RSOCopy(self, dest, src);
-
-    PROF_FINISH(RSOCopy)
+    NOVA_CALL_RESULT(result, RSOCopy, dest, src)
 
     logLine("%s: %s: dest %p, src %p. Result %d (%s)",
         context->name, __func__,
@@ -1953,11 +1826,9 @@ static W3DN_ErrorCode W3DN_RSOCopy(struct W3DN_Context_s *self, W3DN_RenderState
 
 static W3DN_ErrorCode W3DN_RSOSetMaster(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_RenderState *master)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_RSOSetMaster(self, renderState, master);
-
-    PROF_FINISH(RSOSetMaster)
+    NOVA_CALL_RESULT(result, RSOSetMaster, renderState, master)
 
     logLine("%s: %s: renderState %p, master %p. Result %d (%s)",
         context->name, __func__,
@@ -1973,11 +1844,9 @@ static W3DN_ErrorCode W3DN_RSOSetMaster(struct W3DN_Context_s *self, W3DN_Render
 
 static W3DN_ErrorCode W3DN_SetBlendColour(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float red, float green, float blue, float alpha)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetBlendColour(self, renderState, red, green, blue, alpha);
-
-    PROF_FINISH(SetBlendColour)
+    NOVA_CALL_RESULT(result, SetBlendColour, renderState, red, green, blue, alpha)
 
     logLine("%s: %s: renderState %p, red %f, green %f, blue %f, alpha %f. Result %d (%s).",
         context->name, __func__,
@@ -1996,11 +1865,9 @@ static W3DN_ErrorCode W3DN_SetBlendColour(struct W3DN_Context_s *self, W3DN_Rend
 
 static W3DN_ErrorCode W3DN_SetBlendEquation(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendEquation equation)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetBlendEquation(self, renderState, buffIdx, equation);
-
-    PROF_FINISH(SetBlendEquation)
+    NOVA_CALL_RESULT(result, SetBlendEquation, renderState, buffIdx, equation)
 
     logLine("%s: %s: renderState %p, buffIdx %lu, equation %d. Result %d (%s)",
         context->name, __func__,
@@ -2018,11 +1885,9 @@ static W3DN_ErrorCode W3DN_SetBlendEquation(struct W3DN_Context_s *self, W3DN_Re
 static W3DN_ErrorCode W3DN_SetBlendEquationSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
     W3DN_BlendEquation colEquation, W3DN_BlendEquation alphaEquation)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetBlendEquationSeparate(self, renderState, buffIdx, colEquation, alphaEquation);
-
-    PROF_FINISH(SetBlendEquationSeparate)
+    NOVA_CALL_RESULT(result, SetBlendEquationSeparate, renderState, buffIdx, colEquation, alphaEquation)
 
     logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %d, alphaEquation %d. Result %d (%s)",
         context->name, __func__,
@@ -2040,11 +1905,9 @@ static W3DN_ErrorCode W3DN_SetBlendEquationSeparate(struct W3DN_Context_s *self,
 
 static W3DN_ErrorCode W3DN_SetBlendMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx, W3DN_BlendMode src, W3DN_BlendMode dst)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetBlendMode(self, renderState, buffIdx, src, dst);
-
-    PROF_FINISH(SetBlendMode)
+    NOVA_CALL_RESULT(result, SetBlendMode, renderState, buffIdx, src, dst)
 
     logLine("%s: %s: renderState %p, buffIdx %lu, src %d, dst %d. Result %d (%s)",
         context->name, __func__,
@@ -2063,11 +1926,9 @@ static W3DN_ErrorCode W3DN_SetBlendMode(struct W3DN_Context_s *self, W3DN_Render
 static W3DN_ErrorCode W3DN_SetBlendModeSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 buffIdx,
     W3DN_BlendMode colSrc, W3DN_BlendMode colDst, W3DN_BlendMode alphaSrc, W3DN_BlendMode alphaDst)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetBlendModeSeparate(self, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst);
-
-    PROF_FINISH(SetBlendModeSeparate)
+    NOVA_CALL_RESULT(result, SetBlendModeSeparate, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst)
 
     logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %d, colDst %d, alphaSrc %d, alphaDst %d. Result %d (%s)",
         context->name, __func__,
@@ -2087,11 +1948,9 @@ static W3DN_ErrorCode W3DN_SetBlendModeSeparate(struct W3DN_Context_s *self, W3D
 
 static W3DN_ErrorCode W3DN_SetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 index, uint8 mask)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetColourMask(self, renderState, index, mask);
-
-    PROF_FINISH(SetColourMask)
+    NOVA_CALL_RESULT(result, SetColourMask, renderState, index, mask)
 
     logLine("%s: %s: renderState %p, index %lu, mask 0x%x. Result %d (%s)",
         context->name, __func__,
@@ -2108,11 +1967,9 @@ static W3DN_ErrorCode W3DN_SetColourMask(struct W3DN_Context_s *self, W3DN_Rende
 
 static W3DN_ErrorCode W3DN_SetDepthCompareFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_CompareFunc func)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetDepthCompareFunc(self, renderState, func);
-
-    PROF_FINISH(SetDepthCompareFunc)
+    NOVA_CALL_RESULT(result, SetDepthCompareFunc, renderState, func)
 
     logLine("%s: %s: renderState %p, func %d. Result %d (%s)",
         context->name, __func__,
@@ -2128,11 +1985,9 @@ static W3DN_ErrorCode W3DN_SetDepthCompareFunc(struct W3DN_Context_s *self, W3DN
 
 static W3DN_ErrorCode W3DN_SetFrontFace(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_Face face)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetFrontFace(self, renderState, face);
-
-    PROF_FINISH(SetFrontFace)
+    NOVA_CALL_RESULT(result, SetFrontFace, renderState, face)
 
     logLine("%s: %s: renderState %p, face %d. Result %d (%s)",
         context->name, __func__,
@@ -2148,11 +2003,9 @@ static W3DN_ErrorCode W3DN_SetFrontFace(struct W3DN_Context_s *self, W3DN_Render
 
 static W3DN_ErrorCode W3DN_SetLineWidth(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float width)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetLineWidth(self, renderState, width);
-
-    PROF_FINISH(SetLineWidth)
+    NOVA_CALL_RESULT(result, SetLineWidth, renderState, width)
 
     logLine("%s: %s: renderState %p, width %f. Result %d (%s)",
         context->name, __func__,
@@ -2168,11 +2021,9 @@ static W3DN_ErrorCode W3DN_SetLineWidth(struct W3DN_Context_s *self, W3DN_Render
 
 static W3DN_ErrorCode W3DN_SetPolygonMode(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_FaceSelect face, W3DN_PolygonMode mode)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetPolygonMode(self, renderState, face, mode);
-
-    PROF_FINISH(SetPolygonMode)
+    NOVA_CALL_RESULT(result, SetPolygonMode, renderState, face, mode)
 
     logLine("%s: %s: renderState %p, face %d, mode %d. Result %d (%s)",
         context->name, __func__,
@@ -2189,11 +2040,9 @@ static W3DN_ErrorCode W3DN_SetPolygonMode(struct W3DN_Context_s *self, W3DN_Rend
 
 static W3DN_ErrorCode W3DN_SetPolygonOffset(struct W3DN_Context_s *self, W3DN_RenderState *renderState, float factor, float units, float clamp)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetPolygonOffset(self, renderState, factor, units, clamp);
-
-    PROF_FINISH(SetPolygonOffset)
+    NOVA_CALL_RESULT(result, SetPolygonOffset, renderState, factor, units, clamp)
 
     logLine("%s: %s: renderState %p, factor %f, units %f, clamp %f. Result %d (%s)",
         context->name, __func__,
@@ -2211,11 +2060,9 @@ static W3DN_ErrorCode W3DN_SetPolygonOffset(struct W3DN_Context_s *self, W3DN_Re
 
 static W3DN_ErrorCode W3DN_SetProvokingVertex(struct W3DN_Context_s *self, W3DN_RenderState *renderState, W3DN_ProvokingVertexMode mode)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetProvokingVertex(self, renderState, mode);
-
-    PROF_FINISH(SetProvokingVertex)
+    NOVA_CALL_RESULT(result, SetProvokingVertex, renderState, mode)
 
     logLine("%s: %s: renderState %p, mode %d. Result %d (%s)",
         context->name, __func__,
@@ -2232,11 +2079,9 @@ static W3DN_ErrorCode W3DN_SetProvokingVertex(struct W3DN_Context_s *self, W3DN_
 static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 	W3DN_RenderState *renderState, W3DN_FrameBuffer *frameBuffer)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetRenderTarget(self, renderState, frameBuffer);
-
-    PROF_FINISH(SetRenderTarget)
+    NOVA_CALL_RESULT(result, SetRenderTarget, renderState, frameBuffer)
 
     logLine("%s: %s: renderState %p, frameBuffer %p. Result %d (%s)",
         context->name, __func__,
@@ -2250,11 +2095,9 @@ static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 static W3DN_ErrorCode W3DN_SetScissor(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     uint32 x, uint32 y, uint32 width, uint32 height)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetScissor(self, renderState, x, y, width, height);
-
-    PROF_FINISH(SetScissor)
+    NOVA_CALL_RESULT(result, SetScissor, renderState, x, y, width, height)
 
     logLine("%s: %s: renderState %p, x %lu, y %lu, width %lu, height %lu. Result %d (%s)",
         context->name, __func__,
@@ -2274,11 +2117,9 @@ static W3DN_ErrorCode W3DN_SetScissor(struct W3DN_Context_s *self, W3DN_RenderSt
 static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_ShaderPipeline *shaderPipeline)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetShaderPipeline(self, renderState, shaderPipeline);
-
-    PROF_FINISH(SetShaderPipeline)
+    NOVA_CALL_RESULT(result, SetShaderPipeline, renderState, shaderPipeline)
 
     logLine("%s: %s: renderState %p, shaderPipeline %p. Result %d (%s)",
         context->name, __func__,
@@ -2292,11 +2133,9 @@ static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_R
 static W3DN_ErrorCode W3DN_SetState(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_StateFlag stateFlag, W3DN_State value)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetState(self, renderState, stateFlag, value);
-
-    PROF_FINISH(SetState)
+    NOVA_CALL_RESULT(result, SetState, renderState, stateFlag, value)
 
     logLine("%s: %s: renderState %p, stateFlag %d, value %d. Result %d (%s)",
         context->name, __func__,
@@ -2311,11 +2150,9 @@ static W3DN_ErrorCode W3DN_SetState(struct W3DN_Context_s *self, W3DN_RenderStat
 static W3DN_ErrorCode W3DN_SetStencilFunc(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_CompareFunc func, uint32 ref, uint32 mask)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetStencilFunc(self, renderState, func, ref, mask);
-
-    PROF_FINISH(SetStencilFunc)
+    NOVA_CALL_RESULT(result, SetStencilFunc, renderState, func, ref, mask)
 
     logLine("%s: %s: renderState %p, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
@@ -2334,11 +2171,9 @@ static W3DN_ErrorCode W3DN_SetStencilFunc(struct W3DN_Context_s *self, W3DN_Rend
 static W3DN_ErrorCode W3DN_SetStencilFuncSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face, W3DN_CompareFunc func, uint32 ref, uint32 mask)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetStencilFuncSeparate(self, renderState, face, func, ref, mask);
-
-    PROF_FINISH(SetStencilFuncSeparate)
+    NOVA_CALL_RESULT(result, SetStencilFuncSeparate, renderState, face, func, ref, mask)
 
     logLine("%s: %s: renderState %p, face %d, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
@@ -2358,11 +2193,9 @@ static W3DN_ErrorCode W3DN_SetStencilFuncSeparate(struct W3DN_Context_s *self, W
 static W3DN_ErrorCode W3DN_SetStencilOp(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_StencilOp sFail, W3DN_StencilOp dpFail, W3DN_StencilOp dpPass)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetStencilOp(self, renderState, sFail, dpFail, dpPass);
-
-    PROF_FINISH(SetStencilOp)
+    NOVA_CALL_RESULT(result, SetStencilOp, renderState, sFail, dpFail, dpPass)
 
     logLine("%s: %s: renderState %p, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
         context->name, __func__,
@@ -2381,11 +2214,9 @@ static W3DN_ErrorCode W3DN_SetStencilOp(struct W3DN_Context_s *self, W3DN_Render
 static W3DN_ErrorCode W3DN_SetStencilOpSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     W3DN_FaceSelect face, W3DN_StencilOp sFail, W3DN_StencilOp dpFail, W3DN_StencilOp dpPass)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetStencilOpSeparate(self, renderState, face, sFail, dpFail, dpPass);
-
-    PROF_FINISH(SetStencilOpSeparate)
+    NOVA_CALL_RESULT(result, SetStencilOpSeparate, renderState, face, sFail, dpFail, dpPass)
 
     logLine("%s: %s: renderState %p, face %d, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
         context->name, __func__,
@@ -2404,11 +2235,9 @@ static W3DN_ErrorCode W3DN_SetStencilOpSeparate(struct W3DN_Context_s *self, W3D
 
 static W3DN_ErrorCode W3DN_SetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderState *renderState, uint32 mask)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetStencilWriteMask(self, renderState, mask);
-
-    PROF_FINISH(SetStencilWriteMask)
+    NOVA_CALL_RESULT(result, SetStencilWriteMask, renderState, mask)
 
     logLine("%s: %s: renderState %p, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
@@ -2425,11 +2254,9 @@ static W3DN_ErrorCode W3DN_SetStencilWriteMask(struct W3DN_Context_s *self, W3DN
 static W3DN_ErrorCode W3DN_SetStencilWriteMaskSeparate(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
      W3DN_FaceSelect face, uint32 mask)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetStencilWriteMaskSeparate(self, renderState, face, mask);
-
-    PROF_FINISH(SetStencilWriteMaskSeparate)
+    NOVA_CALL_RESULT(result, SetStencilWriteMaskSeparate, renderState, face, mask)
 
     logLine("%s: %s: renderState %p, face %d, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
@@ -2447,11 +2274,9 @@ static W3DN_ErrorCode W3DN_SetStencilWriteMaskSeparate(struct W3DN_Context_s *se
 static W3DN_ErrorCode W3DN_SetViewport(struct W3DN_Context_s *self, W3DN_RenderState *renderState,
     double x, double y, double width, double height, double zNear, double zFar)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_SetViewport(self, renderState, x, y, width, height, zNear, zFar);
-
-    PROF_FINISH(SetViewport)
+    NOVA_CALL_RESULT(result, SetViewport, renderState, x, y, width, height, zNear, zFar);
 
     logLine("%s: %s: renderState %p, x %f, y %f, width %f, height %f, zNear %f, zFar %f. Result %d (%s)",
         context->name, __func__,
@@ -2473,11 +2298,9 @@ static W3DN_ErrorCode W3DN_SetViewport(struct W3DN_Context_s *self, W3DN_RenderS
 static uint32 W3DN_ShaderGetCount(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_Shader *shader,
     W3DN_ShaderObjectType objectType)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint32 count = 0;
 
-    const uint32 count = context->old_ShaderGetCount(self, errCode, shader, objectType);
-
-    PROF_FINISH(ShaderGetCount)
+    NOVA_CALL_RESULT(count, ShaderGetCount, errCode, shader, objectType)
 
     logLine("%s: %s: errCode %d (%s), shader %p, objectType %d. Shader count %lu",
         context->name, __func__,
@@ -2495,11 +2318,9 @@ static uint32 W3DN_ShaderGetCount(struct W3DN_Context_s *self, W3DN_ErrorCode *e
 static W3DN_ErrorCode W3DN_ShaderGetObjectInfo(struct W3DN_Context_s *self, W3DN_Shader *shader,
     W3DN_ShaderObjectType objectType, uint32 index, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_ShaderGetObjectInfo(self, shader, objectType, index, tags);
-
-    PROF_FINISH(ShaderGetObjectInfo)
+    NOVA_CALL_RESULT(result, ShaderGetObjectInfo, shader, objectType, index, tags)
 
     logLine("%s: %s: shader %p, objectType %d, index %lu, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -2518,11 +2339,9 @@ static W3DN_ErrorCode W3DN_ShaderGetObjectInfo(struct W3DN_Context_s *self, W3DN
 static uint32 W3DN_ShaderGetOffset(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_Shader *shader,
     W3DN_ShaderObjectType objectType, const char *name)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint32 offset = 0;
 
-    const uint32 offset = context->old_ShaderGetOffset(self, errCode, shader, objectType, name);
-
-    PROF_FINISH(ShaderGetOffset)
+    NOVA_CALL_RESULT(offset, ShaderGetOffset, errCode, shader, objectType, name)
 
     logLine("%s: %s: errCode %d (%s), shader %p, objectType %d, name '%s'. Offset %lu",
         context->name, __func__,
@@ -2542,11 +2361,9 @@ static uint32 W3DN_ShaderGetOffset(struct W3DN_Context_s *self, W3DN_ErrorCode *
 
 static uint64 W3DN_ShaderGetTotalStorage(struct W3DN_Context_s *self, W3DN_Shader *shader)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint64 size = 0;
 
-    const uint64 size = context->old_ShaderGetTotalStorage(self, shader);
-
-    PROF_FINISH(ShaderGetTotalStorage)
+    NOVA_CALL_RESULT(size, ShaderGetTotalStorage, shader)
 
     logLine("%s: %s: shader %p. Size %llu",
         context->name, __func__,
@@ -2558,11 +2375,9 @@ static uint64 W3DN_ShaderGetTotalStorage(struct W3DN_Context_s *self, W3DN_Shade
 
 static W3DN_ShaderType W3DN_ShaderGetType(struct W3DN_Context_s *self, W3DN_Shader *shader)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ShaderType type = 0;
 
-    const W3DN_ShaderType type = context->old_ShaderGetType(self, shader);
-
-    PROF_FINISH(ShaderGetType)
+    NOVA_CALL_RESULT(type, ShaderGetType, shader)
 
     logLine("%s: %s: shader %p. Type %d",
         context->name, __func__,
@@ -2575,11 +2390,9 @@ static W3DN_ShaderType W3DN_ShaderGetType(struct W3DN_Context_s *self, W3DN_Shad
 static W3DN_Shader* W3DN_ShaderPipelineGetShader(struct W3DN_Context_s *self, W3DN_ShaderPipeline *shaderPipeline,
     W3DN_ShaderType shaderType)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_Shader* shader = NULL;
 
-    W3DN_Shader* shader = context->old_ShaderPipelineGetShader(self, shaderPipeline, shaderType);
-
-    PROF_FINISH(ShaderPipelineGetShader)
+    NOVA_CALL_RESULT(shader, ShaderPipelineGetShader, shaderPipeline, shaderType)
 
     logLine("%s: %s: shaderPipeline %p, shaderType %d. Shader %p",
         context->name, __func__,
@@ -2594,13 +2407,10 @@ static W3DN_Shader* W3DN_ShaderPipelineGetShader(struct W3DN_Context_s *self, W3
 
 static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 {
-    GET_CONTEXT_AND_START_PROFILING
-
     W3DN_ErrorCode myErrCode = 0;
+    uint32 result = 0;
 
-    const uint32 result = context->old_Submit(self, &myErrCode);
-
-    PROF_FINISH(Submit)
+    NOVA_CALL_RESULT(result, Submit, &myErrCode)
 
     logLine("%s: %s: errCode %d (%s). Submit ID %lu",
         context->name, __func__,
@@ -2623,11 +2433,9 @@ static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 
 static W3DN_ErrorCode W3DN_TexGenMipMaps(struct W3DN_Context_s *self, W3DN_Texture *texture, uint32 base, uint32 last)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_TexGenMipMaps(self, texture, base, last);
-
-    PROF_FINISH(TexGenMipMaps)
+    NOVA_CALL_RESULT(result, TexGenMipMaps, texture, base, last)
 
     logLine("%s: %s: texture %p, base %lu, last %lu. Result %d (%s)",
         context->name, __func__,
@@ -2644,11 +2452,9 @@ static W3DN_ErrorCode W3DN_TexGenMipMaps(struct W3DN_Context_s *self, W3DN_Textu
 
 static W3DN_ErrorCode W3DN_TexGetParameters(struct W3DN_Context_s *self, W3DN_Texture *texture, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_TexGetParameters(self, texture, tags);
-
-    PROF_FINISH(TexGetParameters)
+    NOVA_CALL_RESULT(result, TexGetParameters, texture, tags)
 
     logLine("%s: %s: texture %p, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -2664,11 +2470,9 @@ static W3DN_ErrorCode W3DN_TexGetParameters(struct W3DN_Context_s *self, W3DN_Te
 
 static W3DN_ErrorCode W3DN_TexGetProperty(struct W3DN_Context_s *self, W3DN_Texture *texture, W3DN_TextureProperty texProp, void *buffer)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_TexGetProperty(self, texture, texProp, buffer);
-
-    PROF_FINISH(TexGetProperty)
+    NOVA_CALL_RESULT(result, TexGetProperty, texture, texProp, buffer)
 
     logLine("%s: %s: texture %p, texProp %d, buffer %p. Result %d (%s)",
         context->name, __func__,
@@ -2685,11 +2489,9 @@ static W3DN_ErrorCode W3DN_TexGetProperty(struct W3DN_Context_s *self, W3DN_Text
 
 static W3DN_ErrorCode W3DN_TexSetParameters(struct W3DN_Context_s *self, W3DN_Texture *texture, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_TexSetParameters(self, texture, tags);
-
-    PROF_FINISH(TexSetParameters)
+    NOVA_CALL_RESULT(result, TexSetParameters, texture, tags)
 
     logLine("%s: %s: texture %p, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -2706,11 +2508,9 @@ static W3DN_ErrorCode W3DN_TexSetParameters(struct W3DN_Context_s *self, W3DN_Te
 W3DN_ErrorCode W3DN_TexUpdateImage(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
     uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_TexUpdateImage(self, texture, source, level, arrayIdx, srcBytesPerRow, srcRowsPerLayer);
-
-    PROF_FINISH(TexUpdateImage)
+    NOVA_CALL_RESULT(result, TexUpdateImage, texture, source, level, arrayIdx, srcBytesPerRow, srcRowsPerLayer)
 
     logLine("%s: %s: texture %p, source %p, level %lu, arrayIdx %lu, srcBytesPerRow %lu, srcRowsPerLayer %lu. Result %d (%s)",
         context->name, __func__,
@@ -2732,12 +2532,10 @@ W3DN_ErrorCode W3DN_TexUpdateSubImage(struct W3DN_Context_s *self, W3DN_Texture 
     uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer,
     uint32 dstX, uint32 dstY, uint32 dstLayer, uint32 width, uint32 height, uint32 depth)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_TexUpdateSubImage(self, texture, source,
-        level, arrayIdx, srcBytesPerRow, srcRowsPerLayer, dstX, dstY, dstLayer, width, height, depth);
-
-    PROF_FINISH(TexUpdateSubImage)
+    NOVA_CALL_RESULT(result, TexUpdateSubImage, texture, source,
+        level, arrayIdx, srcBytesPerRow, srcRowsPerLayer, dstX, dstY, dstLayer, width, height, depth)
 
     logLine("%s: %s: texture %p, source %p, level %lu, arrayIdx %lu, srcBytesPerRow %lu, srcRowsPerLayer %lu, "
         "dstX %lu, dstY %lu, dstLayer %lu, width %lu, height %lu, depth %lu. Result %d (%s)",
@@ -2764,11 +2562,9 @@ W3DN_ErrorCode W3DN_TexUpdateSubImage(struct W3DN_Context_s *self, W3DN_Texture 
 
 static W3DN_ErrorCode W3DN_TSGetParameters(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_TSGetParameters(self, texSampler, tags);
-
-    PROF_FINISH(TSGetParameters)
+    NOVA_CALL_RESULT(result, TSGetParameters, texSampler, tags)
 
     logLine("%s: %s: texSampler %p, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -2784,11 +2580,9 @@ static W3DN_ErrorCode W3DN_TSGetParameters(struct W3DN_Context_s *self, W3DN_Tex
 
 static W3DN_ErrorCode W3DN_TSSetParameters(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler, struct TagItem *tags)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_TSSetParameters(self, texSampler, tags);
-
-    PROF_FINISH(TSSetParameters)
+    NOVA_CALL_RESULT(result, TSSetParameters, texSampler, tags)
 
     logLine("%s: %s: texSampler %p, tags %p. Result %d (%s)",
         context->name, __func__,
@@ -2806,11 +2600,9 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 		uint32 arrayIdx, W3DN_ElementFormat *elementType, BOOL *normalized,
 		uint64 *numElements, uint64 *stride, uint64 *offset, uint64 *count)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_VBOGetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
-
-    PROF_FINISH(VBOGetArray)
+    NOVA_CALL_RESULT(result, VBOGetArray, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count)
 
     logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
@@ -2823,11 +2615,9 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
 static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer, W3DN_BufferAttribute attr)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    uint64 result = 0;
 
-    const uint64 result = context->old_VBOGetAttr(self, vertexBuffer, attr);
-
-    PROF_FINISH(VBOGetAttr)
+    NOVA_CALL_RESULT(result, VBOGetAttr, vertexBuffer, attr)
 
     logLine("%s: %s: vertexBuffer %p, attr %d. Result %llu", context->name, __func__,
         vertexBuffer, attr, result);
@@ -2838,11 +2628,9 @@ static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *ve
 static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode,
 		W3DN_VertexBuffer *buffer, uint64 readOffset, uint64 readSize)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_BufferLock* result = NULL;
 
-    W3DN_BufferLock* result = context->old_VBOLock(self, errCode, buffer, readOffset, readSize);
-
-    PROF_FINISH(VBOLock)
+    NOVA_CALL_RESULT(result, VBOLock, errCode, buffer, readOffset, readSize)
 
     logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u (%s)", context->name, __func__,
         buffer, readOffset, readSize, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
@@ -2857,11 +2645,9 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 		uint32 arrayIdx, W3DN_ElementFormat elementType, BOOL normalized, uint64 numElements,
 		uint64 stride, uint64 offset, uint64 count)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_VBOSetArray(self, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count);
-
-    PROF_FINISH(VBOSetArray)
+    NOVA_CALL_RESULT(result, VBOSetArray, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count)
 
     logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
@@ -2874,11 +2660,9 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
 static W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID, uint32 timeout)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_WaitDone(self, submitID, timeout);
-
-    PROF_FINISH(WaitDone)
+    NOVA_CALL_RESULT(result, WaitDone, submitID, timeout)
 
     logLine("%s: %s: submitID %lu, timeout %lu. Result %d (%s)",
         context->name, __func__,
@@ -2891,11 +2675,9 @@ static W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID
 
 static W3DN_ErrorCode W3DN_WaitIdle(struct W3DN_Context_s *self, uint32 timeout)
 {
-    GET_CONTEXT_AND_START_PROFILING
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
-    const W3DN_ErrorCode result = context->old_WaitIdle(self, timeout);
-
-    PROF_FINISH(WaitIdle)
+    NOVA_CALL_RESULT(result, WaitIdle, timeout)
 
     logLine("%s: %s: timeout %lu. Result %d (%s)",
         context->name, __func__,
@@ -2905,7 +2687,6 @@ static W3DN_ErrorCode W3DN_WaitIdle(struct W3DN_Context_s *self, uint32 timeout)
 
     return result;
 }
-
 
 #define GENERATE_NOVA_PATCH(function) \
 static void patch_##function(BOOL patching, struct NovaContext* nova) \
@@ -2917,10 +2698,13 @@ static void patch_##function(BOOL patching, struct NovaContext* nova) \
             logLine("Patched W3DN context function " #function); \
         } \
     } else { \
+        IExec->Forbid(); \
         if (nova->old_##function) { \
             nova->context->function = nova->old_##function; \
             nova->old_##function = NULL; \
         } \
+        IExec->Permit(); \
+        logLine("Restored W3DN context function " #function); \
     } \
 }
 
@@ -3150,15 +2934,10 @@ static void patch_context_functions(struct NovaContext* nova)
 
 static void restore_context_functions(struct NovaContext* nova)
 {
-    // Use Forbid because functions may be in use right now
-    IExec->Forbid();
-
     size_t i;
     for (i = 0; i < sizeof(patches) / sizeof(patches[0]); i++) {
         patches[i](FALSE, nova);
     }
-
-    IExec->Permit();
 }
 
 struct ContextCreation {
