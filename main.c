@@ -129,11 +129,15 @@ static void install_patches(void)
 
 static void patch_cooldown(void)
 {
-    logLine("Wait before quit");
+    const ULONG seconds = 1;
+
+    logLine("Wait %lu s before quit...", seconds);
 
     // It's possible that some patched application is still running inside glSnoop wrappers.
     // Give it time to exit before process memory goes out.
-    IDOS->Delay(50);
+    IDOS->Delay(seconds * 50);
+
+    logLine("...waiting over");
 }
 
 static void remove_patches(void)
@@ -161,7 +165,7 @@ static ESignalType wait_for_signal()
     const uint32 wait = IExec->Wait(SIGBREAKF_CTRL_C | timerSig);
 
     if (wait & SIGBREAKF_CTRL_C) {
-        puts("*** Break ***");
+        puts("*** Control-C detected ***");
         return ESignalType_Break;
     }
 
