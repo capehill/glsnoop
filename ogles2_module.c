@@ -802,16 +802,21 @@ if (context->old_gl ## id) { \
     PROF_START \
     context->old_gl ## id(Self, ##__VA_ARGS__); \
     PROF_FINISH(id) \
-} \
-checkErrors(context, id);
+    checkErrors(context, id); \
+} else { \
+    logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
+}
 
 #define GL_CALL_STATUS(id, ...) \
 if (context->old_gl ## id) { \
     PROF_START \
     status = context->old_gl ## id(Self, ##__VA_ARGS__); \
     PROF_FINISH(id) \
-} \
-checkErrors(context, id);
+    checkErrors(context, id); \
+} else { \
+    logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
+}
+
 
 // Wrap traced function calls
 
