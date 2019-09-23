@@ -142,13 +142,13 @@ static void patch_cooldown(void)
 
 static void remove_patches(void)
 {
-    // It may be useful to see the cleanup in serial
-    resume_log();
-
     warp3dnova_remove_patches();
     ogles2_remove_patches();
 
     patch_cooldown();
+
+    // It may be useful to see the cleanup in serial
+    resume_log();
 
     warp3dnova_free();
     ogles2_free();
