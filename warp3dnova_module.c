@@ -775,7 +775,7 @@ if (context->old_ ## id) { \
     context->old_ ## id(self, ##__VA_ARGS__); \
     PROF_FINISH(id) \
 } else { \
-    logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
+    logDebug("%s: " #id " function pointer is NULL (call ignored)", context->name); \
 }
 
 #define NOVA_CALL_RESULT(result, id, ...) \
@@ -785,7 +785,7 @@ if (context->old_ ## id) { \
     result = context->old_ ## id(self, ##__VA_ARGS__); \
     PROF_FINISH(id) \
 } else { \
-    logLine("%s: " #id " function pointer is NULL (call ignored)", context->name); \
+    logDebug("%s: " #id " function pointer is NULL (call ignored)", context->name); \
 }
 
 // Wrap traced calls
@@ -2695,7 +2695,7 @@ static void patch_##function(BOOL patching, struct NovaContext* nova) \
         if (match("W3DN_" #function)) { \
             nova->old_##function = nova->context->function; \
             nova->context->function = W3DN_##function; \
-            logLine("Patched W3DN context function " #function); \
+            logDebug("Patched W3DN context function " #function); \
         } \
     } else { \
         IExec->Forbid(); \
@@ -2704,7 +2704,7 @@ static void patch_##function(BOOL patching, struct NovaContext* nova) \
             nova->old_##function = NULL; \
         } \
         IExec->Permit(); \
-        logLine("Restored W3DN context function " #function); \
+        logDebug("Restored W3DN context function " #function); \
     } \
 }
 

@@ -24,10 +24,10 @@ static void patch_##func(BOOL patching, struct ctxtype * ctx) \
     \
     if (patching) { \
         if (ctx->old_##func) { \
-            logLine("Patched " #func " %p with %p", ctx->old_##func, prefix##_##func); \
+            logDebug("Patched " #func " %p with %p", ctx->old_##func, prefix##_##func); \
         } \
     } else { \
-        logLine("Restored " #func); \
+        logDebug("Restored " #func); \
     } \
 } \
 
@@ -49,10 +49,10 @@ static void patch_##func(BOOL patching, struct ctxtype * ctx) \
     \
     if (patching) { \
         if (ctx->old_##func) { \
-            logLine("Patched " #func " %p with %p", ctx->old_##func, prefix##_##func); \
+            logDebug("Patched " #func " %p with %p", ctx->old_##func, prefix##_##func); \
         } \
     } else { \
-        logLine("Restored " #func); \
+        logDebug("Restored " #func); \
     } \
 } \
 
