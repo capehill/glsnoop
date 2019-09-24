@@ -104,8 +104,8 @@ static BOOL parse_args(void)
     }
 
     puts("--- Configuration ---");
-    printf("  OGLES2 tracing: [%s]\n", params.ogles2 ? enabled : disabled);
-    printf("  WARP3DNOVA tracing: [%s]\n", params.nova ? enabled : disabled);
+    printf("  OGLES2 module: [%s]\n", params.ogles2 ? enabled : disabled);
+    printf("  WARP3DNOVA module: [%s]\n", params.nova ? enabled : disabled);
     printf("  GUI: [%s]\n", params.gui ? enabled : disabled);
     printf("  Tracing mode: [%s]\n", params.profiling ? disabled : enabled);
     printf("  Filter file name: [%s]\n", filterFile ? filterFile : disabled);
