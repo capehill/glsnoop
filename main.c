@@ -135,7 +135,8 @@ static void patch_cooldown(void)
 
     // It's possible that some patched application is still running inside glSnoop wrappers.
     // Give it time to exit before process memory goes out.
-    IDOS->Delay(seconds * 50);
+
+    timer_delay(seconds);
 
     logLine("...waiting over");
 }
@@ -154,36 +155,17 @@ static void remove_patches(void)
     ogles2_free();
 }
 
-typedef enum ESignalType {
-    ESignalType_Break,
-    ESignalType_Timer
-} ESignalType;
-
-static ESignalType wait_for_signal()
-{
-    const uint32 timerSig = (startTime > 0) ? timer_signal(&triggerTimer) : 0;
-    const uint32 wait = IExec->Wait(SIGBREAKF_CTRL_C | timerSig);
-
-    if (wait & SIGBREAKF_CTRL_C) {
-        puts("*** Control-C detected ***");
-        return ESignalType_Break;
-    }
-
-    if (wait & timerSig) {
-        //puts("*** Timer triggered ***");
-        timer_handle_events(&triggerTimer);
-    }
-
-    return ESignalType_Timer;
-}
-
 static void run(void)
 {
     if (params.gui) {
         run_gui(params.profiling);
     } else {
-        if (wait_for_signal() == ESignalType_Timer) {
+        const uint32 timerSig = (startTime > 0) ? timer_signal(&triggerTimer) : 0;
+
+        if (timer_wait_for_signal(timerSig, "Start") == ESignalType_Timer) {
             puts("First timer signal - start profiling");
+
+            timer_handle_events(&triggerTimer);
 
             ogles2_start_profiling();
             warp3dnova_start_profiling();
@@ -192,7 +174,7 @@ static void run(void)
 
             puts("Waiting...");
 
-            wait_for_signal();
+            timer_wait_for_signal(timerSig, "Stop");
 
             puts("Second timer signal - stop profiling");
         }
@@ -250,6 +232,7 @@ out:
     free(filterFile);
 
     if (startTime) {
+        timer_stop(&triggerTimer);
         timer_quit(&triggerTimer);
     }
 

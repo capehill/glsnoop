@@ -3,6 +3,7 @@
 
 #include <proto/exec.h>
 #include <proto/timer.h>
+#include <dos/dos.h>
 
 #include <stdio.h>
 
@@ -168,6 +169,37 @@ void timer_stop(TimerContext * tc)
         IExec->AbortIO((struct IORequest *) tc->request);
         IExec->WaitIO((struct IORequest *) tc->request);
     }
+}
+
+ESignalType timer_wait_for_signal(uint32 timerSig, const char* const name)
+{
+    const uint32 wait = IExec->Wait(SIGBREAKF_CTRL_C | timerSig);
+
+    if (wait & SIGBREAKF_CTRL_C) {
+        puts("*** Control-C detected ***");
+        return ESignalType_Break;
+    }
+
+    if (wait & timerSig) {
+        printf("*** %s timer triggered ***\n", name);
+    }
+
+    return ESignalType_Timer;
+}
+
+void timer_delay(ULONG seconds)
+{
+    const ULONG micros = 0;
+
+    TimerContext delayTimer;
+
+    timer_init(&delayTimer);
+    timer_start(&delayTimer, seconds, micros);
+
+    timer_wait_for_signal(timer_signal(&delayTimer), "Delay");
+
+    timer_stop(&delayTimer);
+    timer_quit(&delayTimer);
 }
 
 double timer_ticks_to_s(const uint64 ticks)
