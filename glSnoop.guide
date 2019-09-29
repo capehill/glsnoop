@@ -3,7 +3,7 @@
 
 @node Main "glSnoop"
 
-    @{B}glSnoop User Guide v0.2@{UB}
+    @{B}glSnoop User Guide v0.3@{UB}
 
     @{" What is glSnoop for and what it does             " link WhatisThat}
     @{" How to use                                       " link Usage}
@@ -27,24 +27,24 @@
    glSnoop is an experimental graphics API tracing and profiling tool for AmigaOS4.
    It was born as an attempt to bring something like @{B}apitrace@{UB}, but written from scratch
    and AmigaOS4 specific.
-  
+
    At the moment only ogles2.library and Warp3DNova.library are supported.
 
    glSnoop works by patching libraries via SetMethod() and wrapping the original functions
    with tracing and profiling mechanisms:
-   
-      OGLES2: 
+
+      OGLES2:
 
       glSnoop patches IExec GetInterface and DropInterface using SetMethod, in order to
       detect applications who ask for IOGLES2 interface. Then the interface-specific
       OGLES2 functions get also patched using SetMethod:
-      https://github.com/capehill/glsnoop/blob/master/ogles2_module.c#L278
+      https://github.com/capehill/glsnoop/blob/master/ogles2_module.c#L3064
 
-      NOVA: 
+      NOVA:
 
       W3DN_CreateContext is patched using SetMethod, then the function pointers in Nova
       context are simply replaced with wrapper functions:
-      https://github.com/capehill/glsnoop/blob/master/warp3dnova_module.c#L1065
+      https://github.com/capehill/glsnoop/blob/master/warp3dnova_module.c#L3000
 
 @endnode
 
@@ -55,7 +55,7 @@
    glSnoop operates in two modes: Command-line one and GUI one.
    Command-line mode is the default mode, and GUI can be started with @{B}GUI@{UB} argument.
    The difference between command-line and GUI mode is that in GUI mode you can pause/stop tracing & profiling
-   Both modes described in appropriate sections.
+   Both modes are described in their respective sections.
 
 @endnode
 
@@ -63,7 +63,7 @@
 
 @{B}   Command-line parameters@{UB}
 
-      OGLES2/S,NOVA/S,GUI/S,PROFILE/S,FILTER/K
+      OGLES2/S,NOVA/S,GUI/S,PROFILE/S,STARTTIME/N,DURATION/N,FILTER/K
 
 @{B}   OGLES2@{UB}
 
@@ -84,8 +84,27 @@
       Profiling is also enabled by default when tracing is enabled, but for speed reasons one may want to disable tracing
       and keep only profiling to avoid massive output to serial (which usually slow things down, even with Sashimi).
 
-      With disabled tracing you don't loose any FPS and can go to the slowest place of tested GL application and catch
-      necessary information.
+      When tracing is disabled, performance is better and the slowest parts of application can be profiled.
+
+      Profiling tables have the following columns:
+
+         function: name of used function
+         call count: how many times given function was called
+         error: how many times function was flagging errors
+         duration (ms): accumulated time in milliseconds taken by all the functions calls
+         avg. call dur. (us): average call duration in microseconds. In other words "accumulated time / call count"
+         % of xxxx ms: percentage of context usage, "100% * (this function duration / total duration of all functions)"
+         % of CPU time: percentage of CPU time context was used. Example: if context is alive for 10 seconds, and
+                                                  and this function consumed 2 seconds, then result would be 20%.
+
+@{B}   STARTTIME@{UB}
+
+     Delay profiling for X seconds after process start (context creation). It may help to avoid the recording of
+     eventually uninteresting initialization stuff or library internal "warm-up" phases.
+
+@{B}   DURATION@{UB}
+
+     Limit tracing/profiling to Y seconds. This could help to produce better comparable logs.
 
 @{B}   FILTER@{UB}
 
@@ -108,10 +127,10 @@
 
    @{B}Tracing@{UB}
 
-   glSnoop supports partial logging of:
+   glSnoop supports logging of:
 
-   ogles2.library
-   Warp3DNova.library
+   ogles2.library 2.10: all (a)gl* functions
+   Warp3DNova.library 1.65: all context-related functions
 
 @endnode
 
@@ -119,7 +138,7 @@
 
    @{B}Profiling@{UB}
 
-   glSnoop records the call count and duration of known OpenGL ES 2.0 and Warp3D Nova functions.
+   glSnoop records the call count and duration of all known OpenGL ES 2.0 and Warp3D Nova functions.
    Profiling summaries are logged when contexts are being destroyed.
 
    Time spent inside OpenGL ES 2.0 functions includes also time spent inside Warp3D Nova functions.
@@ -131,7 +150,7 @@
 
    @{B}Filtering@{UB}
 
-   Filtering can be used to patch only a subset of OGLES2/NOVA functions. 
+   Filtering can be used to patch only a subset of OGLES2/NOVA functions.
    This produces less logs and is faster. Filtering impacts also profiling, because non-patched functions cannot be profiled either.
 
 @endnode
@@ -151,11 +170,27 @@
 
    @{B}Tips & Tricks@{UB}
 
+   @{B}---@{UB}
+
    glSnoop uses serial port for logging. To redirect logs to a file (for speed), one may use the Sashimi tool:
 
    run >NIL: Sashimi > RAM:MyLogFile.txt
 
    Download Sashimi: @{B}http://os4depot.net/index.php?function=showfile&file=development/debug/sashimi.lha@{UB}
+
+   @{B}---@{UB}
+
+   To create more comparable and cleaner logs (free of initialisation and warm-up calls), one may use STARTTIME
+   and DURATION command-line parameters. For example:
+
+   work:> glSnoop PROFILE STARTTIME 5 DURATION 10
+
+   Meaning, profile only, initialize counters 5 seconds after context creation and profile for 10 seconds.
+
+   @{B}---@{UB}
+
+   Disable tracing always when profiling to get the best results. In other words, use PROFILE switch when
+   function call parameters are not under investigation.
 
 @endnode
 
@@ -171,5 +206,7 @@
      Mason for icons
      samo79 for ideas
      Hans for ideas
+     Jabirulo for ideas
+     Daniel for ideas
 
 @endnode
