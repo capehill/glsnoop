@@ -2505,7 +2505,7 @@ static W3DN_ErrorCode W3DN_TexSetParameters(struct W3DN_Context_s *self, W3DN_Te
     return result;
 }
 
-W3DN_ErrorCode W3DN_TexUpdateImage(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
+static W3DN_ErrorCode W3DN_TexUpdateImage(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
     uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer)
 {
     W3DN_ErrorCode result = W3DNEC_SUCCESS;
@@ -2528,7 +2528,7 @@ W3DN_ErrorCode W3DN_TexUpdateImage(struct W3DN_Context_s *self, W3DN_Texture *te
     return result;
 }
 
-W3DN_ErrorCode W3DN_TexUpdateSubImage(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
+static W3DN_ErrorCode W3DN_TexUpdateSubImage(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
     uint32 level, uint32 arrayIdx, uint32 srcBytesPerRow, uint32 srcRowsPerLayer,
     uint32 dstX, uint32 dstY, uint32 dstLayer, uint32 width, uint32 height, uint32 depth)
 {
