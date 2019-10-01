@@ -869,10 +869,16 @@ static void* OGLES2_aglCreateContext_AVOID(struct OGLES2IFace *Self, ULONG * err
 
     void* status = NULL;
 
-    AGL_CALL_STATUS(CreateContext_AVOID, errcode, tags)
+    ULONG tempErrCode = 0;
 
-    logLine("%s: %s: errcode %lu, tags %p. Context address %p", context->name, __func__,
-        *errcode, tags, status);
+    AGL_CALL_STATUS(CreateContext_AVOID, &tempErrCode, tags)
+
+    logLine("%s: %s: errcode pointer %p (value %lu), tags %p. Context address %p", context->name, __func__,
+        errcode, tempErrCode, tags, status);
+
+    if (errcode) {
+        *errcode = tempErrCode;
+    }
 
     return status;
 }
@@ -883,10 +889,16 @@ static void* OGLES2_aglCreateContext2(struct OGLES2IFace *Self, ULONG * errcode,
 
     void* status = NULL;
 
-    AGL_CALL_STATUS(CreateContext2, errcode, tags)
+    ULONG tempErrCode = 0;
 
-    logLine("%s: %s: errcode %lu, tags %p. Context address %p", context->name, __func__,
-        *errcode, tags, status);
+    AGL_CALL_STATUS(CreateContext2, &tempErrCode, tags)
+
+    logLine("%s: %s: errcode pointer %p (value %lu), tags %p. Context address %p", context->name, __func__,
+        errcode, tempErrCode, tags, status);
+
+    if (errcode) {
+        *errcode = tempErrCode;
+    }
 
     return status;
 }
