@@ -721,6 +721,7 @@ static struct Interface* EXEC_GetInterface(struct ExecIFace* Self, struct Librar
                 size_t i;
                 for (i = 0; i < MAX_CLIENTS; i++) {
                     if (contexts[i] == NULL) {
+                        logAlways("[%u] Patching task %s OGLES2IFace %p", i, context->name, interface);
                         contexts[i] = context;
                         break;
                     }
@@ -729,14 +730,14 @@ static struct Interface* EXEC_GetInterface(struct ExecIFace* Self, struct Librar
                 IExec->MutexRelease(mutex);
 
                 if (i == MAX_CLIENTS) {
-                    logLine("glSnoop: too many clients, cannot patch");
+                    logAlways("glSnoop: too many clients, cannot patch");
                     IExec->FreeVec(context);
                 } else {
                     patch_ogles2_functions(context);
                     PROF_INIT(context, Ogles2FunctionCount)
                 }
             } else {
-                logLine("Cannot allocate memory for OGLES2 context data: cannot patch");
+                logAlways("Cannot allocate memory for OGLES2 context data: cannot patch");
             }
         }
     }
@@ -754,7 +755,7 @@ static void EXEC_DropInterface(struct ExecIFace* Self, struct Interface* interfa
         if (contexts[i] && (struct Interface *)contexts[i]->interface == interface) {
             profileResults(contexts[i]);
 
-            logLine("%s: dropping patched OGLES2 interface %p", contexts[i]->name, interface);
+            logAlways("%s: dropping patched OGLES2 interface %p [%u]", contexts[i]->name, interface, i);
 
             // No need to remove patches because every OGLES2 applications has its own interface
             IExec->FreeVec(contexts[i]);

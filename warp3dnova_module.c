@@ -2969,6 +2969,7 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                 for (i = 0; i < MAX_CLIENTS; i++) {
                     if (contexts[i] == NULL) {
                         contexts[i] = nova;
+                        logAlways("[%u] Patching task %s NOVA context %p", i, nova->name, context);
                         break;
                     }
                 }
@@ -2976,7 +2977,7 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                 IExec->MutexRelease(mutex);
 
                 if (i == MAX_CLIENTS) {
-                    logLine("glSnoop: too many clients, cannot patch");
+                    logAlways("glSnoop: too many clients, cannot patch");
                     IExec->FreeVec(nova);
                 } else {
                     patch_context_functions(nova);
@@ -2988,6 +2989,8 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                         timer_start(&triggerTimer, startTime, 0);
                     }
                 }
+            } else {
+                logAlways("Cannot allocate memory for NOVA context data: cannot patch");
             }
         }
     }
