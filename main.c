@@ -87,11 +87,6 @@ static BOOL parse_args(void)
             duration = *params.duration;
         }
 
-        if (startTime > 0 && duration < 1) {
-            puts("Duration should be > 0 seconds. Forcing to 1 second");
-            duration = 1;
-        }
-
         IDOS->FreeArgs(result);
     } else {
         printf("Error when reading command-line arguments. Known parameters are: %s\n", pattern);
@@ -109,8 +104,8 @@ static BOOL parse_args(void)
     printf("  GUI: [%s]\n", params.gui ? enabled : disabled);
     printf("  Tracing mode: [%s]\n", params.profiling ? disabled : enabled);
     printf("  Filter file name: [%s]\n", filterFile ? filterFile : disabled);
-    printf("  Start time: [%lu] seconds\n", startTime);
-    printf("  Duration: [%lu] seconds\n", duration);
+    printf("  Start time: [%lu] seconds %s\n", startTime, !startTime ? "- immediate" : "");
+    printf("  Duration: [%lu] seconds %s\n", duration, !duration ? "- unlimited" : "");
     puts("---------------------");
 
     return TRUE;
@@ -155,28 +150,46 @@ static void remove_patches(void)
     ogles2_free();
 }
 
+static void waitForStartAndStop()
+{
+    const uint32 timerSig = timer_signal(&triggerTimer);
+
+    if (timer_wait_for_signal(timerSig, "Start") == ESignalType_Timer) {
+        puts("First timer signal - start profiling");
+
+        timer_handle_events(&triggerTimer);
+
+        ogles2_start_profiling();
+        warp3dnova_start_profiling();
+
+        if (duration) {
+            timer_start(&triggerTimer, duration, 0);
+            puts("Waiting...");
+        }
+
+        if (timer_wait_for_signal(timerSig, "Stop") == ESignalType_Timer) {
+            puts("Timer signal - stop profiling");
+            timer_handle_events(&triggerTimer);
+        }
+    }
+}
+
+static void waitForBreakSignal()
+{
+    if (IExec->Wait(SIGBREAKF_CTRL_C)) {
+        puts("*** Control-C detected ***");
+    }
+}
+
 static void run(void)
 {
     if (params.gui) {
         run_gui(params.profiling);
     } else {
-        const uint32 timerSig = (startTime > 0) ? timer_signal(&triggerTimer) : 0;
-
-        if (timer_wait_for_signal(timerSig, "Start") == ESignalType_Timer) {
-            puts("First timer signal - start profiling");
-
-            timer_handle_events(&triggerTimer);
-
-            ogles2_start_profiling();
-            warp3dnova_start_profiling();
-
-            timer_start(&triggerTimer, duration, 0);
-
-            puts("Waiting...");
-
-            timer_wait_for_signal(timerSig, "Stop");
-
-            puts("Second timer signal - stop profiling");
+        if (startTime || duration) {
+            waitForStartAndStop();
+        } else {
+            waitForBreakSignal();
         }
     }
 }
@@ -198,7 +211,7 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
         goto out;
     }
 
-    if (startTime) {
+    if (startTime || duration) {
         if (!timer_init(&triggerTimer)) {
              goto out;
         }
@@ -231,7 +244,7 @@ out:
     free_filters();
     free(filterFile);
 
-    if (startTime) {
+    if (startTime || duration) {
         timer_stop(&triggerTimer);
         timer_quit(&triggerTimer);
     }

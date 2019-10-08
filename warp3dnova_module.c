@@ -2982,12 +2982,11 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                 } else {
                     patch_context_functions(nova);
                     PROF_INIT(nova, NovaFunctionCount)
-                    if (startTime > 0) {
-                        logLine("Trigger start timer in %lu seconds", startTime);
-                        // TODO: supports only one app. A proper implementation
-                        // would need a some kind of a timer pool?
-                        timer_start(&triggerTimer, startTime, 0);
-                    }
+
+                    logLine("Trigger start timer in %lu seconds", startTime);
+                    // TODO: supports only one app. A proper implementation
+                    // would need a some kind of a timer pool?
+                    timer_start(&triggerTimer, startTime, 0);
                 }
             } else {
                 logAlways("Cannot allocate memory for NOVA context data: cannot patch");
