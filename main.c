@@ -31,8 +31,13 @@ static struct Params params = { 0, 0, 0, 0, NULL, NULL, NULL };
 
 static struct MsgPort* port;
 
+struct Task* mainTask;
+BYTE mainSig = -1;
+
 static ULONG startTime;
 static ULONG duration;
+
+static BOOL running = TRUE;
 
 static BOOL already_running(void)
 {
@@ -61,6 +66,38 @@ static void remove_port()
     if (port) {
         IExec->FreeSysObject(ASOT_PORT, port);
         port = NULL;
+    }
+}
+
+static void sanitiseParams(void)
+{
+    if (params.gui) {
+        // Some of these limitations may be lifted in the future
+        if (startTime) {
+            puts("Using STARTTIME with GUI is not possible yet");
+            startTime = 0;
+        }
+
+        if (duration) {
+            puts("Using DURATION with GUI is not possible yet");
+            duration = 0;
+        }
+    }
+
+    if (!params.profiling) {
+        if (startTime) {
+            puts("STARTTIME is meant to be used with PROFILE");
+            startTime = 0;
+        }
+        if (duration) {
+            puts("DURATION is meant to be used with PROFILE");
+            duration = 0;
+        }
+    }
+
+    if (!params.ogles2 && !params.nova) {
+        // If user gives nothing, assume everything
+        params.ogles2 = params.nova = TRUE;
     }
 }
 
@@ -93,10 +130,7 @@ static BOOL parse_args(void)
         return FALSE;
     }
 
-    if (!params.ogles2 && !params.nova) {
-        // If user gives nothing, assume everything
-        params.ogles2 = params.nova = TRUE;
-    }
+    sanitiseParams();
 
     puts("--- Configuration ---");
     printf("  OGLES2 module: [%s]\n", params.ogles2 ? enabled : disabled);
@@ -118,7 +152,7 @@ static void install_patches(void)
     }
 
     if (params.nova) {
-        warp3dnova_install_patches(startTime);
+        warp3dnova_install_patches(startTime, duration);
     }
 }
 
@@ -150,22 +184,33 @@ static void remove_patches(void)
     ogles2_free();
 }
 
-static void waitForStartAndStop()
+// When STARTTIME > 0
+static void waitForStartTimer()
 {
     const uint32 timerSig = timer_signal(&triggerTimer);
 
-    if (timer_wait_for_signal(timerSig, "Start") == ESignalType_Timer) {
-        puts("First timer signal - start profiling");
+    const ESignalType type = timer_wait_for_signal(timerSig, "Start");
+
+    if (type == ESignalType_Timer) {
+        puts("Timer signal - start profiling");
 
         timer_handle_events(&triggerTimer);
 
         ogles2_start_profiling();
         warp3dnova_start_profiling();
+    } else if (type == ESignalType_Break) {
+        running = FALSE;
+    }
+}
 
-        if (duration) {
-            timer_start(&triggerTimer, duration, 0);
-            puts("Waiting...");
-        }
+static void waitForEndTimer()
+{
+    if (running) {
+        timer_start(&triggerTimer, duration, 0);
+
+        const uint32 timerSig = timer_signal(&triggerTimer);
+
+        puts("Waiting for timer...");
 
         if (timer_wait_for_signal(timerSig, "Stop") == ESignalType_Timer) {
             puts("Timer signal - stop profiling");
@@ -174,10 +219,41 @@ static void waitForStartAndStop()
     }
 }
 
-static void waitForBreakSignal()
+static void waitForSignal()
 {
-    if (IExec->Wait(SIGBREAKF_CTRL_C)) {
-        puts("*** Control-C detected ***");
+    if (running) {
+        const uint32 sigMask = 1L << mainSig;
+        const uint32 wait = IExec->Wait(sigMask | SIGBREAKF_CTRL_C);
+
+        if (wait & sigMask) {
+            puts("Start signal received");
+        }
+
+        if (wait & SIGBREAKF_CTRL_C) {
+            puts("Break signal received");
+            running = FALSE;
+        }
+    }
+}
+
+static void waitForTimers()
+{
+    if (startTime) {
+        waitForStartTimer();
+    }
+
+    if (duration) {
+        if (!startTime) {
+            // NOVA module Signal()s us
+            puts("Waiting for signal...");
+            waitForSignal();
+        }
+
+        waitForEndTimer();
+    } else {
+        if (startTime) {
+            waitForSignal();
+        }
     }
 }
 
@@ -187,9 +263,9 @@ static void run(void)
         run_gui(params.profiling);
     } else {
         if (startTime || duration) {
-            waitForStartAndStop();
+            waitForTimers();
         } else {
-            waitForBreakSignal();
+            waitForSignal();
         }
     }
 }
@@ -207,6 +283,8 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
         goto out;
     }
 
+    mainTask = IExec->FindTask(NULL);
+
     if (!timer_init(&timer)) {
         goto out;
     }
@@ -215,6 +293,12 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
         if (!timer_init(&triggerTimer)) {
              goto out;
         }
+    }
+
+    mainSig = IExec->AllocSignal(-1);
+    if (mainSig == -1) {
+        puts("Failed to allocate signal");
+        goto out;
     }
 
     create_port();
@@ -239,6 +323,11 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
     puts("Patches removed. glSnoop terminating");
 
 out:
+    if (mainSig != -1) {
+        IExec->FreeSignal(mainSig);
+        mainSig = -1;
+    }
+
     remove_port();
 
     free_filters();

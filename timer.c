@@ -166,6 +166,7 @@ void timer_stop(TimerContext * tc)
     }
 
     if (!IExec->CheckIO((struct IORequest *) tc->request)) {
+        logLine("%s: aborting timer IO request %p", __func__, tc->request);
         IExec->AbortIO((struct IORequest *) tc->request);
         IExec->WaitIO((struct IORequest *) tc->request);
     }

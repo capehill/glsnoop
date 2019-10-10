@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <string.h>
 
+extern BYTE mainSig;
+extern struct Task* mainTask;
+
 typedef enum NovaFunction {
     BindBitMapAsTexture,
     BindShaderDataBuffer,
@@ -248,6 +251,7 @@ static unsigned errorCount;
 static BOOL profilingStarted = TRUE;
 
 static ULONG startTime = 0;
+static ULONG duration = 0;
 
 static const char* mapNovaError(const W3DN_ErrorCode code)
 {
@@ -2983,10 +2987,17 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                     patch_context_functions(nova);
                     PROF_INIT(nova, NovaFunctionCount)
 
-                    logLine("Trigger start timer in %lu seconds", startTime);
-                    // TODO: supports only one app. A proper implementation
-                    // would need a some kind of a timer pool?
-                    timer_start(&triggerTimer, startTime, 0);
+                    if (startTime) {
+                        logLine("Trigger timer in %lu seconds", startTime);
+                        // TODO: supports only one app. A proper implementation
+                        // would need a some kind of a timer pool?
+                        timer_start(&triggerTimer, startTime, 0);
+                    } else {
+                        if (duration) {
+                            logLine("Signal glSnoop task %p with signal %d", mainTask, mainSig);
+                            IExec->Signal(mainTask, 1L << mainSig);
+                        }
+                    }
                 }
             } else {
                 logAlways("Cannot allocate memory for NOVA context data: cannot patch");
@@ -2999,9 +3010,10 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
 
 GENERATE_PATCH(Warp3DNovaIFace, W3DN_CreateContext, my, ContextCreation)
 
-void warp3dnova_install_patches(ULONG startTimeInSeconds)
+void warp3dnova_install_patches(ULONG startTimeInSeconds, ULONG durationTimeInSeconds)
 {
     startTime = startTimeInSeconds;
+    duration = durationTimeInSeconds;
 
     mutex = IExec->AllocSysObject(ASOT_MUTEX, TAG_DONE);
 
