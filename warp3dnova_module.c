@@ -250,8 +250,8 @@ struct Interface* IWarp3DNova;
 static unsigned errorCount;
 static BOOL profilingStarted = TRUE;
 
-static ULONG startTime = 0;
-static ULONG duration = 0;
+static ULONG profilerStartTime = 0;
+static ULONG profilerDuration = 0;
 
 static const char* mapNovaError(const W3DN_ErrorCode code)
 {
@@ -2987,13 +2987,13 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                     patch_context_functions(nova);
                     PROF_INIT(nova, NovaFunctionCount)
 
-                    if (startTime) {
-                        logLine("Trigger timer in %lu seconds", startTime);
+                    if (profilerStartTime) {
+                        logLine("Trigger timer in %lu seconds", profilerStartTime);
                         // TODO: supports only one app. A proper implementation
                         // would need a some kind of a timer pool?
-                        timer_start(&triggerTimer, startTime, 0);
+                        timer_start(&triggerTimer, profilerStartTime, 0);
                     } else {
-                        if (duration) {
+                        if (profilerDuration) {
                             logLine("Signal glSnoop task %p with signal %d", mainTask, mainSig);
                             IExec->Signal(mainTask, 1L << mainSig);
                         }
@@ -3012,8 +3012,8 @@ GENERATE_PATCH(Warp3DNovaIFace, W3DN_CreateContext, my, ContextCreation)
 
 void warp3dnova_install_patches(ULONG startTimeInSeconds, ULONG durationTimeInSeconds)
 {
-    startTime = startTimeInSeconds;
-    duration = durationTimeInSeconds;
+    profilerStartTime = startTimeInSeconds;
+    profilerDuration = durationTimeInSeconds;
 
     mutex = IExec->AllocSysObject(ASOT_MUTEX, TAG_DONE);
 
