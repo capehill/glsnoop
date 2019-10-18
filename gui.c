@@ -97,7 +97,7 @@ static void show_about_window()
 {
     objects[OID_AboutWindow] = IIntuition->NewObject(NULL, "requester.class",
         REQ_TitleText, "About glSnoop",
-        REQ_BodyText, VERSION_STRING DATE,
+        REQ_BodyText, VERSION_STRING DATE_STRING,
         REQ_GadgetText, "_Ok",
         REQ_Image, REQIMAGE_INFO,
         TAG_DONE);
@@ -114,7 +114,7 @@ static void show_about_window()
 static Object* create_gui(LONG profiling)
 {
     return IIntuition->NewObject(NULL, "window.class",
-        WA_ScreenTitle, VERSION_STRING DATE,
+        WA_ScreenTitle, VERSION_STRING DATE_STRING,
         WA_Title, VERSION_STRING,
         WA_Activate, TRUE,
         WA_DragBar, TRUE,
