@@ -2233,7 +2233,26 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
 
     if (length) {
         for (i = 0; i < count; i++) {
-            logLine("Line %u: length %d: '%s'", i, length[i], string[i]);
+            if (length[i] < 0) {
+                // These should be NUL-terminated
+                logLine("Line %u: '%s'", i, string[i]);
+            } else if (length[i] == 0) {
+                logLine("Line %u: length 0:", i);
+            } else {
+                // Use temporary buffer to NUL-terminate strings
+                const size_t len = length[i] + 1;
+
+                char* temp = IExec->AllocVecTags(len, TAG_DONE);
+
+                if (temp) {
+                    snprintf(temp, len, "%s", string[i]);
+                    logLine("Line %u: length %d: '%s'", i, length[i], temp);
+
+                    IExec->FreeVec(temp);
+                } else {
+                    logLine("Failed to allocate %d bytes", len);
+                }
+            }
         }
     } else {
         for (i = 0; i < count; i++) {
