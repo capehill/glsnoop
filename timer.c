@@ -80,7 +80,7 @@ out:
 void timer_quit(TimerContext * tc)
 {
     if ((--users <= 0) && ITimer) {
-        logLine("ITimer user count %d, dropping it", users);
+        //logLine("ITimer user count %d, dropping it", users);
         IExec->DropInterface((struct Interface *) ITimer);
         ITimer = NULL;
     }
