@@ -8,6 +8,12 @@
 #include <proto/exec.h>
 #include <proto/ogles2.h>
 
+// HACK to compile with gl2ext.h
+#define GL_KHR_debug 0
+#define GL_NV_draw_vulkan_image 0
+#define GL_NV_gpu_shader5 0
+#include <GLES2/gl2ext.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -370,6 +376,127 @@ static const char* mapOgles2Error(const int code)
     #undef MAP_ENUM
 
     return "Unknown error";
+}
+
+static const char* decodeValue(const int value)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (value) {
+        MAP_ENUM(GL_TEXTURE_2D)
+        MAP_ENUM(GL_TEXTURE_CUBE_MAP)
+        MAP_ENUM(GL_TEXTURE_MAG_FILTER)
+        MAP_ENUM(GL_TEXTURE_MIN_FILTER)
+        MAP_ENUM(GL_TEXTURE_WRAP_S)
+        MAP_ENUM(GL_TEXTURE_WRAP_T)
+
+        MAP_ENUM(GL_NEAREST)
+        MAP_ENUM(GL_LINEAR)
+        MAP_ENUM(GL_NEAREST_MIPMAP_NEAREST)
+        MAP_ENUM(GL_NEAREST_MIPMAP_LINEAR)
+        MAP_ENUM(GL_LINEAR_MIPMAP_NEAREST)
+        MAP_ENUM(GL_LINEAR_MIPMAP_LINEAR)
+        MAP_ENUM(GL_REPEAT)
+        MAP_ENUM(GL_CLAMP_TO_EDGE)
+        MAP_ENUM(GL_MIRRORED_REPEAT)
+
+        // GL_ARB_provoking_vertex
+        MAP_ENUM(GL_FIRST_VERTEX_CONVENTION)
+        MAP_ENUM(GL_LAST_VERTEX_CONVENTION)
+        MAP_ENUM(GL_PROVOKING_VERTEX)
+        MAP_ENUM(QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION)
+
+        // GL_ARB_texture_mirror_clamp_to_edge
+        MAP_ENUM(GL_TEXTURE_WRAP_R_OES)
+        MAP_ENUM(GL_MIRROR_CLAMP_TO_EDGE)
+
+        // GL_ARB_texture_rectangle
+        MAP_ENUM(GL_TEXTURE_RECTANGLE)
+        MAP_ENUM(GL_TEXTURE_BINDING_RECTANGLE)
+        MAP_ENUM(GL_PROXY_TEXTURE_RECTANGLE)
+        MAP_ENUM(GL_MAX_RECTANGLE_TEXTURE_SIZE)
+        MAP_ENUM(GL_SAMPLER_2D_RECT)
+        // MAP_ENUM(GL_SAMPLER_2D_RECT_SHADOW)
+
+        // GL_EXT_blend_minmax
+        MAP_ENUM(GL_FUNC_ADD)
+        MAP_ENUM(GL_MIN)
+        MAP_ENUM(GL_MAX)
+        MAP_ENUM(GL_BLEND_EQUATION)
+
+        // GL_EXT_texture_filter_anisotropic
+        MAP_ENUM(GL_TEXTURE_MAX_ANISOTROPY_EXT)
+        MAP_ENUM(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT)
+
+        // GL_EXT_texture_format_BGRA8888
+        MAP_ENUM(GL_BGRA_EXT)
+
+        // GL_EXT_texture_lod_bias
+        // MAP_ENUM(GL_TEXTURE_FILTER_CONTROL_EXT)
+        MAP_ENUM(GL_TEXTURE_LOD_BIAS)
+        MAP_ENUM(GL_MAX_TEXTURE_LOD_BIAS)
+
+        // GL_OES_element_index_uint
+        MAP_ENUM(GL_UNSIGNED_INT)
+
+        // GL_OES_texture_float
+        MAP_ENUM(GL_HALF_FLOAT_OES)
+        MAP_ENUM(GL_FLOAT)
+
+        // GL_OES_get_program_binary
+        MAP_ENUM(GL_PROGRAM_BINARY_LENGTH_OES)
+        MAP_ENUM(GL_NUM_PROGRAM_BINARY_FORMATS_OES)
+        MAP_ENUM(GL_PROGRAM_BINARY_FORMATS_OES)
+
+        // GL_OES_mapbuffer
+        MAP_ENUM(GL_WRITE_ONLY_OES)
+        MAP_ENUM(GL_BUFFER_ACCESS_OES)
+        MAP_ENUM(GL_BUFFER_MAPPED_OES)
+        MAP_ENUM(GL_BUFFER_MAP_POINTER_OES)
+
+        // GL_OES_packed_depth_stencil
+        MAP_ENUM(GL_DEPTH_STENCIL_OES)
+        MAP_ENUM(GL_UNSIGNED_INT_24_8_OES)
+        MAP_ENUM(GL_DEPTH24_STENCIL8_OES)
+
+        // GL_SGIS_texture_lod
+        MAP_ENUM(GL_TEXTURE_MIN_LOD)
+        MAP_ENUM(GL_TEXTURE_MAX_LOD)
+        MAP_ENUM(GL_TEXTURE_BASE_LEVEL)
+        MAP_ENUM(GL_TEXTURE_MAX_LEVEL)
+
+        //MAP_ENUM(GL_)
+        //MAP_ENUM(GL_)
+        //MAP_ENUM(GL_)
+        //MAP_ENUM(GL_)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown enum";
+}
+
+static const char* decodeCapability(const int value)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (value) {
+        MAP_ENUM(GL_CULL_FACE)
+        MAP_ENUM(GL_POLYGON_OFFSET_FILL)
+        MAP_ENUM(GL_SCISSOR_TEST)
+        MAP_ENUM(GL_SAMPLE_COVERAGE)
+        MAP_ENUM(GL_SAMPLE_ALPHA_TO_COVERAGE)
+        // TODO: MAP_ENUM(GL_SAMPLE_COVERAGE_TO_ALPHA) ? Typo?
+        MAP_ENUM(GL_STENCIL_TEST)
+        MAP_ENUM(GL_DEPTH_TEST)
+        MAP_ENUM(GL_BLEND)
+        MAP_ENUM(GL_DITHER)
+        //MAP_ENUM()
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown capability";
 }
 
 // Store original function pointers so that they can be still called
@@ -1392,8 +1519,8 @@ static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: cap %d", context->name, __func__,
-        cap);
+    logLine("%s: %s: cap %s (%d)", context->name, __func__,
+        decodeCapability(cap), cap);
 
     GL_CALL(Disable, cap)
 }
@@ -1479,8 +1606,8 @@ static void OGLES2_glEnable(struct OGLES2IFace *Self, GLenum cap)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: cap %d", context->name, __func__,
-        cap);
+    logLine("%s: %s: cap %s (%d)", context->name, __func__,
+        decodeCapability(cap), cap);
 
     GL_CALL(Enable, cap)
 }
@@ -1891,8 +2018,10 @@ static void OGLES2_glGetTexParameterfv(struct OGLES2IFace *Self, GLenum target, 
 
     GL_CALL(GetTexParameterfv, target, pname, params)
 
-    logLine("%s: %s: target %u, pname %u, params %f", context->name, __func__,
-        target, pname, *params);
+    logLine("%s: %s: target %s (%u), pname %s (%u), params %f", context->name, __func__,
+        decodeValue(target), target,
+        decodeValue(pname), pname,
+        *params);
 }
 
 static void OGLES2_glGetTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLenum pname, GLint * params)
@@ -1901,8 +2030,10 @@ static void OGLES2_glGetTexParameteriv(struct OGLES2IFace *Self, GLenum target, 
 
     GL_CALL(GetTexParameteriv, target, pname, params)
 
-    logLine("%s: %s: target %u, pname %u, params %d", context->name, __func__,
-        target, pname, *params);
+    logLine("%s: %s: target %s (%u), pname %s (%u), params %d", context->name, __func__,
+        decodeValue(target), target,
+        decodeValue(pname), pname,
+        *params);
 }
 
 static void OGLES2_glGetUniformfv(struct OGLES2IFace *Self, GLuint program, GLint location, GLfloat * params)
@@ -2337,8 +2468,10 @@ static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, pname %d, param %f", context->name, __func__,
-        target, pname, param);
+    logLine("%s: %s: target %s (%u), pname %s (%u), param %f", context->name, __func__,
+        decodeValue(target), target,
+        decodeValue(pname), pname,
+        param);
 
     GL_CALL(TexParameterf, target, pname, param)
 }
@@ -2347,8 +2480,10 @@ static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, pname %d, params %p", context->name, __func__,
-        target, pname, params);
+    logLine("%s: %s: target %s (%u), pname %s (%u), params %p", context->name, __func__,
+        decodeValue(target), target,
+        decodeValue(pname), pname,
+        params);
 
     GL_CALL(TexParameterfv, target, pname, params)
 }
@@ -2357,8 +2492,10 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, pname %d, param %d", context->name, __func__,
-        target, pname, param);
+    logLine("%s: %s: target %s (%u), pname %s (%u), param %s (%u)", context->name, __func__,
+        decodeValue(target), target,
+        decodeValue(pname), pname,
+        decodeValue(param), param);
 
     GL_CALL(TexParameteri, target, pname, param)
 }
@@ -2367,8 +2504,10 @@ static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, pname %d, params %p", context->name, __func__,
-        target, pname, params);
+    logLine("%s: %s: target %s (%u), pname %s (%u), params %p", context->name, __func__,
+        decodeValue(target), target,
+        decodeValue(pname), pname,
+        params);
 
     GL_CALL(TexParameteriv, target, pname, params)
 }
