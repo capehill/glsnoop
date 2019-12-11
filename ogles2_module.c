@@ -1519,8 +1519,8 @@ static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: cap %s (%d)", context->name, __func__,
-        decodeCapability(cap), cap);
+    logLine("%s: %s: cap %d (%s)", context->name, __func__,
+        cap, decodeCapability(cap));
 
     GL_CALL(Disable, cap)
 }
@@ -1606,8 +1606,8 @@ static void OGLES2_glEnable(struct OGLES2IFace *Self, GLenum cap)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: cap %s (%d)", context->name, __func__,
-        decodeCapability(cap), cap);
+    logLine("%s: %s: cap %d (%s)", context->name, __func__,
+        cap, decodeCapability(cap));
 
     GL_CALL(Enable, cap)
 }
@@ -2018,9 +2018,9 @@ static void OGLES2_glGetTexParameterfv(struct OGLES2IFace *Self, GLenum target, 
 
     GL_CALL(GetTexParameterfv, target, pname, params)
 
-    logLine("%s: %s: target %s (%u), pname %s (%u), params %f", context->name, __func__,
-        decodeValue(target), target,
-        decodeValue(pname), pname,
+    logLine("%s: %s: target %u (%s), pname %u (%s), params %f", context->name, __func__,
+        target, decodeValue(target),
+        pname, decodeValue(pname),
         *params);
 }
 
@@ -2030,9 +2030,9 @@ static void OGLES2_glGetTexParameteriv(struct OGLES2IFace *Self, GLenum target, 
 
     GL_CALL(GetTexParameteriv, target, pname, params)
 
-    logLine("%s: %s: target %s (%u), pname %s (%u), params %d", context->name, __func__,
-        decodeValue(target), target,
-        decodeValue(pname), pname,
+    logLine("%s: %s: target %u (%s), pname %u (%s), params %d", context->name, __func__,
+        target, decodeValue(target),
+        pname, decodeValue(pname),
         *params);
 }
 
@@ -2468,9 +2468,9 @@ static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %s (%u), pname %s (%u), param %f", context->name, __func__,
-        decodeValue(target), target,
-        decodeValue(pname), pname,
+    logLine("%s: %s: target %u (%s), pname %u (%s), param %f", context->name, __func__,
+        target, decodeValue(target),
+        pname, decodeValue(pname),
         param);
 
     GL_CALL(TexParameterf, target, pname, param)
@@ -2480,9 +2480,9 @@ static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %s (%u), pname %s (%u), params %p", context->name, __func__,
-        decodeValue(target), target,
-        decodeValue(pname), pname,
+    logLine("%s: %s: target %u (%s), pname %u (%s), params %p", context->name, __func__,
+        target, decodeValue(target),
+        pname, decodeValue(pname),
         params);
 
     GL_CALL(TexParameterfv, target, pname, params)
@@ -2492,10 +2492,10 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %s (%u), pname %s (%u), param %s (%u)", context->name, __func__,
-        decodeValue(target), target,
-        decodeValue(pname), pname,
-        decodeValue(param), param);
+    logLine("%s: %s: target %u (%s), pname %u (%s), param %u (%s)", context->name, __func__,
+        target, decodeValue(target),
+        pname, decodeValue(pname),
+        param, decodeValue(param));
 
     GL_CALL(TexParameteri, target, pname, param)
 }
@@ -2504,9 +2504,9 @@ static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %s (%u), pname %s (%u), params %p", context->name, __func__,
-        decodeValue(target), target,
-        decodeValue(pname), pname,
+    logLine("%s: %s: target %u (%s), pname %u (%s), params %p", context->name, __func__,
+        target, decodeValue(target),
+        pname, decodeValue(pname),
         params);
 
     GL_CALL(TexParameteriv, target, pname, params)
