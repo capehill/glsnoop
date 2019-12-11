@@ -380,22 +380,54 @@ static const char* decodeValue(const int value)
     #define MAP_ENUM(x) case x: return #x;
 
     switch (value) {
+        MAP_ENUM(GL_ARRAY_BUFFER)
+        MAP_ENUM(GL_BUFFER_SIZE)
+        MAP_ENUM(GL_BUFFER_USAGE)
+        MAP_ENUM(GL_CLAMP_TO_EDGE)
+        MAP_ENUM(GL_CONSTANT_ALPHA)
+        MAP_ENUM(GL_CONSTANT_COLOR)
+        MAP_ENUM(GL_DST_ALPHA)
+        MAP_ENUM(GL_DST_COLOR)
+        MAP_ENUM(GL_DYNAMIC_DRAW)
+        MAP_ENUM(GL_ELEMENT_ARRAY_BUFFER)
+        MAP_ENUM(GL_FRAMEBUFFER)
+        MAP_ENUM(GL_FRAMEBUFFER_COMPLETE)
+        MAP_ENUM(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
+        MAP_ENUM(GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)
+        MAP_ENUM(GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS)
+        //MAP_ENUM(GL_FRAMEBUFFER_INCOMPLETE_FORMATS) - missing?
+        MAP_ENUM(GL_FRAMEBUFFER_UNSUPPORTED)
+        MAP_ENUM(GL_FUNC_ADD)
+        MAP_ENUM(GL_FUNC_REVERSE_SUBTRACT)
+        MAP_ENUM(GL_FUNC_SUBTRACT)
+        MAP_ENUM(GL_NEAREST)
+        MAP_ENUM(GL_NEAREST_MIPMAP_NEAREST)
+        MAP_ENUM(GL_NEAREST_MIPMAP_LINEAR)
+        MAP_ENUM(GL_LINEAR)
+        MAP_ENUM(GL_LINEAR_MIPMAP_NEAREST)
+        MAP_ENUM(GL_LINEAR_MIPMAP_LINEAR)
+        MAP_ENUM(GL_MIRRORED_REPEAT)
+        MAP_ENUM(GL_ONE)
+        MAP_ENUM(GL_ONE_MINUS_CONSTANT_ALPHA)
+        MAP_ENUM(GL_ONE_MINUS_CONSTANT_COLOR)
+        MAP_ENUM(GL_ONE_MINUS_DST_ALPHA)
+        MAP_ENUM(GL_ONE_MINUS_DST_COLOR)
+        MAP_ENUM(GL_ONE_MINUS_SRC_ALPHA)
+        MAP_ENUM(GL_ONE_MINUS_SRC_COLOR)
+        MAP_ENUM(GL_RENDERBUFFER)
+        MAP_ENUM(GL_REPEAT)
+        MAP_ENUM(GL_SRC_ALPHA)
+        MAP_ENUM(GL_SRC_ALPHA_SATURATE)
+        MAP_ENUM(GL_SRC_COLOR)
+        MAP_ENUM(GL_STATIC_DRAW)
+        MAP_ENUM(GL_STREAM_DRAW)
         MAP_ENUM(GL_TEXTURE_2D)
         MAP_ENUM(GL_TEXTURE_CUBE_MAP)
         MAP_ENUM(GL_TEXTURE_MAG_FILTER)
         MAP_ENUM(GL_TEXTURE_MIN_FILTER)
         MAP_ENUM(GL_TEXTURE_WRAP_S)
         MAP_ENUM(GL_TEXTURE_WRAP_T)
-
-        MAP_ENUM(GL_NEAREST)
-        MAP_ENUM(GL_LINEAR)
-        MAP_ENUM(GL_NEAREST_MIPMAP_NEAREST)
-        MAP_ENUM(GL_NEAREST_MIPMAP_LINEAR)
-        MAP_ENUM(GL_LINEAR_MIPMAP_NEAREST)
-        MAP_ENUM(GL_LINEAR_MIPMAP_LINEAR)
-        MAP_ENUM(GL_REPEAT)
-        MAP_ENUM(GL_CLAMP_TO_EDGE)
-        MAP_ENUM(GL_MIRRORED_REPEAT)
+        MAP_ENUM(GL_ZERO)
 
         // GL_ARB_provoking_vertex
         MAP_ENUM(GL_FIRST_VERTEX_CONVENTION)
@@ -416,7 +448,7 @@ static const char* decodeValue(const int value)
         // MAP_ENUM(GL_SAMPLER_2D_RECT_SHADOW) - may be added later?
 
         // GL_EXT_blend_minmax
-        MAP_ENUM(GL_FUNC_ADD)
+        // MAP_ENUM(GL_FUNC_ADD)
         MAP_ENUM(GL_MIN)
         MAP_ENUM(GL_MAX)
         MAP_ENUM(GL_BLEND_EQUATION)
@@ -512,7 +544,7 @@ struct Ogles2Context
     void* (*old_aglCreateContext_AVOID)(struct OGLES2IFace *Self, ULONG * errcode, struct TagItem * tags);
     void* (*old_aglCreateContext2)(struct OGLES2IFace *Self, ULONG * errcode, struct TagItem * tags);
     void (*old_aglDestroyContext)(struct OGLES2IFace *Self, void* context);
-    void* (*old_aglGetProcAddress)(struct OGLES2IFace *Self,const char *name);
+    void* (*old_aglGetProcAddress)(struct OGLES2IFace *Self, const char *name);
     void (*old_aglMakeCurrent)(struct OGLES2IFace *Self, void* context);
     void (*old_aglSetBitmap)(struct OGLES2IFace *Self, struct BitMap *bitmap);
     void (*old_aglSetParams_AVOID)(struct OGLES2IFace *Self, struct TagItem * tags);
@@ -1038,7 +1070,7 @@ static void OGLES2_aglDestroyContext(struct OGLES2IFace *Self, void* context_)
     AGL_CALL(DestroyContext, context_)
 }
 
-static void* OGLES2_aglGetProcAddress(struct OGLES2IFace *Self,const char *name)
+static void* OGLES2_aglGetProcAddress(struct OGLES2IFace *Self, const char *name)
 {
     GET_CONTEXT
 
@@ -1135,8 +1167,9 @@ static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, buffer %u", context->name, __func__,
-        target, buffer);
+    logLine("%s: %s: target %d (%s), buffer %u", context->name, __func__,
+        target, decodeValue(target),
+        buffer);
 
     GL_CALL(BindBuffer, target, buffer)
 }
@@ -1145,8 +1178,9 @@ static void OGLES2_glBindFramebuffer(struct OGLES2IFace *Self, GLenum target, GL
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u, framebuffer %u", context->name, __func__,
-        target, framebuffer);
+    logLine("%s: %s: target %u (%s), framebuffer %u", context->name, __func__,
+        target, decodeValue(target),
+        framebuffer);
 
     GL_CALL(BindFramebuffer, target, framebuffer)
 }
@@ -1155,8 +1189,9 @@ static void OGLES2_glBindRenderbuffer(struct OGLES2IFace *Self, GLenum target, G
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u, renderbuffer %u", context->name, __func__,
-        target, renderbuffer);
+    logLine("%s: %s: target %u (%s), renderbuffer %u", context->name, __func__,
+        target, decodeValue(target),
+        renderbuffer);
 
     GL_CALL(BindRenderbuffer, target, renderbuffer)
 }
@@ -1165,8 +1200,9 @@ static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, texture %d", context->name, __func__,
-        target, texture);
+    logLine("%s: %s: target %d (%s), texture %d", context->name, __func__,
+        target, decodeValue(target),
+        texture);
 
     GL_CALL(BindTexture, target, texture)
 }
@@ -1185,8 +1221,8 @@ static void OGLES2_glBlendEquation(struct OGLES2IFace *Self, GLenum mode)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %d", context->name, __func__,
-        mode);
+    logLine("%s: %s: mode %u (%s)", context->name, __func__,
+        mode, decodeValue(mode));
 
     GL_CALL(BlendEquation, mode)
 }
@@ -1195,8 +1231,9 @@ static void OGLES2_glBlendEquationSeparate(struct OGLES2IFace *Self, GLenum mode
 {
     GET_CONTEXT
 
-    logLine("%s: %s: modeRGB %d, modeAlpha %d", context->name, __func__,
-        modeRGB, modeAlpha);
+    logLine("%s: %s: modeRGB %u (%s), modeAlpha %u (%s)", context->name, __func__,
+        modeRGB, decodeValue(modeRGB),
+        modeAlpha, decodeValue(modeAlpha));
 
     GL_CALL(BlendEquationSeparate, modeRGB, modeAlpha)
 }
@@ -1205,8 +1242,9 @@ static void OGLES2_glBlendFunc(struct OGLES2IFace *Self, GLenum sfactor, GLenum 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: sfactor %d, dfactor %d", context->name, __func__,
-        sfactor, dfactor);
+    logLine("%s: %s: sfactor %u (%s), dfactor %u (%s)", context->name, __func__,
+        sfactor, decodeValue(sfactor),
+        dfactor, decodeValue(dfactor));
 
     GL_CALL(BlendFunc, sfactor, dfactor)
 }
@@ -1215,8 +1253,11 @@ static void OGLES2_glBlendFuncSeparate(struct OGLES2IFace *Self, GLenum sfactorR
 {
     GET_CONTEXT
 
-    logLine("%s: %s: sfactorRGB %d, dfactorRGB %d, sfactorAlpha %d, dfactorAlpha %d", context->name, __func__,
-        sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
+    logLine("%s: %s: sfactorRGB %u (%s), dfactorRGB %u (%s), sfactorAlpha %u (%s), dfactorAlpha %u (%s)", context->name, __func__,
+        sfactorRGB, decodeValue(sfactorRGB),
+        dfactorRGB, decodeValue(dfactorRGB),
+        sfactorAlpha, decodeValue(sfactorAlpha),
+        dfactorAlpha, decodeValue(dfactorAlpha));
 
     GL_CALL(BlendFuncSeparate, sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha)
 }
@@ -1225,8 +1266,10 @@ static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizei
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, size %u, data %p, usage %d", context->name, __func__,
-        target, size, data, usage);
+    logLine("%s: %s: target %u (%s), size %u, data %p, usage %d (%s)", context->name, __func__,
+        target, decodeValue(target),
+        size, data,
+        usage, decodeValue(usage));
 
     GL_CALL(BufferData, target, size, data, usage)
 }
@@ -1235,8 +1278,9 @@ static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLin
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, offset %u, size %u, data %p", context->name, __func__,
-        target, offset, size, data);
+    logLine("%s: %s: target %u (%s), offset %u, size %u, data %p", context->name, __func__,
+        target, decodeValue(target),
+        offset, size, data);
 
     GL_CALL(BufferSubData, target, offset, size, data)
 }
@@ -1249,8 +1293,9 @@ static GLenum OGLES2_glCheckFramebufferStatus(struct OGLES2IFace *Self, GLenum t
 
     GL_CALL_STATUS(CheckFramebufferStatus, target)
 
-    logLine("%s: %s: status %u", context->name, __func__,
-        status);
+    logLine("%s: %s: target %u (%s) status %u (%s)", context->name, __func__,
+        target, decodeValue(target),
+        status, decodeValue(status));
 
     return status;
 }
