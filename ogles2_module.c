@@ -8,10 +8,7 @@
 #include <proto/exec.h>
 #include <proto/ogles2.h>
 
-// HACK to compile with gl2ext.h
-#define GL_KHR_debug 0
-#define GL_NV_draw_vulkan_image 0
-#define GL_NV_gpu_shader5 0
+#include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
 #include <stdio.h>
@@ -416,7 +413,7 @@ static const char* decodeValue(const int value)
         MAP_ENUM(GL_PROXY_TEXTURE_RECTANGLE)
         MAP_ENUM(GL_MAX_RECTANGLE_TEXTURE_SIZE)
         MAP_ENUM(GL_SAMPLER_2D_RECT)
-        // MAP_ENUM(GL_SAMPLER_2D_RECT_SHADOW)
+        // MAP_ENUM(GL_SAMPLER_2D_RECT_SHADOW) - may be added later?
 
         // GL_EXT_blend_minmax
         MAP_ENUM(GL_FUNC_ADD)
@@ -432,7 +429,7 @@ static const char* decodeValue(const int value)
         MAP_ENUM(GL_BGRA_EXT)
 
         // GL_EXT_texture_lod_bias
-        // MAP_ENUM(GL_TEXTURE_FILTER_CONTROL_EXT)
+        // MAP_ENUM(GL_TEXTURE_FILTER_CONTROL_EXT) - there is no texture env
         MAP_ENUM(GL_TEXTURE_LOD_BIAS)
         MAP_ENUM(GL_MAX_TEXTURE_LOD_BIAS)
 
