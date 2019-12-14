@@ -358,7 +358,7 @@ static const char* mapOgles2Function(const Ogles2Function func)
     return "Unknown";
 }
 
-static const char* mapOgles2Error(const int code)
+static const char* mapOgles2Error(const GLenum code)
 {
     #define MAP_ENUM(x) case x: ++errorCount; return #x;
 
@@ -375,7 +375,51 @@ static const char* mapOgles2Error(const int code)
     return "Unknown error";
 }
 
-static const char* decodeValue(const int value)
+static const char* decodeTexture(const GLenum texture)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (texture) {
+        MAP_ENUM(GL_TEXTURE0)
+        MAP_ENUM(GL_TEXTURE1)
+        MAP_ENUM(GL_TEXTURE2)
+        MAP_ENUM(GL_TEXTURE3)
+        MAP_ENUM(GL_TEXTURE4)
+        MAP_ENUM(GL_TEXTURE5)
+        MAP_ENUM(GL_TEXTURE6)
+        MAP_ENUM(GL_TEXTURE7)
+        MAP_ENUM(GL_TEXTURE8)
+        MAP_ENUM(GL_TEXTURE9)
+        MAP_ENUM(GL_TEXTURE10)
+        MAP_ENUM(GL_TEXTURE11)
+        MAP_ENUM(GL_TEXTURE12)
+        MAP_ENUM(GL_TEXTURE13)
+        MAP_ENUM(GL_TEXTURE14)
+        MAP_ENUM(GL_TEXTURE15)
+        MAP_ENUM(GL_TEXTURE16)
+        MAP_ENUM(GL_TEXTURE17)
+        MAP_ENUM(GL_TEXTURE18)
+        MAP_ENUM(GL_TEXTURE19)
+        MAP_ENUM(GL_TEXTURE20)
+        MAP_ENUM(GL_TEXTURE21)
+        MAP_ENUM(GL_TEXTURE22)
+        MAP_ENUM(GL_TEXTURE23)
+        MAP_ENUM(GL_TEXTURE24)
+        MAP_ENUM(GL_TEXTURE25)
+        MAP_ENUM(GL_TEXTURE26)
+        MAP_ENUM(GL_TEXTURE27)
+        MAP_ENUM(GL_TEXTURE28)
+        MAP_ENUM(GL_TEXTURE29)
+        MAP_ENUM(GL_TEXTURE30)
+        MAP_ENUM(GL_TEXTURE31)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown texture";
+}
+
+static const char* decodeValue(const GLenum value)
 {
     #define MAP_ENUM(x) case x: return #x;
 
@@ -664,7 +708,7 @@ static const char* decodeValue(const int value)
     return "Unknown enum";
 }
 
-static const char* decodeCapability(const int value)
+static const char* decodeCapability(const GLenum value)
 {
     #define MAP_ENUM(x) case x: return #x;
 
@@ -1315,8 +1359,8 @@ static void OGLES2_glActiveTexture(struct OGLES2IFace *Self, GLenum texture)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: texture %d", context->name, __func__,
-        texture);
+    logLine("%s: %s: texture 0x%X (%s)", context->name, __func__,
+        texture, decodeTexture(texture));
 
     GL_CALL(ActiveTexture, texture)
 }
@@ -1345,7 +1389,7 @@ static void OGLES2_glBindBuffer(struct OGLES2IFace *Self, GLenum target, GLuint 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d (%s), buffer %u", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), buffer %u", context->name, __func__,
         target, decodeValue(target),
         buffer);
 
@@ -1356,7 +1400,7 @@ static void OGLES2_glBindFramebuffer(struct OGLES2IFace *Self, GLenum target, GL
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), framebuffer %u", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), framebuffer %u", context->name, __func__,
         target, decodeValue(target),
         framebuffer);
 
@@ -1367,7 +1411,7 @@ static void OGLES2_glBindRenderbuffer(struct OGLES2IFace *Self, GLenum target, G
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), renderbuffer %u", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), renderbuffer %u", context->name, __func__,
         target, decodeValue(target),
         renderbuffer);
 
@@ -1378,7 +1422,7 @@ static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d (%s), texture %d", context->name, __func__,
+    logLine("%s: %s: target 0%X (%s), texture %d", context->name, __func__,
         target, decodeValue(target),
         texture);
 
@@ -1399,7 +1443,7 @@ static void OGLES2_glBlendEquation(struct OGLES2IFace *Self, GLenum mode)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %u (%s)", context->name, __func__,
+    logLine("%s: %s: mode 0x%X (%s)", context->name, __func__,
         mode, decodeValue(mode));
 
     GL_CALL(BlendEquation, mode)
@@ -1409,7 +1453,7 @@ static void OGLES2_glBlendEquationSeparate(struct OGLES2IFace *Self, GLenum mode
 {
     GET_CONTEXT
 
-    logLine("%s: %s: modeRGB %u (%s), modeAlpha %u (%s)", context->name, __func__,
+    logLine("%s: %s: modeRGB 0x%X (%s), modeAlpha 0x%X (%s)", context->name, __func__,
         modeRGB, decodeValue(modeRGB),
         modeAlpha, decodeValue(modeAlpha));
 
@@ -1420,7 +1464,7 @@ static void OGLES2_glBlendFunc(struct OGLES2IFace *Self, GLenum sfactor, GLenum 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: sfactor %u (%s), dfactor %u (%s)", context->name, __func__,
+    logLine("%s: %s: sfactor 0x%X (%s), dfactor 0x%X (%s)", context->name, __func__,
         sfactor, decodeValue(sfactor),
         dfactor, decodeValue(dfactor));
 
@@ -1431,7 +1475,7 @@ static void OGLES2_glBlendFuncSeparate(struct OGLES2IFace *Self, GLenum sfactorR
 {
     GET_CONTEXT
 
-    logLine("%s: %s: sfactorRGB %u (%s), dfactorRGB %u (%s), sfactorAlpha %u (%s), dfactorAlpha %u (%s)", context->name, __func__,
+    logLine("%s: %s: sfactorRGB 0x%X (%s), dfactorRGB 0x%X (%s), sfactorAlpha 0x%X (%s), dfactorAlpha 0x%X (%s)", context->name, __func__,
         sfactorRGB, decodeValue(sfactorRGB),
         dfactorRGB, decodeValue(dfactorRGB),
         sfactorAlpha, decodeValue(sfactorAlpha),
@@ -1444,7 +1488,7 @@ static void OGLES2_glBufferData(struct OGLES2IFace *Self, GLenum target, GLsizei
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), size %u, data %p, usage %d (%s)", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), size %u, data %p, usage 0x%X (%s)", context->name, __func__,
         target, decodeValue(target),
         size, data,
         usage, decodeValue(usage));
@@ -1456,7 +1500,7 @@ static void OGLES2_glBufferSubData(struct OGLES2IFace *Self, GLenum target, GLin
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), offset %u, size %u, data %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), offset %u, size %u, data %p", context->name, __func__,
         target, decodeValue(target),
         offset, size, data);
 
@@ -1471,7 +1515,7 @@ static GLenum OGLES2_glCheckFramebufferStatus(struct OGLES2IFace *Self, GLenum t
 
     GL_CALL_STATUS(CheckFramebufferStatus, target)
 
-    logLine("%s: %s: target %u (%s) status %u (%s)", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s) status 0x%X (%s)", context->name, __func__,
         target, decodeValue(target),
         status, decodeValue(status));
 
@@ -1545,7 +1589,7 @@ static void OGLES2_glCompressedTexImage2D(struct OGLES2IFace *Self, GLenum targe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), level %d, internalformat %u (%s), width %d, height %d, border %d, imageSize %d, data %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), level %d, internalformat 0x%X (%s), width %d, height %d, border %d, imageSize %d, data %p", context->name, __func__,
         target, decodeValue(target),
         level,
         internalformat, decodeValue(internalformat),
@@ -1558,7 +1602,7 @@ static void OGLES2_glCompressedTexSubImage2D(struct OGLES2IFace *Self, GLenum ta
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), level %d, xoffset %d, yoffset %d, width %d, height %d, format %u (%s), imageSize %d, data %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), level %d, xoffset %d, yoffset %d, width %d, height %d, format 0x%X (%s), imageSize %d, data %p", context->name, __func__,
         target, decodeValue(target),
         level, xoffset, yoffset, width, height,
         format, decodeValue(format),
@@ -1571,7 +1615,7 @@ static void OGLES2_glCopyTexImage2D(struct OGLES2IFace *Self, GLenum target, GLi
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), level %d, internalformat %u (%s), x %d, y %d, width %d, height %d, border %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), level %d, internalformat 0x%X (%s), x %d, y %d, width %d, height %d, border %d", context->name, __func__,
         target, decodeValue(target),
         level,
         internalformat, decodeValue(internalformat),
@@ -1584,7 +1628,7 @@ static void OGLES2_glCopyTexSubImage2D(struct OGLES2IFace *Self, GLenum target, 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), level %d, xoffset %d, yoffset %d, x %d, y %d, width %d, height %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), level %d, xoffset %d, yoffset %d, x %d, y %d, width %d, height %d", context->name, __func__,
         target, decodeValue(target),
         level, xoffset, yoffset, x, y, width, height);
 
@@ -1613,7 +1657,7 @@ static GLuint OGLES2_glCreateShader(struct OGLES2IFace *Self, GLenum type)
 
     GL_CALL_STATUS(CreateShader, type)
 
-    logLine("%s: %s: type %u (%s). Created shader %u", context->name, __func__,
+    logLine("%s: %s: type 0x%X (%s). Created shader %u", context->name, __func__,
         type, decodeValue(type),
         status);
 
@@ -1626,7 +1670,7 @@ static void OGLES2_glCullFace(struct OGLES2IFace *Self, GLenum mode)
 
     GL_CALL(CullFace, mode)
 
-    logLine("%s: %s: mode %u (%s)", context->name, __func__,
+    logLine("%s: %s: mode 0x%X (%s)", context->name, __func__,
         mode, decodeValue(mode));
 }
 
@@ -1714,7 +1758,7 @@ static void OGLES2_glDepthFunc(struct OGLES2IFace *Self, GLenum func)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: func %u (%s)", context->name, __func__,
+    logLine("%s: %s: func 0x%X (%s)", context->name, __func__,
         func, decodeValue(func));
 
     GL_CALL(DepthFunc, func)
@@ -1754,7 +1798,7 @@ static void OGLES2_glDisable(struct OGLES2IFace *Self, GLenum cap)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: cap %d (%s)", context->name, __func__,
+    logLine("%s: %s: cap 0x%X (%s)", context->name, __func__,
         cap, decodeCapability(cap));
 
     GL_CALL(Disable, cap)
@@ -1805,7 +1849,7 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %u (%s), first %d, count %u", context->name, __func__,
+    logLine("%s: %s: mode 0x%X (%s), first %d, count %u", context->name, __func__,
         mode, decodePrimitive(mode),
         first, count);
 
@@ -1818,7 +1862,7 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %u (%s), count %u, type %u (%s), indices %p", context->name, __func__,
+    logLine("%s: %s: mode 0x%X (%s), count %u, type 0x%X (%s), indices %p", context->name, __func__,
         mode, decodePrimitive(mode),
         count,
         type, decodeValue(type),
@@ -1833,7 +1877,7 @@ static void OGLES2_glDrawElementsBaseVertexOES(struct OGLES2IFace *Self, GLenum 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %u (%s), count %u, type %u (%s), indices %p, basevertex %d", context->name, __func__,
+    logLine("%s: %s: mode 0x%X (%s), count %u, type 0x%X (%s), indices %p, basevertex %d", context->name, __func__,
         mode, decodePrimitive(mode),
         count,
         type, decodeValue(type),
@@ -1848,7 +1892,7 @@ static void OGLES2_glEnable(struct OGLES2IFace *Self, GLenum cap)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: cap %d (%s)", context->name, __func__,
+    logLine("%s: %s: cap 0x%X (%s)", context->name, __func__,
         cap, decodeCapability(cap));
 
     GL_CALL(Enable, cap)
@@ -1886,7 +1930,7 @@ static void OGLES2_glFramebufferRenderbuffer(struct OGLES2IFace *Self, GLenum ta
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), attachment %u (%s), renderbuffertarget %u (%s), renderbuffer %u", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), attachment 0x%X (%s), renderbuffertarget 0x%X (%s), renderbuffer %u", context->name, __func__,
         target, decodeValue(target),
         attachment, decodeValue(attachment),
         renderbuffertarget, decodeValue(renderbuffertarget),
@@ -1899,7 +1943,7 @@ static void OGLES2_glFramebufferTexture2D(struct OGLES2IFace *Self, GLenum targe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), attachment %u (%s), textarget %u (%s), texture %u, level %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), attachment 0x%X (%s), textarget 0x%X (%s), texture %u, level %d", context->name, __func__,
         target, decodeValue(target),
         attachment, decodeValue(attachment),
         textarget, decodeValue(textarget),
@@ -1912,7 +1956,7 @@ static void OGLES2_glFrontFace(struct OGLES2IFace *Self, GLenum mode)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: mode %u (%s)", context->name, __func__,
+    logLine("%s: %s: mode 0x%X (%s)", context->name, __func__,
         mode, decodeValue(mode));
 
     GL_CALL(FrontFace, mode)
@@ -1996,7 +2040,7 @@ static void OGLES2_glGetActiveAttrib(struct OGLES2IFace *Self, GLuint program, G
 
     GL_CALL(GetActiveAttrib, program, index, bufSize, &tempLength, size, type, name)
 
-    logLine("%s: %s: program %u, index %u, bufSize %u, length %u, size %d, type %u (%s), name '%s'", context->name, __func__,
+    logLine("%s: %s: program %u, index %u, bufSize %u, length %u, size %d, type 0x%X (%s), name '%s'", context->name, __func__,
         program, index, bufSize, tempLength, *size,
         *type, decodeValue(*type),
         name);
@@ -2014,7 +2058,7 @@ static void OGLES2_glGetActiveUniform(struct OGLES2IFace *Self, GLuint program, 
 
     GL_CALL(GetActiveUniform, program, index, bufSize, &tempLength, size, type, name)
 
-    logLine("%s: %s: program %u, index %u, bufSize %u, length %u, size %d, type %u (%s), name '%s'", context->name, __func__,
+    logLine("%s: %s: program %u, index %u, bufSize %u, length %u, size %d, type 0x%X (%s), name '%s'", context->name, __func__,
         program, index, bufSize, tempLength, *size,
         *type, decodeValue(*type),
         name);
@@ -2065,7 +2109,7 @@ static void OGLES2_glGetBooleanv(struct OGLES2IFace *Self, GLenum pname, GLboole
 
     GL_CALL(GetBooleanv, pname, data)
 
-    logLine("%s: %s: pname %u (%s), data %d", context->name, __func__,
+    logLine("%s: %s: pname 0x%X (%s), data %d", context->name, __func__,
         pname, decodeValue(pname),
         *data);
 }
@@ -2076,7 +2120,7 @@ static void OGLES2_glGetBufferParameteriv(struct OGLES2IFace *Self, GLenum targe
 
     GL_CALL(GetBufferParameteriv, target, pname, params)
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), params %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), params %d", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         *params);
@@ -2088,7 +2132,7 @@ static void OGLES2_glGetBufferParameterivOES(struct OGLES2IFace *Self, GLenum ta
 
     GL_CALL(GetBufferParameterivOES, target, value, data)
 
-    logLine("%s: %s: target %u (%s), value %u (%s), data %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), value 0x%X (%s), data %d", context->name, __func__,
         target, decodeValue(target),
         value, decodeValue(value),
         *data);
@@ -2100,7 +2144,7 @@ static void OGLES2_glGetBufferPointervOES(struct OGLES2IFace *Self, GLenum targe
 
     GL_CALL(GetBufferPointervOES, target, pname, params)
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), params %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), params %p", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         *params);
@@ -2117,7 +2161,7 @@ static GLenum OGLES2_glGetError(struct OGLES2IFace *Self)
 
     GL_CALL_STATUS(GetError)
 
-    logLine("%s: %s: error %u (%s)", context->name, __func__,
+    logLine("%s: %s: error 0x%X (%s)", context->name, __func__,
         status, (status == GL_NO_ERROR) ? "GL_NO_ERROR" : mapOgles2Error(status));
 
     return status;
@@ -2129,7 +2173,7 @@ static void OGLES2_glGetFloatv(struct OGLES2IFace *Self, GLenum pname, GLfloat *
 
     GL_CALL(GetFloatv, pname, data)
 
-    logLine("%s: %s: pname %u (%s), data %f", context->name, __func__,
+    logLine("%s: %s: pname 0x%X (%s), data %f", context->name, __func__,
         pname, decodeValue(pname),
         *data);
 }
@@ -2140,7 +2184,7 @@ static void OGLES2_glGetFramebufferAttachmentParameteriv(struct OGLES2IFace *Sel
 
     GL_CALL(GetFramebufferAttachmentParameteriv, target, attachment, pname, params)
 
-    logLine("%s: %s: target %u (%s), attachment %u (%s), pname %u (%s), params %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), attachment 0x%X (%s), pname 0x%X (%s), params %d", context->name, __func__,
         target, decodeValue(target),
         attachment, decodeValue(attachment),
         pname, decodeValue(pname),
@@ -2153,7 +2197,7 @@ static void OGLES2_glGetIntegerv(struct OGLES2IFace *Self, GLenum pname, GLint *
 
     GL_CALL(GetIntegerv, pname, data)
 
-    logLine("%s: %s: pname %u (%s), data %d", context->name, __func__,
+    logLine("%s: %s: pname 0x%X (%s), data %d", context->name, __func__,
         pname, decodeValue(pname),
         *data);
 }
@@ -2166,7 +2210,7 @@ static void OGLES2_glGetProgramBinaryOES(struct OGLES2IFace *Self, GLuint progra
 
     GL_CALL(GetProgramBinaryOES, program, bufSize, &tempLength, binaryFormat, binary)
 
-    logLine("%s: %s: program %u, bufSize %u, length %u, binaryFormat %u (%s), binary %p", context->name, __func__,
+    logLine("%s: %s: program %u, bufSize %u, length %u, binaryFormat 0x%X (%s), binary %p", context->name, __func__,
         program, bufSize, tempLength,
         *binaryFormat, decodeValue(*binaryFormat),
         binary);
@@ -2182,7 +2226,7 @@ static void OGLES2_glGetProgramiv(struct OGLES2IFace *Self, GLuint program, GLen
 
     GL_CALL(GetProgramiv, program, pname, params)
 
-    logLine("%s: %s: program %u, pname %u (%s), params %d", context->name, __func__,
+    logLine("%s: %s: program %u, pname 0x%X (%s), params %d", context->name, __func__,
         program,
         pname, decodeValue(pname),
         *params);
@@ -2210,7 +2254,7 @@ static void OGLES2_glGetRenderbufferParameteriv(struct OGLES2IFace *Self, GLenum
 
     GL_CALL(GetRenderbufferParameteriv, target, pname, params)
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), params %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), params %d", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         *params);
@@ -2222,7 +2266,7 @@ static void OGLES2_glGetShaderiv(struct OGLES2IFace *Self, GLuint shader, GLenum
 
     GL_CALL(GetShaderiv, shader, pname, params)
 
-    logLine("%s: %s: shader %u, pname %u (%s), params %d", context->name, __func__,
+    logLine("%s: %s: shader %u, pname 0x%X (%s), params %d", context->name, __func__,
         shader,
         pname, decodeValue(pname),
         *params);
@@ -2250,7 +2294,7 @@ static void OGLES2_glGetShaderPrecisionFormat(struct OGLES2IFace *Self, GLenum s
 
     GL_CALL(GetShaderPrecisionFormat, shadertype, precisiontype, range, precision)
 
-    logLine("%s: %s: shadertype %u (%s), precisiontype %u (%s), range [%d, %d], precision %d", context->name, __func__,
+    logLine("%s: %s: shadertype 0x%X (%s), precisiontype 0x%X (%s), range [%d, %d], precision %d", context->name, __func__,
         shadertype, decodeValue(shadertype),
         precisiontype, decodeValue(precisiontype),
         range[0], range[1], *precision);
@@ -2280,7 +2324,7 @@ static const GLubyte * OGLES2_glGetString(struct OGLES2IFace *Self, GLenum name)
 
     GL_CALL_STATUS(GetString, name)
 
-    logLine("%s: %s: name %u (%s). String '%s'", context->name, __func__,
+    logLine("%s: %s: name 0x%X (%s). String '%s'", context->name, __func__,
         name, decodeValue(name),
         status);
 
@@ -2293,7 +2337,7 @@ static void OGLES2_glGetTexParameterfv(struct OGLES2IFace *Self, GLenum target, 
 
     GL_CALL(GetTexParameterfv, target, pname, params)
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), params %f", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), params %f", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         *params);
@@ -2305,7 +2349,7 @@ static void OGLES2_glGetTexParameteriv(struct OGLES2IFace *Self, GLenum target, 
 
     GL_CALL(GetTexParameteriv, target, pname, params)
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), params %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), params %d", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         *params);
@@ -2351,7 +2395,7 @@ static void OGLES2_glGetVertexAttribfv(struct OGLES2IFace *Self, GLuint index, G
 
     GL_CALL(GetVertexAttribfv, index, pname, params)
 
-    logLine("%s: %s: index %u, pname %u (%s), params %f", context->name, __func__,
+    logLine("%s: %s: index %u, pname 0x%X (%s), params %f", context->name, __func__,
         index,
         pname, decodeValue(pname),
         *params);
@@ -2363,7 +2407,7 @@ static void OGLES2_glGetVertexAttribiv(struct OGLES2IFace *Self, GLuint index, G
 
     GL_CALL(GetVertexAttribiv, index, pname, params)
 
-    logLine("%s: %s: index %u, pname %u (%s), params %d", context->name, __func__,
+    logLine("%s: %s: index %u, pname 0x%X (%s), params %d", context->name, __func__,
         index,
         pname, decodeValue(pname),
         *params);
@@ -2375,7 +2419,7 @@ static void OGLES2_glGetVertexAttribPointerv(struct OGLES2IFace *Self, GLuint in
 
     GL_CALL(GetVertexAttribPointerv, index, pname, pointer)
 
-    logLine("%s: %s: index %u, pname %u (%s), pointer %p", context->name, __func__,
+    logLine("%s: %s: index %u, pname 0x%X (%s), pointer %p", context->name, __func__,
         index,
         pname, decodeValue(pname),
         *pointer);
@@ -2385,7 +2429,7 @@ static void OGLES2_glHint(struct OGLES2IFace *Self, GLenum target, GLenum mode)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u, mode %u", context->name, __func__,
+    logLine("%s: %s: target 0x%X, mode 0x%X", context->name, __func__,
         target, mode);
 
     GL_CALL(Hint, target, mode)
@@ -2413,7 +2457,7 @@ static GLboolean OGLES2_glIsEnabled(struct OGLES2IFace *Self, GLenum cap)
 
     GL_CALL_STATUS(IsEnabled, cap)
 
-    logLine("%s: %s: cap %u. Result %d", context->name, __func__,
+    logLine("%s: %s: cap 0x%X. Result %d", context->name, __func__,
         cap, status);
 
     return status;
@@ -2517,7 +2561,7 @@ static void* OGLES2_glMapBufferOES(struct OGLES2IFace *Self, GLenum target, GLen
 
     GL_CALL_STATUS(MapBufferOES, target, access)
 
-    logLine("%s: %s: target %u, access %u. Returned address %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X, access 0x%X. Returned address %p", context->name, __func__,
         target, access, status);
 
     checkPointer(context, MapBufferOES, status);
@@ -2529,7 +2573,7 @@ static void OGLES2_glPixelStorei(struct OGLES2IFace *Self, GLenum pname, GLint p
 {
     GET_CONTEXT
 
-    logLine("%s: %s: pname %u, param %d", context->name, __func__,
+    logLine("%s: %s: pname 0x%X, param %d", context->name, __func__,
         pname, param);
 
     GL_CALL(PixelStorei, pname, param)
@@ -2539,7 +2583,7 @@ static void OGLES2_glPolygonMode(struct OGLES2IFace *Self, GLenum face, GLenum m
 {
     GET_CONTEXT
 
-    logLine("%s: %s: face %u, mode %u", context->name, __func__,
+    logLine("%s: %s: face 0x%X, mode 0x%X", context->name, __func__,
         face, mode);
 
     GL_CALL(PolygonMode, face, mode)
@@ -2561,7 +2605,7 @@ static void OGLES2_glProgramBinaryOES(struct OGLES2IFace *Self, GLuint program, 
 
     GL_CALL(ProgramBinaryOES, program, binaryFormat, binary, length)
 
-    logLine("%s: %s: program %u, binaryFormat %u, binary %p, length %d", context->name, __func__,
+    logLine("%s: %s: program %u, binaryFormat 0x%X, binary %p, length %d", context->name, __func__,
         program, binaryFormat, binary, length);
 }
 
@@ -2569,7 +2613,7 @@ static void OGLES2_glProvokingVertex(struct OGLES2IFace *Self, GLenum provokeMod
 {
     GET_CONTEXT
 
-    logLine("%s: %s: provokeMode %u", context->name, __func__,
+    logLine("%s: %s: provokeMode 0x%X", context->name, __func__,
         provokeMode);
 
     GL_CALL(ProvokingVertex, provokeMode)
@@ -2579,7 +2623,7 @@ static void OGLES2_glReadPixels(struct OGLES2IFace *Self, GLint x, GLint y, GLsi
 {
     GET_CONTEXT
 
-    logLine("%s: %s: x %d, y %d, width %u, height %u, format %u, type %u, pixels %p", context->name, __func__,
+    logLine("%s: %s: x %d, y %d, width %u, height %u, format 0x%X, type 0x%X, pixels %p", context->name, __func__,
         x, y, width, height, format, type, pixels);
 
     GL_CALL(ReadPixels, x, y, width, height, format, type, pixels)
@@ -2598,7 +2642,7 @@ static void OGLES2_glRenderbufferStorage(struct OGLES2IFace *Self, GLenum target
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u, internalformat %u, width %u, height %u", context->name, __func__,
+    logLine("%s: %s: target 0x%X, internalformat 0x%X, width %u, height %u", context->name, __func__,
         target, internalformat, width, height);
 
     GL_CALL(RenderbufferStorage, target, internalformat, width, height)
@@ -2628,7 +2672,7 @@ static void OGLES2_glShaderBinary(struct OGLES2IFace *Self, GLsizei count, const
 {
     GET_CONTEXT
 
-    logLine("%s: %s: count %u, shaders %p, binaryformat %u, binary %p, length %u", context->name, __func__,
+    logLine("%s: %s: count %u, shaders %p, binaryformat 0x%X, binary %p, length %u", context->name, __func__,
         count, shaders, binaryformat, binary, length);
 
     GL_CALL(ShaderBinary, count, shaders, binaryformat, binary, length)
@@ -2679,7 +2723,7 @@ static void OGLES2_glStencilFunc(struct OGLES2IFace *Self, GLenum func, GLint re
 {
     GET_CONTEXT
 
-    logLine("%s: %s: func %u, ref %d, mask %u", context->name, __func__,
+    logLine("%s: %s: func 0x%X, ref %d, mask %u", context->name, __func__,
         func, ref, mask);
 
     GL_CALL(StencilFunc, func, ref, mask)
@@ -2689,7 +2733,7 @@ static void OGLES2_glStencilFuncSeparate(struct OGLES2IFace *Self, GLenum face, 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: face %u, func %u, ref %d, mask %u", context->name, __func__,
+    logLine("%s: %s: face 0x%X, func 0x%X, ref %d, mask %u", context->name, __func__,
         face, func, ref, mask);
 
     GL_CALL(StencilFuncSeparate, face, func, ref, mask)
@@ -2709,7 +2753,7 @@ static void OGLES2_glStencilMaskSeparate(struct OGLES2IFace *Self, GLenum face, 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: face %u, mask %u", context->name, __func__,
+    logLine("%s: %s: face 0x%X, mask %u", context->name, __func__,
         face, mask);
 
     GL_CALL(StencilMaskSeparate, face, mask)
@@ -2719,7 +2763,7 @@ static void OGLES2_glStencilOp(struct OGLES2IFace *Self, GLenum fail, GLenum zfa
 {
     GET_CONTEXT
 
-    logLine("%s: %s: fail %u, zfail %u, zpass %u", context->name, __func__,
+    logLine("%s: %s: fail 0x%X, zfail 0x%X, zpass 0x%X", context->name, __func__,
         fail, zfail, zpass);
 
     GL_CALL(StencilOp, fail, zfail, zpass)
@@ -2729,7 +2773,7 @@ static void OGLES2_glStencilOpSeparate(struct OGLES2IFace *Self, GLenum face, GL
 {
     GET_CONTEXT
 
-    logLine("%s: %s: face %u, sfail %u, dpfail %u, dppass %u", context->name, __func__,
+    logLine("%s: %s: face 0x%X, sfail 0x%X, dpfail 0x%X, dppass 0x%X", context->name, __func__,
         face, sfail, dpfail, dppass);
 
     GL_CALL(StencilOpSeparate, face, sfail, dpfail, dppass)
@@ -2739,7 +2783,7 @@ static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint l
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, level %d, internalformat %d, width %u, height %u, border %d, format %d, type %d, pixels %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X, level %d, internalformat 0x%X, width %u, height %u, border %d, format 0x%X, type 0x%X, pixels %p", context->name, __func__,
         target, level, internalformat, width, height, border, format, type, pixels);
 
     GL_CALL(TexImage2D, target,  level, internalformat, width, height, border, format, type, pixels)
@@ -2749,7 +2793,7 @@ static void OGLES2_glTexParameterf(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), param %f", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), param %f", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         param);
@@ -2761,7 +2805,7 @@ static void OGLES2_glTexParameterfv(struct OGLES2IFace *Self, GLenum target, GLe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), params %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), params %p", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         params);
@@ -2773,7 +2817,7 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), param %u (%s)", context->name, __func__,
+    logLine("%s: %s: target 0%X (%s), pname 0x%X (%s), param 0x%X (%s)", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         param, decodeValue(param));
@@ -2785,7 +2829,7 @@ static void OGLES2_glTexParameteriv(struct OGLES2IFace *Self, GLenum target, GLe
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s), pname %u (%s), params %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), params %p", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         params);
@@ -2797,7 +2841,7 @@ static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLin
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %d, level %d, xoffset %d, yoffset %d, width %u, height %u, format %d, type %d, pixels %p", context->name, __func__,
+    logLine("%s: %s: target 0x%X, level %d, xoffset %d, yoffset %d, width %u, height %u, format 0x%X, type 0x%X, pixels %p", context->name, __func__,
         target, level, xoffset, yoffset, width, height, format, type, pixels);
 
     GL_CALL(TexSubImage2D, target, level, xoffset, yoffset, width, height, format, type, pixels)
@@ -3063,7 +3107,7 @@ static GLboolean OGLES2_glUnmapBufferOES(struct OGLES2IFace *Self, GLenum target
 
     GL_CALL_STATUS(UnmapBufferOES, target)
 
-    logLine("%s: %s: target %u. Return value %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X. Return value %d", context->name, __func__,
         target, status);
 
     return status;
@@ -3173,7 +3217,7 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
 {
     GET_CONTEXT
 
-    logLine("%s: %s: index %u, size %d, type %d, normalized %d, stride %d, pointer %p", context->name, __func__,
+    logLine("%s: %s: index %u, size %d, type 0x%X, normalized %d, stride %d, pointer %p", context->name, __func__,
         index, size, type, normalized, stride, pointer);
 
     GL_CALL(VertexAttribPointer, index, size, type, normalized, stride, pointer)
