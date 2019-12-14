@@ -455,6 +455,7 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_BUFFER_MAP_POINTER_OES)
         MAP_ENUM(GL_BUFFER_SIZE)
         MAP_ENUM(GL_BUFFER_USAGE)
+        MAP_ENUM(GL_BYTE)
         MAP_ENUM(GL_CCW)
         MAP_ENUM(GL_CLAMP_TO_EDGE)
         MAP_ENUM(GL_COLOR_ATTACHMENT0)
@@ -468,13 +469,20 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_CURRENT_PROGRAM)
         MAP_ENUM(GL_CURRENT_VERTEX_ATTRIB)
         MAP_ENUM(GL_CW)
+        MAP_ENUM(GL_DECR)
+        MAP_ENUM(GL_DECR_WRAP)
         MAP_ENUM(GL_DELETE_STATUS)
         MAP_ENUM(GL_DEPTH_BITS)
         MAP_ENUM(GL_DEPTH_ATTACHMENT)
         MAP_ENUM(GL_DEPTH_CLEAR_VALUE)
+        MAP_ENUM(GL_DEPTH_COMPONENT16)
+        MAP_ENUM(GL_DEPTH_COMPONENT24_OES)
+        MAP_ENUM(GL_DEPTH_COMPONENT32_OES)
         MAP_ENUM(GL_DEPTH_FUNC)
         MAP_ENUM(GL_DEPTH_WRITEMASK)
         MAP_ENUM(GL_DEPTH_RANGE)
+        MAP_ENUM(GL_DEPTH24_STENCIL8_OES)
+        MAP_ENUM(GL_DONT_CARE)
         MAP_ENUM(GL_DST_ALPHA)
         MAP_ENUM(GL_DST_COLOR)
         MAP_ENUM(GL_DYNAMIC_DRAW)
@@ -482,6 +490,9 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_ELEMENT_ARRAY_BUFFER_BINDING)
         MAP_ENUM(GL_EQUAL)
         MAP_ENUM(GL_EXTENSIONS)
+        MAP_ENUM(GL_FASTEST)
+        MAP_ENUM(GL_FILL)
+        MAP_ENUM(GL_FIXED)
         MAP_ENUM(GL_FLOAT)
         MAP_ENUM(GL_FLOAT_VEC2)
         MAP_ENUM(GL_FLOAT_VEC3)
@@ -490,6 +501,7 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_FLOAT_MAT3)
         MAP_ENUM(GL_FLOAT_MAT4)
         MAP_ENUM(GL_FRAGMENT_SHADER)
+        MAP_ENUM(GL_FRAGMENT_SHADER_DERIVATIVE_HINT_OES)
         MAP_ENUM(GL_FRAMEBUFFER)
         MAP_ENUM(GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)
         MAP_ENUM(GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)
@@ -508,20 +520,27 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_FUNC_ADD)
         MAP_ENUM(GL_FUNC_REVERSE_SUBTRACT)
         MAP_ENUM(GL_FUNC_SUBTRACT)
+        MAP_ENUM(GL_GENERATE_MIPMAP_HINT)
         MAP_ENUM(GL_GEQUAL)
         MAP_ENUM(GL_GREATER)
         MAP_ENUM(GL_GREEN_BITS)
+        MAP_ENUM(GL_HALF_FLOAT_OES)
         MAP_ENUM(GL_HIGH_FLOAT)
         MAP_ENUM(GL_HIGH_INT)
         MAP_ENUM(GL_IMPLEMENTATION_COLOR_READ_FORMAT)
         MAP_ENUM(GL_IMPLEMENTATION_COLOR_READ_TYPE)
+        MAP_ENUM(GL_INCR)
+        MAP_ENUM(GL_INCR_WRAP)
         MAP_ENUM(GL_INFO_LOG_LENGTH)
         MAP_ENUM(GL_INT)
         MAP_ENUM(GL_INT_VEC2)
         MAP_ENUM(GL_INT_VEC3)
         MAP_ENUM(GL_INT_VEC4)
+        MAP_ENUM(GL_INVERT)
+        MAP_ENUM(GL_KEEP)
         MAP_ENUM(GL_LEQUAL)
         MAP_ENUM(GL_LESS)
+        MAP_ENUM(GL_LINE)
         MAP_ENUM(GL_LINEAR)
         MAP_ENUM(GL_LINEAR_MIPMAP_NEAREST)
         MAP_ENUM(GL_LINEAR_MIPMAP_LINEAR)
@@ -540,6 +559,7 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_NEAREST_MIPMAP_NEAREST)
         MAP_ENUM(GL_NEAREST_MIPMAP_LINEAR)
         MAP_ENUM(GL_NEVER)
+        MAP_ENUM(GL_NICEST)
         // MAP_ENUM(GL_NONE)
         MAP_ENUM(GL_NOTEQUAL)
         MAP_ENUM(GL_NUM_COMPRESSED_TEXTURE_FORMATS)
@@ -551,6 +571,7 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_ONE_MINUS_SRC_ALPHA)
         MAP_ENUM(GL_ONE_MINUS_SRC_COLOR)
         MAP_ENUM(GL_PACK_ALIGNMENT)
+        MAP_ENUM(GL_POINT)
         MAP_ENUM(GL_POLYGON_OFFSET_FACTOR)
         MAP_ENUM(GL_POLYGON_OFFSET_UNITS)
         MAP_ENUM(GL_RED_BITS)
@@ -567,8 +588,14 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_RENDERBUFFER_WIDTH)
         MAP_ENUM(GL_RENDERER)
         MAP_ENUM(GL_REPEAT)
+        MAP_ENUM(GL_REPLACE)
         MAP_ENUM(GL_RGB)
+        MAP_ENUM(GL_RGB5_A1)
+        MAP_ENUM(GL_RGB565)
+        MAP_ENUM(GL_RGB8_OES)
         MAP_ENUM(GL_RGBA)
+        MAP_ENUM(GL_RGBA4)
+        MAP_ENUM(GL_RGBA8_OES)
         MAP_ENUM(GL_SAMPLE_COVERAGE_VALUE)
         MAP_ENUM(GL_SAMPLE_COVERAGE_INVERT)
         MAP_ENUM(GL_SAMPLER_2D)
@@ -577,6 +604,7 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_SHADER_SOURCE_LENGTH)
         MAP_ENUM(GL_SHADER_TYPE)
         MAP_ENUM(GL_SHADING_LANGUAGE_VERSION)
+        MAP_ENUM(GL_SHORT)
         MAP_ENUM(GL_SRC_ALPHA)
         MAP_ENUM(GL_SRC_ALPHA_SATURATE)
         MAP_ENUM(GL_SRC_COLOR)
@@ -593,6 +621,9 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_STENCIL_CLEAR_VALUE)
         MAP_ENUM(GL_STENCIL_FAIL)
         MAP_ENUM(GL_STENCIL_FUNC)
+        MAP_ENUM(GL_STENCIL_INDEX1_OES)
+        MAP_ENUM(GL_STENCIL_INDEX4_OES)
+        MAP_ENUM(GL_STENCIL_INDEX8)
         MAP_ENUM(GL_STENCIL_PASS_DEPTH_FAIL)
         MAP_ENUM(GL_STENCIL_REF)
         MAP_ENUM(GL_STENCIL_VALUE_MASK)
@@ -618,6 +649,9 @@ static const char* decodeValue(const GLenum value)
         MAP_ENUM(GL_UNSIGNED_BYTE)
         MAP_ENUM(GL_UNSIGNED_INT)
         MAP_ENUM(GL_UNSIGNED_SHORT)
+        MAP_ENUM(GL_UNSIGNED_SHORT_4_4_4_4)
+        MAP_ENUM(GL_UNSIGNED_SHORT_5_5_5_1)
+        MAP_ENUM(GL_UNSIGNED_SHORT_5_6_5)
         MAP_ENUM(GL_VALIDATE_STATUS)
         MAP_ENUM(GL_VENDOR)
         MAP_ENUM(GL_VERSION)
@@ -672,7 +706,7 @@ static const char* decodeValue(const GLenum value)
         // MAP_ENUM(GL_UNSIGNED_INT)
 
         // GL_OES_texture_float
-        MAP_ENUM(GL_HALF_FLOAT_OES)
+        // MAP_ENUM(GL_HALF_FLOAT_OES)
         // MAP_ENUM(GL_FLOAT)
 
         // GL_OES_get_program_binary
@@ -689,7 +723,7 @@ static const char* decodeValue(const GLenum value)
         // GL_OES_packed_depth_stencil
         MAP_ENUM(GL_DEPTH_STENCIL_OES)
         MAP_ENUM(GL_UNSIGNED_INT_24_8_OES)
-        MAP_ENUM(GL_DEPTH24_STENCIL8_OES)
+        //MAP_ENUM(GL_DEPTH24_STENCIL8_OES)
 
         // GL_SGIS_texture_lod
         MAP_ENUM(GL_TEXTURE_MIN_LOD)
@@ -1422,7 +1456,7 @@ static void OGLES2_glBindTexture(struct OGLES2IFace *Self, GLenum target, GLuint
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target 0%X (%s), texture %d", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), texture %d", context->name, __func__,
         target, decodeValue(target),
         texture);
 
@@ -1981,7 +2015,7 @@ static void OGLES2_glGenerateMipmap(struct OGLES2IFace *Self, GLenum target)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target %u (%s)", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s)", context->name, __func__,
         target, decodeValue(target));
 
     GL_CALL(GenerateMipmap, target)
@@ -2429,8 +2463,9 @@ static void OGLES2_glHint(struct OGLES2IFace *Self, GLenum target, GLenum mode)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target 0x%X, mode 0x%X", context->name, __func__,
-        target, mode);
+    logLine("%s: %s: target 0x%X (%s), mode 0x%X (%s)", context->name, __func__,
+        target, decodeValue(target),
+        mode, decodeValue(mode));
 
     GL_CALL(Hint, target, mode)
 }
@@ -2457,8 +2492,9 @@ static GLboolean OGLES2_glIsEnabled(struct OGLES2IFace *Self, GLenum cap)
 
     GL_CALL_STATUS(IsEnabled, cap)
 
-    logLine("%s: %s: cap 0x%X. Result %d", context->name, __func__,
-        cap, status);
+    logLine("%s: %s: cap 0x%X (%s). Result %d", context->name, __func__,
+        cap, decodeValue(cap),
+        status);
 
     return status;
 }
@@ -2561,8 +2597,10 @@ static void* OGLES2_glMapBufferOES(struct OGLES2IFace *Self, GLenum target, GLen
 
     GL_CALL_STATUS(MapBufferOES, target, access)
 
-    logLine("%s: %s: target 0x%X, access 0x%X. Returned address %p", context->name, __func__,
-        target, access, status);
+    logLine("%s: %s: target 0x%X (%s), access 0x%X (%s). Returned address %p", context->name, __func__,
+        target, decodeValue(target),
+        access, decodeValue(access),
+        status);
 
     checkPointer(context, MapBufferOES, status);
 
@@ -2573,8 +2611,9 @@ static void OGLES2_glPixelStorei(struct OGLES2IFace *Self, GLenum pname, GLint p
 {
     GET_CONTEXT
 
-    logLine("%s: %s: pname 0x%X, param %d", context->name, __func__,
-        pname, param);
+    logLine("%s: %s: pname 0x%X (%s), param %d", context->name, __func__,
+        pname, decodeValue(pname),
+        param);
 
     GL_CALL(PixelStorei, pname, param)
 }
@@ -2583,8 +2622,9 @@ static void OGLES2_glPolygonMode(struct OGLES2IFace *Self, GLenum face, GLenum m
 {
     GET_CONTEXT
 
-    logLine("%s: %s: face 0x%X, mode 0x%X", context->name, __func__,
-        face, mode);
+    logLine("%s: %s: face 0x%X (%s), mode 0x%X (%s)", context->name, __func__,
+        face, decodeValue(face),
+        mode, decodeValue(mode));
 
     GL_CALL(PolygonMode, face, mode)
 }
@@ -2605,16 +2645,18 @@ static void OGLES2_glProgramBinaryOES(struct OGLES2IFace *Self, GLuint program, 
 
     GL_CALL(ProgramBinaryOES, program, binaryFormat, binary, length)
 
-    logLine("%s: %s: program %u, binaryFormat 0x%X, binary %p, length %d", context->name, __func__,
-        program, binaryFormat, binary, length);
+    logLine("%s: %s: program %u, binaryFormat 0x%X (%s), binary %p, length %d", context->name, __func__,
+        program,
+        binaryFormat, decodeValue(binaryFormat),
+        binary, length);
 }
 
 static void OGLES2_glProvokingVertex(struct OGLES2IFace *Self, GLenum provokeMode)
 {
     GET_CONTEXT
 
-    logLine("%s: %s: provokeMode 0x%X", context->name, __func__,
-        provokeMode);
+    logLine("%s: %s: provokeMode 0x%X (%s)", context->name, __func__,
+        provokeMode, decodeValue(provokeMode));
 
     GL_CALL(ProvokingVertex, provokeMode)
 }
@@ -2623,8 +2665,11 @@ static void OGLES2_glReadPixels(struct OGLES2IFace *Self, GLint x, GLint y, GLsi
 {
     GET_CONTEXT
 
-    logLine("%s: %s: x %d, y %d, width %u, height %u, format 0x%X, type 0x%X, pixels %p", context->name, __func__,
-        x, y, width, height, format, type, pixels);
+    logLine("%s: %s: x %d, y %d, width %u, height %u, format 0x%X (%s), type 0x%X (%s), pixels %p", context->name, __func__,
+        x, y, width, height,
+        format, decodeValue(format),
+        type, decodeValue(type),
+        pixels);
 
     GL_CALL(ReadPixels, x, y, width, height, format, type, pixels)
 }
@@ -2642,8 +2687,10 @@ static void OGLES2_glRenderbufferStorage(struct OGLES2IFace *Self, GLenum target
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target 0x%X, internalformat 0x%X, width %u, height %u", context->name, __func__,
-        target, internalformat, width, height);
+    logLine("%s: %s: target 0x%X (%s), internalformat 0x%X (%s), width %u, height %u", context->name, __func__,
+        target, decodeValue(target),
+        internalformat, decodeValue(internalformat),
+        width, height);
 
     GL_CALL(RenderbufferStorage, target, internalformat, width, height)
 }
@@ -2672,8 +2719,10 @@ static void OGLES2_glShaderBinary(struct OGLES2IFace *Self, GLsizei count, const
 {
     GET_CONTEXT
 
-    logLine("%s: %s: count %u, shaders %p, binaryformat 0x%X, binary %p, length %u", context->name, __func__,
-        count, shaders, binaryformat, binary, length);
+    logLine("%s: %s: count %u, shaders %p, binaryformat 0x%X (%s), binary %p, length %u", context->name, __func__,
+        count, shaders,
+        binaryformat, decodeValue(binaryformat),
+        binary, length);
 
     GL_CALL(ShaderBinary, count, shaders, binaryformat, binary, length)
 }
@@ -2723,8 +2772,9 @@ static void OGLES2_glStencilFunc(struct OGLES2IFace *Self, GLenum func, GLint re
 {
     GET_CONTEXT
 
-    logLine("%s: %s: func 0x%X, ref %d, mask %u", context->name, __func__,
-        func, ref, mask);
+    logLine("%s: %s: func 0x%X (%s), ref %d, mask %u", context->name, __func__,
+        func, decodeValue(func),
+        ref, mask);
 
     GL_CALL(StencilFunc, func, ref, mask)
 }
@@ -2733,8 +2783,10 @@ static void OGLES2_glStencilFuncSeparate(struct OGLES2IFace *Self, GLenum face, 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: face 0x%X, func 0x%X, ref %d, mask %u", context->name, __func__,
-        face, func, ref, mask);
+    logLine("%s: %s: face 0x%X (%s), func 0x%X (%s), ref %d, mask %u", context->name, __func__,
+        face, decodeValue(face),
+        func, decodeValue(func),
+        ref, mask);
 
     GL_CALL(StencilFuncSeparate, face, func, ref, mask)
 }
@@ -2753,8 +2805,9 @@ static void OGLES2_glStencilMaskSeparate(struct OGLES2IFace *Self, GLenum face, 
 {
     GET_CONTEXT
 
-    logLine("%s: %s: face 0x%X, mask %u", context->name, __func__,
-        face, mask);
+    logLine("%s: %s: face 0x%X (%s), mask %u", context->name, __func__,
+        face, decodeValue(face),
+        mask);
 
     GL_CALL(StencilMaskSeparate, face, mask)
 }
@@ -2763,8 +2816,10 @@ static void OGLES2_glStencilOp(struct OGLES2IFace *Self, GLenum fail, GLenum zfa
 {
     GET_CONTEXT
 
-    logLine("%s: %s: fail 0x%X, zfail 0x%X, zpass 0x%X", context->name, __func__,
-        fail, zfail, zpass);
+    logLine("%s: %s: fail 0x%X (%s), zfail 0x%X (%s), zpass 0x%X (%s)", context->name, __func__,
+        fail, decodeValue(fail),
+        zfail, decodeValue(zfail),
+        zpass, decodeValue(zpass));
 
     GL_CALL(StencilOp, fail, zfail, zpass)
 }
@@ -2773,8 +2828,11 @@ static void OGLES2_glStencilOpSeparate(struct OGLES2IFace *Self, GLenum face, GL
 {
     GET_CONTEXT
 
-    logLine("%s: %s: face 0x%X, sfail 0x%X, dpfail 0x%X, dppass 0x%X", context->name, __func__,
-        face, sfail, dpfail, dppass);
+    logLine("%s: %s: face 0x%X (%s), sfail 0x%X (%s), dpfail 0x%X (%s), dppass 0x%X (%s)", context->name, __func__,
+        face, decodeValue(face),
+        sfail, decodeValue(sfail),
+        dpfail, decodeValue(dpfail),
+        dppass, decodeValue(dppass));
 
     GL_CALL(StencilOpSeparate, face, sfail, dpfail, dppass)
 }
@@ -2783,8 +2841,14 @@ static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint l
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target 0x%X, level %d, internalformat 0x%X, width %u, height %u, border %d, format 0x%X, type 0x%X, pixels %p", context->name, __func__,
-        target, level, internalformat, width, height, border, format, type, pixels);
+    logLine("%s: %s: target 0x%X (%s), level %d, internalformat 0x%X (%s), width %u, height %u, border %d, format 0x%X (%s), type 0x%X (%s), pixels %p", context->name, __func__,
+        target, decodeValue(target),
+        level,
+        internalformat, decodeValue(internalformat),
+        width, height, border,
+        format, decodeValue(format),
+        type, decodeValue(type),
+        pixels);
 
     GL_CALL(TexImage2D, target,  level, internalformat, width, height, border, format, type, pixels)
 }
@@ -2817,7 +2881,7 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target 0%X (%s), pname 0x%X (%s), param 0x%X (%s)", context->name, __func__,
+    logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), param 0x%X (%s)", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
         param, decodeValue(param));
@@ -2841,8 +2905,12 @@ static void OGLES2_glTexSubImage2D(struct OGLES2IFace *Self, GLenum target, GLin
 {
     GET_CONTEXT
 
-    logLine("%s: %s: target 0x%X, level %d, xoffset %d, yoffset %d, width %u, height %u, format 0x%X, type 0x%X, pixels %p", context->name, __func__,
-        target, level, xoffset, yoffset, width, height, format, type, pixels);
+    logLine("%s: %s: target 0x%X (%s, level %d, xoffset %d, yoffset %d, width %u, height %u, format 0x%X (%s), type 0x%X (%s), pixels %p", context->name, __func__,
+        target, decodeValue(target),
+        level, xoffset, yoffset, width, height,
+        format, decodeValue(format),
+        type, decodeValue(type),
+        pixels);
 
     GL_CALL(TexSubImage2D, target, level, xoffset, yoffset, width, height, format, type, pixels)
 }
@@ -3107,8 +3175,9 @@ static GLboolean OGLES2_glUnmapBufferOES(struct OGLES2IFace *Self, GLenum target
 
     GL_CALL_STATUS(UnmapBufferOES, target)
 
-    logLine("%s: %s: target 0x%X. Return value %d", context->name, __func__,
-        target, status);
+    logLine("%s: %s: target 0x%X (%s). Return value %d", context->name, __func__,
+        target, decodeValue(target),
+        status);
 
     return status;
 }
@@ -3217,8 +3286,10 @@ static void OGLES2_glVertexAttribPointer(struct OGLES2IFace *Self, GLuint index,
 {
     GET_CONTEXT
 
-    logLine("%s: %s: index %u, size %d, type 0x%X, normalized %d, stride %d, pointer %p", context->name, __func__,
-        index, size, type, normalized, stride, pointer);
+    logLine("%s: %s: index %u, size %d, type 0x%X (%s), normalized %d, stride %d, pointer %p", context->name, __func__,
+        index, size,
+        type, decodeValue(type),
+        normalized, stride, pointer);
 
     GL_CALL(VertexAttribPointer, index, size, type, normalized, stride, pointer)
 }
