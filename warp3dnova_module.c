@@ -334,7 +334,7 @@ static const char* decodeBufferUsage(const W3DN_BufferUsage usage)
     return "Unknown buffer usage";
 }
 
-static const char* decodeTextureType(W3DN_TextureType type)
+static const char* decodeTextureType(const W3DN_TextureType type)
 {
     #define MAP_ENUM(x) case x: return #x;
 
@@ -351,7 +351,7 @@ static const char* decodeTextureType(W3DN_TextureType type)
     return "Unknown texture type";
 }
 
-static const char* decodePixelFormat(W3DN_PixelFormat format)
+static const char* decodePixelFormat(const W3DN_PixelFormat format)
 {
     #define MAP_ENUM(x) case x: return #x;
 
@@ -373,7 +373,7 @@ static const char* decodePixelFormat(W3DN_PixelFormat format)
     return "Unknown pixel format";
 }
 
-static const char* decodeElementFormat(W3DN_ElementFormat format)
+static const char* decodeElementFormat(const W3DN_ElementFormat format)
 {
     #define MAP_ENUM(x) case x: return #x;
 
@@ -401,6 +401,40 @@ static const char* decodeElementFormat(W3DN_ElementFormat format)
     #undef MAP_ENUM
 
     return "Unknown element format";
+}
+
+static const char* decodeBufferAttribute(const W3DN_BufferAttribute attribute)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (attribute) {
+        MAP_ENUM(W3DN_BUFFATTR_SIZE)
+        MAP_ENUM(W3DN_BUFFATTR_USAGE)
+        MAP_ENUM(W3DN_BUFFATTR_NUM_ARRAYS)
+        MAP_ENUM(W3DN_BUFFATTR_NUM_BUFFERS)
+        MAP_ENUM(W3DN_BUFFATTR_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown buffer attribute";
+}
+
+static const char* decodeFrameBufferAttribute(const W3DN_FrameBufferAttribute attribute)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (attribute) {
+        MAP_ENUM(W3DN_FBATTR_WIDTH)
+        MAP_ENUM(W3DN_FBATTR_HEIGHT)
+        MAP_ENUM(W3DN_FBATTR_DEPTH_FORMAT)
+        MAP_ENUM(W3DN_FBATTR_STENCIL_FORMAT)
+        MAP_ENUM(W3DN_FBATTR_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown frame buffer attribute";
 }
 
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
@@ -1177,9 +1211,11 @@ static uint64 W3DN_DBOGetAttr(struct W3DN_Context_s *self, W3DN_DataBuffer *data
 
     NOVA_CALL_RESULT(result, DBOGetAttr, dataBuffer, attr)
 
-    logLine("%s: %s: dataBuffer %p, attr %d. Result %llu",
+    logLine("%s: %s: dataBuffer %p, attr %u (%s). Result %llu",
         context->name, __func__,
-        dataBuffer, attr, result);
+        dataBuffer,
+        attr, decodeBufferAttribute(attr),
+        result);
 
     return result;
 }
@@ -1427,9 +1463,11 @@ static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
 
     NOVA_CALL_RESULT(result, FBGetAttr, frameBuffer, attrib)
 
-    logLine("%s: %s: frameBuffer %p, attrib %d. Result %llu",
+    logLine("%s: %s: frameBuffer %p, attrib %u (%s). Result %llu",
         context->name, __func__,
-        frameBuffer, attrib, result);
+        frameBuffer,
+        attrib, decodeFrameBufferAttribute(attrib),
+        result);
 
     return result;
 }
@@ -2742,8 +2780,10 @@ static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *ve
 
     NOVA_CALL_RESULT(result, VBOGetAttr, vertexBuffer, attr)
 
-    logLine("%s: %s: vertexBuffer %p, attr %d. Result %llu", context->name, __func__,
-        vertexBuffer, attr, result);
+    logLine("%s: %s: vertexBuffer %p, attr %u (%s). Result %llu", context->name, __func__,
+        vertexBuffer,
+        attr, decodeBufferAttribute(attr),
+        result);
 
     return result;
 }
