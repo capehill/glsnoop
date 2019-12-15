@@ -483,6 +483,38 @@ static const char* decodeBlendMode(const W3DN_BlendMode mode)
     return "Unknown blend mode";
 }
 
+static const char* decodeFaceSelect(const W3DN_FaceSelect face)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (face) {
+        MAP_ENUM(W3DN_FRONT)
+        MAP_ENUM(W3DN_BACK)
+        MAP_ENUM(W3DN_FRONT_AND_BACK)
+        MAP_ENUM(W3DN_FACESELECT_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown face select";
+}
+
+static const char* decodePolygonMode(const W3DN_PolygonMode mode)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (mode) {
+        MAP_ENUM(W3DN_POINT)
+        MAP_ENUM(W3DN_LINE)
+        MAP_ENUM(W3DN_FILL)
+        MAP_ENUM(W3DN_POLYGONMODE_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown polygon mode";
+}
+
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
 {
     if (pointer) {
@@ -1724,11 +1756,11 @@ static W3DN_PolygonMode W3DN_GetPolygonMode(struct W3DN_Context_s *self, W3DN_Re
 
     NOVA_CALL_RESULT(mode, GetPolygonMode, renderState, face)
 
-    logLine("%s: %s: renderState %p, face %d. Polygon mode %d",
+    logLine("%s: %s: renderState %p, face %u (%s). Polygon mode %u (%s)",
         context->name, __func__,
         renderState,
-        face,
-        mode);
+        face, decodeFaceSelect(face),
+        mode, decodePolygonMode(mode));
 
     return mode;
 }
@@ -1847,10 +1879,10 @@ static W3DN_ErrorCode W3DN_GetStencilFunc(struct W3DN_Context_s *self, W3DN_Rend
 
     NOVA_CALL_RESULT(result, GetStencilFunc, renderState, face, func, ref, mask);
 
-    logLine("%s: %s: renderState %p, face %d, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), func %d, ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
-        face,
+        face, decodeFaceSelect(face),
         func ? *func : 0,
         ref ? *ref : 0,
         mask ? *mask : 0,
@@ -1869,10 +1901,10 @@ static W3DN_ErrorCode W3DN_GetStencilOp(struct W3DN_Context_s *self, W3DN_Render
 
     NOVA_CALL_RESULT(result, GetStencilOp, renderState, face, sFail, dpFail, dpPass);
 
-    logLine("%s: %s: renderState %p, face %d, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
         context->name, __func__,
         renderState,
-        face,
+        face, decodeFaceSelect(face),
         *sFail,
         *dpFail,
         *dpPass,
@@ -1891,10 +1923,10 @@ static uint32 W3DN_GetStencilWriteMask(struct W3DN_Context_s *self, W3DN_RenderS
 
     NOVA_CALL_RESULT(mask, GetStencilWriteMask, renderState, face, errCode)
 
-    logLine("%s: %s: renderState %p, face %d, errCode %d (%s). Stencil write mask 0x%lx",
+    logLine("%s: %s: renderState %p, face %u (%s), errCode %d (%s). Stencil write mask 0x%lx",
         context->name, __func__,
         renderState,
-        face,
+        face, decodeFaceSelect(face),
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
         mask);
@@ -2230,11 +2262,11 @@ static W3DN_ErrorCode W3DN_SetPolygonMode(struct W3DN_Context_s *self, W3DN_Rend
 
     NOVA_CALL_RESULT(result, SetPolygonMode, renderState, face, mode)
 
-    logLine("%s: %s: renderState %p, face %d, mode %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), mode %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
-        face,
-        mode,
+        face, decodeFaceSelect(face),
+        mode, decodePolygonMode(mode),
         result,
         mapNovaError(result));
 
@@ -2380,10 +2412,10 @@ static W3DN_ErrorCode W3DN_SetStencilFuncSeparate(struct W3DN_Context_s *self, W
 
     NOVA_CALL_RESULT(result, SetStencilFuncSeparate, renderState, face, func, ref, mask)
 
-    logLine("%s: %s: renderState %p, face %d, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), func %d, ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
-        face,
+        face, decodeFaceSelect(face),
         func,
         ref,
         mask,
@@ -2423,10 +2455,10 @@ static W3DN_ErrorCode W3DN_SetStencilOpSeparate(struct W3DN_Context_s *self, W3D
 
     NOVA_CALL_RESULT(result, SetStencilOpSeparate, renderState, face, sFail, dpFail, dpPass)
 
-    logLine("%s: %s: renderState %p, face %d, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
         context->name, __func__,
         renderState,
-        face,
+        face, decodeFaceSelect(face),
         sFail,
         dpFail,
         dpPass,
@@ -2463,10 +2495,10 @@ static W3DN_ErrorCode W3DN_SetStencilWriteMaskSeparate(struct W3DN_Context_s *se
 
     NOVA_CALL_RESULT(result, SetStencilWriteMaskSeparate, renderState, face, mask)
 
-    logLine("%s: %s: renderState %p, face %d, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
-        face,
+        face, decodeFaceSelect(face),
         mask,
         result,
         mapNovaError(result));
