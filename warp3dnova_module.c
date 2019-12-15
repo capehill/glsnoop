@@ -334,6 +334,75 @@ static const char* decodeBufferUsage(const W3DN_BufferUsage usage)
     return "Unknown buffer usage";
 }
 
+static const char* decodeTextureType(W3DN_TextureType type)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (type) {
+        MAP_ENUM(W3DN_TEXTURE_1D)
+        MAP_ENUM(W3DN_TEXTURE_2D)
+        MAP_ENUM(W3DN_TEXTURE_3D)
+        MAP_ENUM(W3DN_TEXTURE_CUBEMAP)
+        MAP_ENUM(W3DN_TEXTURE_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown texture type";
+}
+
+static const char* decodePixelFormat(W3DN_PixelFormat format)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (format) {
+        MAP_ENUM(W3DNPF_DEPTH)
+        MAP_ENUM(W3DNPF_DEPTH_STENCIL)
+        MAP_ENUM(W3DNPF_RED)
+        MAP_ENUM(W3DNPF_RG)
+        MAP_ENUM(W3DNPF_RGB)
+        MAP_ENUM(W3DNPF_RGBA)
+        MAP_ENUM(W3DNPF_SRGB8)
+        MAP_ENUM(W3DNPF_SRGB8_A8)
+        MAP_ENUM(W3DNPF_END)
+        MAP_ENUM(W3DNPF_NONE)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown pixel format";
+}
+
+static const char* decodeElementFormat(W3DN_ElementFormat format)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (format) {
+        MAP_ENUM(W3DNEF_UINT8)
+        MAP_ENUM(W3DNEF_SINT8)
+        MAP_ENUM(W3DNEF_UINT16)
+        MAP_ENUM(W3DNEF_SINT16)
+        MAP_ENUM(W3DNEF_UINT32)
+        MAP_ENUM(W3DNEF_SINT32)
+        MAP_ENUM(W3DNEF_FLOAT)
+        MAP_ENUM(W3DNEF_DOUBLE)
+        MAP_ENUM(W3DNEF_UINT8_3_3_2)
+        MAP_ENUM(W3DNEF_UINT8_2_3_3_REV)
+        MAP_ENUM(W3DNEF_UINT16_5_6_5)
+        MAP_ENUM(W3DNEF_UINT16_4_4_4_4)
+        MAP_ENUM(W3DNEF_UINT16_5_5_5_1)
+        MAP_ENUM(W3DNEF_UINT16_1_5_5_5_REV)
+        MAP_ENUM(W3DNEF_UINT32_10_10_10_2)
+        MAP_ENUM(W3DNEF_UINT32_2_10_10_10_REV)
+        MAP_ENUM(W3DNEF_END)
+        MAP_ENUM(W3DNEF_NONE)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown element format";
+}
+
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
 {
     if (pointer) {
@@ -1060,14 +1129,14 @@ static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorC
     NOVA_CALL_RESULT(texture, CreateTexture, errCode, texType, pixelFormat, elementFormat,
         width, height, depth, mipmapped, usage)
 
-    logLine("%s: %s: errCode %d (%s), texType %d, pixelFormat %d, elementFormat %d, width %lu, height %lu, depth %lu, "
+    logLine("%s: %s: errCode %d (%s), texType %u (%s), pixelFormat %u (%s), elementFormat %u (%s), width %lu, height %lu, depth %lu, "
         "mipmapped %d, usage %u (%s). Texture address %p",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
-        texType,
-        pixelFormat,
-        elementFormat,
+        texType, decodeTextureType(texType),
+        pixelFormat, decodePixelFormat(pixelFormat),
+        elementFormat, decodeElementFormat(elementFormat),
         width,
         height,
         depth,
@@ -2656,9 +2725,11 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     NOVA_CALL_RESULT(result, VBOGetArray, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count)
 
-    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
+    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %u (%s), normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
-        buffer, arrayIdx, *elementType, *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
+        buffer, arrayIdx,
+        *elementType, decodeElementFormat(*elementType),
+        *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
 
     checkSuccess(context, VBOGetArray, result);
 
@@ -2701,9 +2772,11 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     NOVA_CALL_RESULT(result, VBOSetArray, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count)
 
-    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %d, normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
+    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %u (%s), normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
-        buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count, result, mapNovaError(result));
+        buffer, arrayIdx,
+        elementType, decodeElementFormat(elementType),
+        normalized, numElements, stride, offset, count, result, mapNovaError(result));
 
     checkSuccess(context, VBOSetArray, result);
 
