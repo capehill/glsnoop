@@ -483,6 +483,21 @@ static const char* decodeBlendMode(const W3DN_BlendMode mode)
     return "Unknown blend mode";
 }
 
+static const char* decodeFace(const W3DN_Face face)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (face) {
+        MAP_ENUM(W3DN_FACE_CCW)
+        MAP_ENUM(W3DN_FACE_CW)
+        MAP_ENUM(W3DN_FACE_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown face";
+}
+
 static const char* decodeFaceSelect(const W3DN_FaceSelect face)
 {
     #define MAP_ENUM(x) case x: return #x;
@@ -1760,10 +1775,10 @@ static W3DN_Face W3DN_GetFrontFace(struct W3DN_Context_s *self, W3DN_RenderState
 
     NOVA_CALL_RESULT(face, GetFrontFace, renderState)
 
-    logLine("%s: %s: renderState %p. Front face %d",
+    logLine("%s: %s: renderState %p. Front face %u (%s)",
         context->name, __func__,
         renderState,
-        face);
+        face, decodeFace(face));
 
     return face;
 }
@@ -2277,10 +2292,10 @@ static W3DN_ErrorCode W3DN_SetFrontFace(struct W3DN_Context_s *self, W3DN_Render
 
     NOVA_CALL_RESULT(result, SetFrontFace, renderState, face)
 
-    logLine("%s: %s: renderState %p, face %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
-        face,
+        face, decodeFace(face),
         result,
         mapNovaError(result));
 
