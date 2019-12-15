@@ -515,6 +515,55 @@ static const char* decodePolygonMode(const W3DN_PolygonMode mode)
     return "Unknown polygon mode";
 }
 
+static const char* decodeProvokingVertexMode(const W3DN_ProvokingVertexMode mode)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (mode) {
+        MAP_ENUM(W3DN_FIRST_VERTEX)
+        MAP_ENUM(W3DN_LAST_VERTEX)
+        MAP_ENUM(W3DN_PROVOKINGVERTEXMODE_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown provoking vertex mode";
+}
+
+static const char* decodeState(const W3DN_State state)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (state) {        
+        MAP_ENUM(W3DN_DISABLE)
+        MAP_ENUM(W3DN_ENABLE)
+        MAP_ENUM(W3DN_STATE_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown state";
+}
+
+static const char* decodeStateFlag(const W3DN_StateFlag flag)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (flag) {
+        MAP_ENUM(W3DN_DEPTHTEST)
+        MAP_ENUM(W3DN_DEPTHWRITE)
+        MAP_ENUM(W3DN_STENCILTEST)
+        MAP_ENUM(W3DN_CULLFRONT)
+        MAP_ENUM(W3DN_CULLBACK)
+        MAP_ENUM(W3DN_BLEND)
+        MAP_ENUM(W3DN_STATEFLAG_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown state flag";
+}
+
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
 {
     if (pointer) {
@@ -1792,10 +1841,10 @@ static W3DN_ProvokingVertexMode W3DN_GetProvokingVertex(struct W3DN_Context_s *s
 
     NOVA_CALL_RESULT(mode, GetProvokingVertex, renderState)
 
-    logLine("%s: %s: renderState %p. Vertex mode %d",
+    logLine("%s: %s: renderState %p. Vertex mode %u (%s)",
         context->name, __func__,
         renderState,
-        mode);
+        mode, decodeProvokingVertexMode(mode));
 
     return mode;
 }
@@ -1865,9 +1914,11 @@ static W3DN_State W3DN_GetState(struct W3DN_Context_s *self, W3DN_RenderState *r
 
     NOVA_CALL_RESULT(state, GetState, renderState, stateFlag)
 
-    logLine("%s: %s: renderState %p, stateFlag %d. State %d",
+    logLine("%s: %s: renderState %p, stateFlag %u (%s). State %u (%s)",
         context->name, __func__,
-        renderState, stateFlag, state);
+        renderState,
+        stateFlag, decodeStateFlag(stateFlag),
+        state, decodeState(state));
 
     return state;
 }
@@ -2301,10 +2352,10 @@ static W3DN_ErrorCode W3DN_SetProvokingVertex(struct W3DN_Context_s *self, W3DN_
 
     NOVA_CALL_RESULT(result, SetProvokingVertex, renderState, mode)
 
-    logLine("%s: %s: renderState %p, mode %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, mode %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
-        mode,
+        mode, decodeProvokingVertexMode(mode),
         result,
         mapNovaError(result));
 
@@ -2374,9 +2425,11 @@ static W3DN_ErrorCode W3DN_SetState(struct W3DN_Context_s *self, W3DN_RenderStat
 
     NOVA_CALL_RESULT(result, SetState, renderState, stateFlag, value)
 
-    logLine("%s: %s: renderState %p, stateFlag %d, value %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, stateFlag %u (%s), value %u (%s). Result %d (%s)",
         context->name, __func__,
-        renderState, stateFlag, value,
+        renderState,
+        stateFlag, decodeStateFlag(stateFlag),
+        value, decodeState(value),
         result, mapNovaError(result));
 
     checkSuccess(context, SetState, result);
