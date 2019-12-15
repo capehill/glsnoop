@@ -579,6 +579,48 @@ static const char* decodeStateFlag(const W3DN_StateFlag flag)
     return "Unknown state flag";
 }
 
+static const char* decodeCompareFunc(const W3DN_CompareFunc func)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (func) {
+        MAP_ENUM(W3DN_NEVER)
+        MAP_ENUM(W3DN_LESS)
+        MAP_ENUM(W3DN_GEQUAL)
+        MAP_ENUM(W3DN_LEQUAL)
+        MAP_ENUM(W3DN_GREATER)
+        MAP_ENUM(W3DN_NOTEQUAL)
+        MAP_ENUM(W3DN_EQUAL)
+        MAP_ENUM(W3DN_ALWAYS)
+        MAP_ENUM(W3DN_COMPAREFUNC_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown compare func";
+}
+
+static const char* decodeStencilOp(const W3DN_StencilOp op)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (op) {
+        MAP_ENUM(W3DN_ST_KEEP)
+        MAP_ENUM(W3DN_ST_ZERO)
+        MAP_ENUM(W3DN_ST_REPLACE)
+        MAP_ENUM(W3DN_ST_INCR)
+        MAP_ENUM(W3DN_ST_DECR)
+        MAP_ENUM(W3DN_ST_INVERT)
+        MAP_ENUM(W3DN_ST_INCR_WRAP)
+        MAP_ENUM(W3DN_ST_DECR_WRAP)
+        MAP_ENUM(W3DN_STENCILOP_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown stencil op";
+}
+
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
 {
     if (pointer) {
@@ -1761,10 +1803,10 @@ static W3DN_CompareFunc W3DN_GetDepthCompareFunc(struct W3DN_Context_s *self, W3
 
     NOVA_CALL_RESULT(function, GetDepthCompareFunc, renderState)
 
-    logLine("%s: %s: renderState %p. Compare function %d",
+    logLine("%s: %s: renderState %p. Compare function %u (%s)",
         context->name, __func__,
         renderState,
-        function);
+        function, decodeCompareFunc(function));
 
     return function;
 }
@@ -1945,11 +1987,12 @@ static W3DN_ErrorCode W3DN_GetStencilFunc(struct W3DN_Context_s *self, W3DN_Rend
 
     NOVA_CALL_RESULT(result, GetStencilFunc, renderState, face, func, ref, mask);
 
-    logLine("%s: %s: renderState %p, face %u (%s), func %d, ref %lu, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), func %u (%s), ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
         face, decodeFaceSelect(face),
         func ? *func : 0,
+        func ? decodeCompareFunc(*func) : "",
         ref ? *ref : 0,
         mask ? *mask : 0,
         result,
@@ -1967,13 +2010,13 @@ static W3DN_ErrorCode W3DN_GetStencilOp(struct W3DN_Context_s *self, W3DN_Render
 
     NOVA_CALL_RESULT(result, GetStencilOp, renderState, face, sFail, dpFail, dpPass);
 
-    logLine("%s: %s: renderState %p, face %u (%s), sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), sFail %u (%s), dpFail %u (%s), dpPass %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
         face, decodeFaceSelect(face),
-        *sFail,
-        *dpFail,
-        *dpPass,
+        *sFail, decodeStencilOp(*sFail),
+        *dpFail, decodeStencilOp(*dpFail),
+        *dpPass, decodeStencilOp(*dpPass),
         result,
         mapNovaError(result));
 
@@ -2274,10 +2317,10 @@ static W3DN_ErrorCode W3DN_SetDepthCompareFunc(struct W3DN_Context_s *self, W3DN
 
     NOVA_CALL_RESULT(result, SetDepthCompareFunc, renderState, func)
 
-    logLine("%s: %s: renderState %p, func %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, func %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
-        func,
+        func, decodeCompareFunc(func),
         result,
         mapNovaError(result));
 
@@ -2459,10 +2502,10 @@ static W3DN_ErrorCode W3DN_SetStencilFunc(struct W3DN_Context_s *self, W3DN_Rend
 
     NOVA_CALL_RESULT(result, SetStencilFunc, renderState, func, ref, mask)
 
-    logLine("%s: %s: renderState %p, func %d, ref %lu, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, func %u (%s), ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
-        func,
+        func, decodeCompareFunc(func),
         ref,
         mask,
         result,
@@ -2502,12 +2545,12 @@ static W3DN_ErrorCode W3DN_SetStencilOp(struct W3DN_Context_s *self, W3DN_Render
 
     NOVA_CALL_RESULT(result, SetStencilOp, renderState, sFail, dpFail, dpPass)
 
-    logLine("%s: %s: renderState %p, sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, sFail %u (%s), dpFail %u (%s), dpPass %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
-        sFail,
-        dpFail,
-        dpPass,
+        sFail, decodeStencilOp(sFail),
+        dpFail, decodeStencilOp(dpFail),
+        dpPass, decodeStencilOp(dpPass),
         result,
         mapNovaError(result));
 
@@ -2523,13 +2566,13 @@ static W3DN_ErrorCode W3DN_SetStencilOpSeparate(struct W3DN_Context_s *self, W3D
 
     NOVA_CALL_RESULT(result, SetStencilOpSeparate, renderState, face, sFail, dpFail, dpPass)
 
-    logLine("%s: %s: renderState %p, face %u (%s), sFail %d, dpFail %d, dpPass %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), sFail %u (%s), dpFail %u (%s), dpPass %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
         face, decodeFaceSelect(face),
-        sFail,
-        dpFail,
-        dpPass,
+        sFail, decodeStencilOp(sFail),
+        dpFail, decodeStencilOp(dpFail),
+        dpPass, decodeStencilOp(dpPass),
         result,
         mapNovaError(result));
 
