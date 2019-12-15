@@ -621,6 +621,105 @@ static const char* decodeStencilOp(const W3DN_StencilOp op)
     return "Unknown stencil op";
 }
 
+static const char* decodePrimitive(const W3DN_Primitive primitive)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (primitive) {
+        MAP_ENUM(W3DN_PRIM_TRIANGLES)
+        MAP_ENUM(W3DN_PRIM_TRIFAN)
+        MAP_ENUM(W3DN_PRIM_TRISTRIP)
+        MAP_ENUM(W3DN_PRIM_POINTS)
+        MAP_ENUM(W3DN_PRIM_LINES)
+        MAP_ENUM(W3DN_PRIM_LINELOOP)
+        MAP_ENUM(W3DN_PRIM_LINESTRIP)
+        MAP_ENUM(W3DN_PRIM_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown primitive";
+}
+
+static const char* decodeCapQuery(const W3DN_CapQuery query)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (query) {
+        MAP_ENUM(W3DN_Q_MAXTEXUNITS)
+        MAP_ENUM(W3DN_Q_MAXTEXWIDTH)
+        MAP_ENUM(W3DN_Q_MAXTEXHEIGHT)
+        MAP_ENUM(W3DN_Q_ANISOTROPICFILTER)
+        MAP_ENUM(W3DN_Q_MAXANISOTROPY)
+        MAP_ENUM(W3DN_Q_RENDERTOTEXTURE)
+        MAP_ENUM(W3DN_Q_BITMAPASTEXTURE)
+        MAP_ENUM(W3DN_Q_DEPTHTEXTURE)
+        MAP_ENUM(W3DN_Q_TEXTURE_1D)
+        MAP_ENUM(W3DN_Q_TEXTURE_3D)
+        MAP_ENUM(W3DN_Q_TEXTURE_CUBEMAP)
+        MAP_ENUM(W3DN_Q_MAXCOLOURBUFFERS)
+        MAP_ENUM(W3DN_Q_MAXRENDERWIDTH)
+        MAP_ENUM(W3DN_Q_MAXRENDERHEIGHT)
+        MAP_ENUM(W3DN_Q_MAXVERTEXATTRIBS)
+        MAP_ENUM(W3DN_Q_MIPMAPPING)
+        MAP_ENUM(W3DN_Q_MIPMAPGENERATION)
+        MAP_ENUM(W3DN_Q_MAXTEXDEPTH)
+        MAP_ENUM(W3DN_Q_NPOT_MIPMAPPING)
+        MAP_ENUM(W3DN_Q_STENCIL)
+        MAP_ENUM(W3DN_Q_VERTEX_TEXTUREFETCH)
+        MAP_ENUM(W3DN_Q_MAXVARYINGVECTORS)
+        MAP_ENUM(W3DN_Q_MAXTEXCUBEMAPSIZE)
+        MAP_ENUM(W3DN_Q_MAXLINEWIDTH)
+        MAP_ENUM(W3DN_Q_MAXPOINTSIZE)
+        MAP_ENUM(W3DN_Q_POLYGONOFFSET)
+        MAP_ENUM(W3DN_Q_POLYGONMODE)
+        MAP_ENUM(W3DN_Q_FLATSHADE)
+        MAP_ENUM(W3DN_Q_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown cap query";
+}
+
+static const char* decodeShaderObjectType(const W3DN_ShaderObjectType type)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (type) {        
+        MAP_ENUM(W3DNSOT_INPUT)
+        MAP_ENUM(W3DNSOT_OUTPUT)
+        MAP_ENUM(W3DNSOT_IMAGE)
+        MAP_ENUM(W3DNSOT_UNIFORM)
+        MAP_ENUM(W3DNSOT_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown shader object type";
+}
+
+static const char* decodeTextureProperty(const W3DN_TextureProperty property)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (property) {
+        MAP_ENUM(W3DN_TP_TEXTURETYPE)
+        MAP_ENUM(W3DN_TP_PIXELFORMAT)
+        MAP_ENUM(W3DN_TP_ELEMENTFORMAT)
+        MAP_ENUM(W3DN_TP_WIDTH)
+        MAP_ENUM(W3DN_TP_HEIGHT)
+        MAP_ENUM(W3DN_TP_DEPTH)
+        MAP_ENUM(W3DN_TP_MIPMAPPED)
+        MAP_ENUM(W3DN_TP_USAGE)
+        MAP_ENUM(W3DN_TP_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown texture property";
+}
+
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
 {
     if (pointer) {
@@ -1597,8 +1696,10 @@ static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 
     NOVA_CALL_RESULT(result, DrawArrays, renderState, primitive, base, count)
 
-    logLine("%s: %s: renderState %p, primitive %d, base %lu, count %lu. Result %d (%s)", context->name, __func__,
-        renderState, primitive, base, count, result, mapNovaError(result));
+    logLine("%s: %s: renderState %p, primitive %u (%s), base %lu, count %lu. Result %d (%s)", context->name, __func__,
+        renderState,
+        primitive, decodePrimitive(primitive),
+        base, count, result, mapNovaError(result));
 
     countPrimitive(&context->counter, primitive, count);
     checkSuccess(context, DrawArrays, result);
@@ -1614,9 +1715,11 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 
     NOVA_CALL_RESULT(result, DrawElements, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx)
 
-    logLine("%s: %s: renderState %p, primitive %d, baseVertex %lu, count %lu, indexBuffer %p, arrayIdx %lu. Result %d (%s)",
+    logLine("%s: %s: renderState %p, primitive %u (%s), baseVertex %lu, count %lu, indexBuffer %p, arrayIdx %lu. Result %d (%s)",
         context->name, __func__,
-        renderState, primitive, baseVertex, count, indexBuffer, arrayIdx, result, mapNovaError(result));
+        renderState,
+        primitive, decodePrimitive(primitive),
+        baseVertex, count, indexBuffer, arrayIdx, result, mapNovaError(result));
 
     countPrimitive(&context->counter, primitive, count);
     checkSuccess(context, DrawElements, result);
@@ -2144,9 +2247,9 @@ static uint32 W3DN_Query(struct W3DN_Context_s *self, W3DN_CapQuery query)
 
     NOVA_CALL_RESULT(result, Query, query)
 
-    logLine("%s: %s: query %d. Result %lu",
+    logLine("%s: %s: query %u (%s). Result %lu",
         context->name, __func__,
-        query,
+        query, decodeCapQuery(query),
         result);
 
     return result;
@@ -2523,11 +2626,11 @@ static W3DN_ErrorCode W3DN_SetStencilFuncSeparate(struct W3DN_Context_s *self, W
 
     NOVA_CALL_RESULT(result, SetStencilFuncSeparate, renderState, face, func, ref, mask)
 
-    logLine("%s: %s: renderState %p, face %u (%s), func %d, ref %lu, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), func %u (%s), ref %lu, mask 0x%lx. Result %d (%s)",
         context->name, __func__,
         renderState,
         face, decodeFaceSelect(face),
-        func,
+        func, decodeCompareFunc(func),
         ref,
         mask,
         result,
@@ -2650,12 +2753,12 @@ static uint32 W3DN_ShaderGetCount(struct W3DN_Context_s *self, W3DN_ErrorCode *e
 
     NOVA_CALL_RESULT(count, ShaderGetCount, errCode, shader, objectType)
 
-    logLine("%s: %s: errCode %d (%s), shader %p, objectType %d. Shader count %lu",
+    logLine("%s: %s: errCode %d (%s), shader %p, objectType %u (%s). Shader count %lu",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
         shader,
-        objectType,
+        objectType, decodeShaderObjectType(objectType),
         count);
 
     checkSuccess(context, ShaderGetCount, mapNovaErrorPointerToCode(errCode));
@@ -2670,10 +2773,10 @@ static W3DN_ErrorCode W3DN_ShaderGetObjectInfo(struct W3DN_Context_s *self, W3DN
 
     NOVA_CALL_RESULT(result, ShaderGetObjectInfo, shader, objectType, index, tags)
 
-    logLine("%s: %s: shader %p, objectType %d, index %lu, tags %p. Result %d (%s)",
+    logLine("%s: %s: shader %p, objectType %u (%s), index %lu, tags %p. Result %d (%s)",
         context->name, __func__,
         shader,
-        objectType,
+        objectType, decodeShaderObjectType(objectType),
         index,
         tags,
         result,
@@ -2691,12 +2794,12 @@ static uint32 W3DN_ShaderGetOffset(struct W3DN_Context_s *self, W3DN_ErrorCode *
 
     NOVA_CALL_RESULT(offset, ShaderGetOffset, errCode, shader, objectType, name)
 
-    logLine("%s: %s: errCode %d (%s), shader %p, objectType %d, name '%s'. Offset %lu",
+    logLine("%s: %s: errCode %d (%s), shader %p, objectType %u (%s), name '%s'. Offset %lu",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
         shader,
-        objectType,
+        objectType, decodeShaderObjectType(objectType),
         name,
         offset);
 
@@ -2822,10 +2925,10 @@ static W3DN_ErrorCode W3DN_TexGetProperty(struct W3DN_Context_s *self, W3DN_Text
 
     NOVA_CALL_RESULT(result, TexGetProperty, texture, texProp, buffer)
 
-    logLine("%s: %s: texture %p, texProp %d, buffer %p. Result %d (%s)",
+    logLine("%s: %s: texture %p, texProp %u (%s), buffer %p. Result %d (%s)",
         context->name, __func__,
         texture,
-        texProp,
+        texProp, decodeTextureProperty(texProp),
         buffer,
         result,
         mapNovaError(result));
