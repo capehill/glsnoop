@@ -296,6 +296,44 @@ static const char* mapNovaError(const W3DN_ErrorCode code)
     return "Unknown error";
 }
 
+static const char* decodeShaderType(const W3DN_ShaderType type)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (type) {
+        MAP_ENUM(W3DNST_VERTEX)
+        MAP_ENUM(W3DNST_FRAGMENT)
+        MAP_ENUM(W3DNST_MAX)
+        MAP_ENUM(W3DNST_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown shader type";
+}
+
+static const char* decodeBufferUsage(const W3DN_BufferUsage usage)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (usage) {
+        MAP_ENUM(W3DN_STATIC_DRAW)
+        MAP_ENUM(W3DN_STATIC_READ)
+        MAP_ENUM(W3DN_STATIC_COPY)
+        MAP_ENUM(W3DN_DYNAMIC_DRAW)
+        MAP_ENUM(W3DN_DYNAMIC_READ)
+        MAP_ENUM(W3DN_DYNAMIC_COPY)
+        MAP_ENUM(W3DN_STREAM_DRAW)
+        MAP_ENUM(W3DN_STREAM_READ)
+        MAP_ENUM(W3DN_STREAM_COPY)
+        MAP_ENUM(W3DN_BUFFERUSAGE_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown buffer usage";
+}
+
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
 {
     if (pointer) {
@@ -817,9 +855,11 @@ static W3DN_ErrorCode W3DN_BindShaderDataBuffer(struct W3DN_Context_s *self, W3D
 
     NOVA_CALL_RESULT(result, BindShaderDataBuffer, renderState, shaderType, buffer, bufferIdx)
 
-    logLine("%s: %s: renderState %p, shaderType %d, buffer %p, bufferIdx %lu. Result %d (%s)",
+    logLine("%s: %s: renderState %p, shaderType %u (%s), buffer %p, bufferIdx %lu. Result %d (%s)",
         context->name, __func__,
-        renderState, shaderType, buffer, bufferIdx, result, mapNovaError(result));
+        renderState,
+        shaderType, decodeShaderType(shaderType),
+        buffer, bufferIdx, result, mapNovaError(result));
 
     checkSuccess(context, BindShaderDataBuffer, result);
 
@@ -863,6 +903,12 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
 {
     W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
+#if 0
+    const size_t items = bufferLock->size / 4;
+    for (size_t i = 0; i < items; i++) {
+        logLine("[%u] = 0x%lX", i, bufferLock->buffer[i]);
+    }
+#endif
     NOVA_CALL_RESULT(result, BufferUnlock, bufferLock, writeOffset, writeSize)
 
     logLine("%s: %s: bufferLock %p, writeOffset %llu, writeSize %llu. Result %d (%s)", context->name, __func__,
@@ -916,12 +962,12 @@ static W3DN_DataBuffer* W3DN_CreateDataBufferObject(struct W3DN_Context_s *self,
 
     NOVA_CALL_RESULT(buffer, CreateDataBufferObject, errCode, size, usage, maxBuffers, tags)
 
-    logLine("%s: %s: errCode %d (%s), size %llu, usage %d, maxBuffers %lu, tags %p. Data buffer object address %p",
+    logLine("%s: %s: errCode %d (%s), size %llu, usage %u (%s), maxBuffers %lu, tags %p. Data buffer object address %p",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
         size,
-        usage,
+        usage, decodeBufferUsage(usage),
         maxBuffers,
         tags,
         buffer);
@@ -1015,7 +1061,7 @@ static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorC
         width, height, depth, mipmapped, usage)
 
     logLine("%s: %s: errCode %d (%s), texType %d, pixelFormat %d, elementFormat %d, width %lu, height %lu, depth %lu, "
-        "mipmapped %d, usage %d. Texture address %p",
+        "mipmapped %d, usage %u (%s). Texture address %p",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
@@ -1026,7 +1072,7 @@ static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorC
         height,
         depth,
         mipmapped,
-        usage,
+        usage, decodeBufferUsage(usage),
         texture);
 
     checkPointer(context, CreateTexture, texture);
@@ -1042,9 +1088,11 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
     NOVA_CALL_RESULT(result, CreateVertexBufferObject, errCode, size, usage, maxArrays, tags)
 
-    logLine("%s: %s: size %llu, usage %d, maxArrays %lu, tags %p. Buffer address %p, errCode %d (%s)",
+    logLine("%s: %s: size %llu, usage %u (%s), maxArrays %lu, tags %p. Buffer address %p, errCode %d (%s)",
         context->name, __func__,
-        size, usage, maxArrays, tags, result,
+        size,
+        usage, decodeBufferUsage(usage),
+        maxArrays, tags, result,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode));
 
@@ -1596,10 +1644,10 @@ static W3DN_ErrorCode W3DN_GetShaderDataBuffer(struct W3DN_Context_s *self, W3DN
 
     NOVA_CALL_RESULT(result, GetShaderDataBuffer, renderState, shaderType, buffer, bufferIdx)
 
-    logLine("%s: %s: renderState %p, shaderType %d, buffer %p, bufferIdx %lu. Result %d (%s)",
+    logLine("%s: %s: renderState %p, shaderType %u (%s), buffer %p, bufferIdx %lu. Result %d (%s)",
         context->name, __func__,
         renderState,
-        shaderType,
+        shaderType, decodeShaderType(shaderType),
         *buffer,
         *bufferIdx,
         result,
@@ -2383,10 +2431,10 @@ static W3DN_ShaderType W3DN_ShaderGetType(struct W3DN_Context_s *self, W3DN_Shad
 
     NOVA_CALL_RESULT(type, ShaderGetType, shader)
 
-    logLine("%s: %s: shader %p. Type %d",
+    logLine("%s: %s: shader %p. Type %u (%s)",
         context->name, __func__,
         shader,
-        type);
+        type, decodeShaderType(type));
 
     return type;
 }
@@ -2398,10 +2446,10 @@ static W3DN_Shader* W3DN_ShaderPipelineGetShader(struct W3DN_Context_s *self, W3
 
     NOVA_CALL_RESULT(shader, ShaderPipelineGetShader, shaderPipeline, shaderType)
 
-    logLine("%s: %s: shaderPipeline %p, shaderType %d. Shader %p",
+    logLine("%s: %s: shaderPipeline %p, shaderType %u (%s). Shader %p",
         context->name, __func__,
         shaderPipeline,
-        shaderType,
+        shaderType, decodeShaderType(shaderType),
         shader);
 
     checkPointer(context, ShaderPipelineGetShader, shader);
