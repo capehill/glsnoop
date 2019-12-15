@@ -437,6 +437,52 @@ static const char* decodeFrameBufferAttribute(const W3DN_FrameBufferAttribute at
     return "Unknown frame buffer attribute";
 }
 
+static const char* decodeBlendEquation(const W3DN_BlendEquation equation)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (equation) {
+        MAP_ENUM(W3DN_FUNC_ADD)
+        MAP_ENUM(W3DN_FUNC_SUBTRACT)
+        MAP_ENUM(W3DN_FUNC_REVERSE_SUBTRACT)
+        MAP_ENUM(W3DN_FUNC_MIN)
+        MAP_ENUM(W3DN_FUNC_MAX)
+        MAP_ENUM(W3DN_BLENDEQUATION_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown blend equation";
+}
+
+static const char* decodeBlendMode(const W3DN_BlendMode mode)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (mode) {
+        MAP_ENUM(W3DN_ZERO)
+        MAP_ENUM(W3DN_ONE)
+        MAP_ENUM(W3DN_SRC_COLOUR)
+        MAP_ENUM(W3DN_ONE_MINUS_SRC_COLOUR)
+        MAP_ENUM(W3DN_DST_COLOUR)
+        MAP_ENUM(W3DN_ONE_MINUS_DST_COLOUR)
+        MAP_ENUM(W3DN_SRC_ALPHA)
+        MAP_ENUM(W3DN_ONE_MINUS_SRC_ALPHA)
+        MAP_ENUM(W3DN_DST_ALPHA)
+        MAP_ENUM(W3DN_ONE_MINUS_DST_ALPHA)
+        MAP_ENUM(W3DN_CONSTANT_COLOUR)
+        MAP_ENUM(W3DN_ONE_MINUS_CONSTANT_COLOUR)
+        MAP_ENUM(W3DN_CONSTANT_ALPHA)
+        MAP_ENUM(W3DN_ONE_MINUS_CONSTANT_ALPHA)
+        MAP_ENUM(W3DN_SRC_ALPHA_SATURATE)
+        MAP_ENUM(W3DN_BLENDMODE_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown blend mode";
+}
+
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
 {
     if (pointer) {
@@ -1561,12 +1607,12 @@ static W3DN_ErrorCode W3DN_GetBlendEquation(struct W3DN_Context_s *self, W3DN_Re
 
     NOVA_CALL_RESULT(result, GetBlendEquation, renderState, buffIdx, colEquation, alphaEquation);
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %d, alphaEquation %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %u (%s), alphaEquation %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
-        *colEquation,
-        *alphaEquation,
+        *colEquation, decodeBlendEquation(*colEquation),
+        *alphaEquation, decodeBlendEquation(*alphaEquation),
         result,
         mapNovaError(result));
 
@@ -1582,14 +1628,14 @@ static W3DN_ErrorCode W3DN_GetBlendMode(struct W3DN_Context_s *self, W3DN_Render
 
     NOVA_CALL_RESULT(result, GetBlendMode, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %d, colDst %d, alphaSrc %d, alphaDst %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %u (%s), colDst %u (%s), alphaSrc %u (%s), alphaDst %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
-        *colSrc,
-        *colDst,
-        *alphaSrc,
-        *alphaDst,
+        *colSrc, decodeBlendMode(*colSrc),
+        *colDst, decodeBlendMode(*colDst),
+        *alphaSrc, decodeBlendMode(*alphaSrc),
+        *alphaDst, decodeBlendMode(*alphaDst),
         result,
         mapNovaError(result));
 
@@ -2028,11 +2074,11 @@ static W3DN_ErrorCode W3DN_SetBlendEquation(struct W3DN_Context_s *self, W3DN_Re
 
     NOVA_CALL_RESULT(result, SetBlendEquation, renderState, buffIdx, equation)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, equation %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, buffIdx %lu, equation %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
-        equation,
+        equation, decodeBlendEquation(equation),
         result,
         mapNovaError(result));
 
@@ -2048,12 +2094,12 @@ static W3DN_ErrorCode W3DN_SetBlendEquationSeparate(struct W3DN_Context_s *self,
 
     NOVA_CALL_RESULT(result, SetBlendEquationSeparate, renderState, buffIdx, colEquation, alphaEquation)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %d, alphaEquation %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %u (%s), alphaEquation %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
-        colEquation,
-        alphaEquation,
+        colEquation, decodeBlendEquation(colEquation),
+        alphaEquation, decodeBlendEquation(alphaEquation),
         result,
         mapNovaError(result));
 
@@ -2068,12 +2114,12 @@ static W3DN_ErrorCode W3DN_SetBlendMode(struct W3DN_Context_s *self, W3DN_Render
 
     NOVA_CALL_RESULT(result, SetBlendMode, renderState, buffIdx, src, dst)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, src %d, dst %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, buffIdx %lu, src %u (%s), dst %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
-        src,
-        dst,
+        src, decodeBlendMode(src),
+        dst, decodeBlendMode(dst),
         result,
         mapNovaError(result));
 
@@ -2089,14 +2135,14 @@ static W3DN_ErrorCode W3DN_SetBlendModeSeparate(struct W3DN_Context_s *self, W3D
 
     NOVA_CALL_RESULT(result, SetBlendModeSeparate, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %d, colDst %d, alphaSrc %d, alphaDst %d. Result %d (%s)",
+    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %u (%s), colDst %u (%s), alphaSrc %u (%s), alphaDst %u (%s). Result %d (%s)",
         context->name, __func__,
         renderState,
         buffIdx,
-        colSrc,
-        colDst,
-        alphaSrc,
-        alphaDst,
+        colSrc, decodeBlendMode(colSrc),
+        colDst, decodeBlendMode(colDst),
+        alphaSrc, decodeBlendMode(alphaSrc),
+        alphaDst, decodeBlendMode(alphaDst),
         result,
         mapNovaError(result));
 
