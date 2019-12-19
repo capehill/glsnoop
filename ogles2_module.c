@@ -7,6 +7,7 @@
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>
+#include <proto/utility.h>
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -790,6 +791,7 @@ struct Ogles2Context
     struct OGLES2IFace* interface;
     struct Task* task;
     char name[NAME_LEN];
+    char tagBuffer[TAG_BUFFER_LEN];
 
     MyClock start;
     uint64 ticks;
@@ -1004,6 +1006,52 @@ static void close_ogles2_library(void)
         IExec->CloseLibrary(OGLES2Base);
         OGLES2Base = NULL;
     }
+}
+
+static void logTags(struct TagItem* tags, struct Ogles2Context* context)
+{
+    struct TagItem* iter = tags;
+    struct TagItem* tag;
+
+    char* dest = context->tagBuffer;
+    size_t left = sizeof(context->tagBuffer);
+
+    char temp[64];
+
+    dest[0] = '\0';
+
+    #define TAG_U32(x) case x: snprintf(temp, sizeof(temp), "[" #x ": %lu]", tag->ti_Data); break;
+    #define TAG_HEX(x) case x: snprintf(temp, sizeof(temp), "[" #x ": 0x%lX]", tag->ti_Data); break;
+
+    while ((tag = IUtility->NextTagItem(&iter))) {
+        switch (tag->ti_Tag) {
+            TAG_HEX(OGLES2_CCT_MIN)
+            TAG_HEX(OGLES2_CCT_WINDOW)
+            TAG_HEX(OGLES2_CCT_MODEID)
+            TAG_U32(OGLES2_CCT_DEPTH)
+            TAG_U32(OGLES2_CCT_STENCIL)
+            TAG_U32(OGLES2_CCT_VSYNC)
+            TAG_U32(OGLES2_CCT_SINGLE_GET_ERROR_MODE)
+            TAG_HEX(OGLES2_CCT_GET_WIDTH)
+            TAG_HEX(OGLES2_CCT_GET_HEIGHT)
+            TAG_HEX(OGLES2_CCT_BITMAP)
+            TAG_U32(OGLES2_CCT_SHADER_COMPAT_PATCH)
+            TAG_HEX(OGLES2_CCT_CONTEXT_FOR_MODEID)
+            TAG_U32(OGLES2_CCT_RESIZE_VIEWPORT)
+            default:
+                snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
+                break;
+        }
+
+        snprintf(dest, left, "%s", temp);
+
+        const size_t len = strlen(temp);
+        left -= len;
+        dest += len;
+    }
+
+    #undef TAG_U32
+    #undef TAG_HEX
 }
 
 static void checkPointer(struct Ogles2Context* context, const Ogles2Function id, const void* ptr)
@@ -1286,8 +1334,10 @@ static void* OGLES2_aglCreateContext_AVOID(struct OGLES2IFace *Self, ULONG * err
 
     AGL_CALL_STATUS(CreateContext_AVOID, &tempErrCode, tags)
 
-    logLine("%s: %s: errcode pointer %p (value %lu), tags %p. Context address %p", context->name, __func__,
-        errcode, tempErrCode, tags, status);
+    logTags(tags, context);
+
+    logLine("%s: %s: errcode pointer %p (value %lu), tags %p (%s). Context address %p", context->name, __func__,
+        errcode, tempErrCode, tags, context->tagBuffer, status);
 
     if (errcode) {
         *errcode = tempErrCode;
@@ -1306,8 +1356,10 @@ static void* OGLES2_aglCreateContext2(struct OGLES2IFace *Self, ULONG * errcode,
 
     AGL_CALL_STATUS(CreateContext2, &tempErrCode, tags)
 
-    logLine("%s: %s: errcode pointer %p (value %lu), tags %p. Context address %p", context->name, __func__,
-        errcode, tempErrCode, tags, status);
+    logTags(tags, context);
+
+    logLine("%s: %s: errcode pointer %p (value %lu), tags %p (%s). Context address %p", context->name, __func__,
+        errcode, tempErrCode, tags, context->tagBuffer, status);
 
     if (errcode) {
         *errcode = tempErrCode;
@@ -1364,8 +1416,10 @@ static void OGLES2_aglSetParams_AVOID(struct OGLES2IFace *Self, struct TagItem *
 {
     GET_CONTEXT
 
-    logLine("%s: %s: tags %p", context->name, __func__,
-        tags);
+    logTags(tags, context);
+
+    logLine("%s: %s: tags %p (%s)", context->name, __func__,
+        tags, context->tagBuffer);
 
     AGL_CALL(SetParams_AVOID, tags)
 }
@@ -1374,8 +1428,10 @@ static void OGLES2_aglSetParams2(struct OGLES2IFace *Self, struct TagItem * tags
 {
     GET_CONTEXT
 
-    logLine("%s: %s: tags %p", context->name, __func__,
-        tags);
+    logTags(tags, context);
+
+    logLine("%s: %s: tags %p (%s)", context->name, __func__,
+        tags, context->tagBuffer);
 
     AGL_CALL(SetParams2, tags)
 }

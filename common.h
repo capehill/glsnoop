@@ -4,6 +4,8 @@
 #include <proto/exec.h>
 
 #define NAME_LEN 64
+#define TAG_BUFFER_LEN 1024
+
 #define MAX_CLIENTS 5
 
 void find_process_name2(struct Node * node, char * destination);
