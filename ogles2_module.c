@@ -1008,7 +1008,7 @@ static void close_ogles2_library(void)
     }
 }
 
-static void logTags(struct TagItem* tags, struct Ogles2Context* context)
+static const char* decodeTags(struct TagItem* tags, struct Ogles2Context* context)
 {
     struct TagItem* iter = tags;
     struct TagItem* tag;
@@ -1052,6 +1052,8 @@ static void logTags(struct TagItem* tags, struct Ogles2Context* context)
 
     #undef TAG_U32
     #undef TAG_HEX
+
+    return context->tagBuffer;
 }
 
 static void checkPointer(struct Ogles2Context* context, const Ogles2Function id, const void* ptr)
@@ -1334,10 +1336,8 @@ static void* OGLES2_aglCreateContext_AVOID(struct OGLES2IFace *Self, ULONG * err
 
     AGL_CALL_STATUS(CreateContext_AVOID, &tempErrCode, tags)
 
-    logTags(tags, context);
-
     logLine("%s: %s: errcode pointer %p (value %lu), tags %p (%s). Context address %p", context->name, __func__,
-        errcode, tempErrCode, tags, context->tagBuffer, status);
+        errcode, tempErrCode, tags, decodeTags(tags, context), status);
 
     if (errcode) {
         *errcode = tempErrCode;
@@ -1356,10 +1356,8 @@ static void* OGLES2_aglCreateContext2(struct OGLES2IFace *Self, ULONG * errcode,
 
     AGL_CALL_STATUS(CreateContext2, &tempErrCode, tags)
 
-    logTags(tags, context);
-
     logLine("%s: %s: errcode pointer %p (value %lu), tags %p (%s). Context address %p", context->name, __func__,
-        errcode, tempErrCode, tags, context->tagBuffer, status);
+        errcode, tempErrCode, tags, decodeTags(tags, context), status);
 
     if (errcode) {
         *errcode = tempErrCode;
@@ -1416,10 +1414,8 @@ static void OGLES2_aglSetParams_AVOID(struct OGLES2IFace *Self, struct TagItem *
 {
     GET_CONTEXT
 
-    logTags(tags, context);
-
     logLine("%s: %s: tags %p (%s)", context->name, __func__,
-        tags, context->tagBuffer);
+        tags, decodeTags(tags, context));
 
     AGL_CALL(SetParams_AVOID, tags)
 }
@@ -1428,10 +1424,8 @@ static void OGLES2_aglSetParams2(struct OGLES2IFace *Self, struct TagItem * tags
 {
     GET_CONTEXT
 
-    logTags(tags, context);
-
     logLine("%s: %s: tags %p (%s)", context->name, __func__,
-        tags, context->tagBuffer);
+        tags, decodeTags(tags, context));
 
     AGL_CALL(SetParams2, tags)
 }
