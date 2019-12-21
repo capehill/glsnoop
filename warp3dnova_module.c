@@ -7,6 +7,7 @@
 
 #include <proto/exec.h>
 #include <proto/warp3dnova.h>
+#include <proto/utility.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -742,6 +743,7 @@ struct NovaContext {
     struct Task* task;
     struct W3DN_Context_s* context;
     char name[NAME_LEN];
+    char tagBuffer[TAG_BUFFER_LEN];
 
     MyClock start;
     uint64 ticks;
@@ -1023,6 +1025,211 @@ struct NovaContext {
 
 static struct NovaContext* contexts[MAX_CLIENTS];
 static APTR mutex;
+
+static const char* decodeTags(struct TagItem* tags, struct NovaContext* context)
+{
+    struct TagItem* iter = tags;
+    struct TagItem* tag;
+
+    char* dest = context->tagBuffer;
+    size_t left = sizeof(context->tagBuffer);
+
+    char temp[64];
+
+    dest[0] = '\0';
+
+    #define TAG_U32(x) case x: snprintf(temp, sizeof(temp), "[" #x ": %lu]", tag->ti_Data); break;
+    #define TAG_HEX(x) case x: snprintf(temp, sizeof(temp), "[" #x ": 0x%lX]", tag->ti_Data); break;
+
+    while ((tag = IUtility->NextTagItem(&iter))) {
+        switch (tag->ti_Tag) {
+            // W3DN_CreateContext
+            TAG_U32(W3DNTag_BoardNum)
+            TAG_HEX(W3DNTag_ModeID)
+            TAG_HEX(W3DNTag_Screen)
+            TAG_U32(W3DNTag_ReqFeature)
+            TAG_U32(W3DNTag_Min)
+            TAG_U32(W3DNTag_DesiredScreenWidth)
+            TAG_U32(W3DNTag_DesiredScreenHeight)
+            TAG_U32(W3DNTag_MinScreenWidth)
+            TAG_U32(W3DNTag_MinScreenHeight)
+            TAG_U32(W3DNTag_MaxScreenWidth)
+            TAG_U32(W3DNTag_MaxScreenHeight)
+            TAG_HEX(W3DNTag_GPU)
+            TAG_U32(W3DNTag_DriverType)
+            // FBBindBuffer
+            TAG_HEX(W3DNTag_BitMap)
+            TAG_HEX(W3DNTag_Texture)
+            TAG_U32(W3DNTag_AllocDepthStencil)
+            TAG_U32(W3DNTag_TextureMipLevel)
+            // CompileShader
+            TAG_HEX(W3DNTag_FileName)
+            TAG_HEX(W3DNTag_DataBuffer)
+            TAG_U32(W3DNTag_DataSize)
+            TAG_HEX(W3DNTag_Log)
+            TAG_U32(W3DNTag_LogLevel)
+            // CreateShaderPipeline
+            TAG_HEX(W3DNTag_Shader)
+            default:
+                snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
+                break;
+        }
+
+        snprintf(dest, left, "%s", temp);
+
+        const size_t len = strlen(temp);
+        left -= len;
+        dest += len;
+    }
+
+    #undef TAG_U32
+    #undef TAG_HEX
+
+    return context->tagBuffer;
+}
+
+static const char* decodeShaderGetObjectInfoTags(struct TagItem* tags, struct NovaContext* context)
+{
+    struct TagItem* iter = tags;
+    struct TagItem* tag;
+
+    char* dest = context->tagBuffer;
+    size_t left = sizeof(context->tagBuffer);
+
+    char temp[64];
+
+    dest[0] = '\0';
+
+    #define TAG_U32(x) case x: snprintf(temp, sizeof(temp), "[" #x ": %lu]", tag->ti_Data); break;
+    #define TAG_HEX(x) case x: snprintf(temp, sizeof(temp), "[" #x ": 0x%lX]", tag->ti_Data); break;
+
+    while ((tag = IUtility->NextTagItem(&iter))) {
+        switch (tag->ti_Tag) {
+            // ShaderGetObjectInfo
+            TAG_HEX(W3DNTag_Offset)
+            TAG_HEX(W3DNTag_SizeBytes)
+            TAG_HEX(W3DNTag_Name)
+            TAG_HEX(W3DNTag_Location)
+            TAG_HEX(W3DNTag_Type)
+            TAG_HEX(W3DNTag_ElementType)
+            TAG_HEX(W3DNTag_NumSubFields)
+            TAG_U32(W3DNTag_SubFieldIdx)
+            TAG_HEX(W3DNTag_ArrayLength)
+            TAG_HEX(W3DNTag_ArrayStride)
+            TAG_HEX(W3DNTag_MatrixStride)
+            TAG_HEX(W3DNTag_IsRowMajor)
+            TAG_HEX(W3DNTag_ArrayDims)
+            TAG_U32(W3DNTag_ArrayDimIdx)
+            default:
+                snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
+                break;
+        }
+
+        snprintf(dest, left, "%s", temp);
+
+        const size_t len = strlen(temp);
+        left -= len;
+        dest += len;
+    }
+
+    #undef TAG_U32
+    #undef TAG_HEX
+
+    return context->tagBuffer;
+}
+
+static const char* decodeTextureParameterTags(struct TagItem* tags, struct NovaContext* context)
+{
+    struct TagItem* iter = tags;
+    struct TagItem* tag;
+
+    char* dest = context->tagBuffer;
+    size_t left = sizeof(context->tagBuffer);
+
+    char temp[64];
+
+    dest[0] = '\0';
+
+    #define TAG_U32(x) case x: snprintf(temp, sizeof(temp), "[" #x ": %lu]", tag->ti_Data); break;
+    #define TAG_HEX(x) case x: snprintf(temp, sizeof(temp), "[" #x ": 0x%lX]", tag->ti_Data); break;
+
+    while ((tag = IUtility->NextTagItem(&iter))) {
+        switch (tag->ti_Tag) {
+            // SetTextureParameter, GetTextureParameter
+            TAG_U32(W3DN_TEXTURE_BASE_LEVEL)
+            TAG_HEX(W3DN_TEXTURE_MAX_LEVEL)
+            TAG_HEX(W3DN_TEXTURE_DEPTH_STENCIL_MODE)
+            TAG_HEX(W3DN_TEXTURE_SWIZZLE_R)
+            TAG_HEX(W3DN_TEXTURE_SWIZZLE_G)
+            TAG_HEX(W3DN_TEXTURE_SWIZZLE_B)
+            TAG_HEX(W3DN_TEXTURE_SWIZZLE_A)
+            default:
+                snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
+                break;
+        }
+
+        snprintf(dest, left, "%s", temp);
+
+        const size_t len = strlen(temp);
+        left -= len;
+        dest += len;
+    }
+
+    #undef TAG_U32
+    #undef TAG_HEX
+
+    return context->tagBuffer;
+}
+
+static const char* decodeTextureSamplerParameterTags(struct TagItem* tags, struct NovaContext* context)
+{
+    struct TagItem* iter = tags;
+    struct TagItem* tag;
+
+    char* dest = context->tagBuffer;
+    size_t left = sizeof(context->tagBuffer);
+
+    char temp[64];
+
+    dest[0] = '\0';
+
+    #define TAG_U32(x) case x: snprintf(temp, sizeof(temp), "[" #x ": %lu]", tag->ti_Data); break;
+    #define TAG_HEX(x) case x: snprintf(temp, sizeof(temp), "[" #x ": 0x%lX]", tag->ti_Data); break;
+    #define TAG_F32(x) case x: snprintf(temp, sizeof(temp), "[" #x ": %f]", (float)tag->ti_Data); break;
+
+    while ((tag = IUtility->NextTagItem(&iter))) {
+        switch (tag->ti_Tag) {
+            // TSSetParameters, TSGetParameters
+            TAG_U32(W3DN_TEXTURE_WRAP_S)
+            TAG_U32(W3DN_TEXTURE_WRAP_T)
+            TAG_U32(W3DN_TEXTURE_WRAP_R)
+            TAG_U32(W3DN_TEXTURE_MIN_FILTER)
+            TAG_U32(W3DN_TEXTURE_MAG_FILTER)
+            TAG_HEX(W3DN_TEXTURE_BORDER_COLOUR)
+            TAG_F32(W3DN_TEXTURE_MIN_LOD)
+            TAG_F32(W3DN_TEXTURE_MAX_LOD)
+            TAG_F32(W3DN_TEXTURE_LOD_BIAS)
+            TAG_U32(W3DN_TEXTURE_COMPARE_MODE)
+            TAG_U32(W3DN_TEXTURE_COMPARE_FUNC)
+            TAG_U32(W3DN_TEXTURE_MAX_ANISOTROPY)
+            default:
+                snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
+                break;
+        }
+
+        snprintf(dest, left, "%s", temp);
+
+        const size_t len = strlen(temp);
+        left -= len;
+        dest += len;
+    }
+
+    #undef TAG_U32
+    #undef TAG_HEX
+    #undef TAG_F32
+
+    return context->tagBuffer;
+}
 
 static void profileResults(struct NovaContext* const context)
 {
@@ -1328,11 +1535,11 @@ static W3DN_Shader* W3DN_CompileShader(struct W3DN_Context_s *self,
 
     NOVA_CALL_RESULT(shader, CompileShader, errCode, tags)
 
-    logLine("%s: %s: errCode %d (%s), tags %p. Shader address %p",
+    logLine("%s: %s: errCode %d (%s), tags %p (%s). Shader address %p",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
-        tags,
+        tags, decodeTags(tags, context),
         shader);
 
     checkPointer(context, CompileShader, shader);
@@ -1348,14 +1555,14 @@ static W3DN_DataBuffer* W3DN_CreateDataBufferObject(struct W3DN_Context_s *self,
 
     NOVA_CALL_RESULT(buffer, CreateDataBufferObject, errCode, size, usage, maxBuffers, tags)
 
-    logLine("%s: %s: errCode %d (%s), size %llu, usage %u (%s), maxBuffers %lu, tags %p. Data buffer object address %p",
+    logLine("%s: %s: errCode %d (%s), size %llu, usage %u (%s), maxBuffers %lu, tags %p (%s). Data buffer object address %p",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
         size,
         usage, decodeBufferUsage(usage),
         maxBuffers,
-        tags,
+        tags, decodeTags(tags, context),
         buffer);
 
     checkPointer(context, CreateDataBufferObject, buffer);
@@ -1406,11 +1613,11 @@ static W3DN_ShaderPipeline* W3DN_CreateShaderPipeline(struct W3DN_Context_s *sel
 
     NOVA_CALL_RESULT(pipeline, CreateShaderPipeline, errCode, tags)
 
-    logLine("%s: %s: errCode %d (%s), tags %p. Shader pipeline address %p",
+    logLine("%s: %s: errCode %d (%s), tags %p (%s). Shader pipeline address %p",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
-        tags,
+        tags, decodeTags(tags, context),
         pipeline);
 
     checkPointer(context, CreateShaderPipeline, pipeline);
@@ -1474,11 +1681,13 @@ static W3DN_VertexBuffer* W3DN_CreateVertexBufferObject(struct W3DN_Context_s *s
 
     NOVA_CALL_RESULT(result, CreateVertexBufferObject, errCode, size, usage, maxArrays, tags)
 
-    logLine("%s: %s: size %llu, usage %u (%s), maxArrays %lu, tags %p. Buffer address %p, errCode %d (%s)",
+    logLine("%s: %s: size %llu, usage %u (%s), maxArrays %lu, tags %p (%s). Buffer address %p, errCode %d (%s)",
         context->name, __func__,
         size,
         usage, decodeBufferUsage(usage),
-        maxArrays, tags, result,
+        maxArrays,
+        tags, decodeTags(tags, context),
+        result,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode));
 
@@ -1510,9 +1719,11 @@ static W3DN_ErrorCode W3DN_DBOGetBuffer(struct W3DN_Context_s *self, W3DN_DataBu
 
     NOVA_CALL_RESULT(result, DBOGetBuffer, dataBuffer, bufferIdx, offset, size, targetShader, tags)
 
-    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu, size %llu, targetShader %p, tags %p. Result %d (%s)",
+    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu, size %llu, targetShader %p, tags %p (%s). Result %d (%s)",
         context->name, __func__,
-        dataBuffer, bufferIdx, *offset, *size, *targetShader, tags, result, mapNovaError(result));
+        dataBuffer, bufferIdx, *offset, *size, *targetShader,
+        tags, decodeTags(tags, context),
+        result, mapNovaError(result));
 
     checkSuccess(context, DBOGetBuffer, result);
 
@@ -1544,9 +1755,11 @@ static W3DN_ErrorCode W3DN_DBOSetBuffer(struct W3DN_Context_s *self, W3DN_DataBu
 
     NOVA_CALL_RESULT(result, DBOSetBuffer, dataBuffer, bufferIdx, offset, size, targetShader, tags)
 
-    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu. size %llu, targetShader %p, tags %p. Result %d (%s)",
+    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu. size %llu, targetShader %p, tags %p (%s). Result %d (%s)",
         context->name, __func__,
-        dataBuffer, bufferIdx, offset, size, targetShader, tags, result, mapNovaError(result));
+        dataBuffer, bufferIdx, offset, size, targetShader,
+        tags, decodeTags(tags, context),
+        result, mapNovaError(result));
 
     checkSuccess(context, DBOSetBuffer, result);
 
@@ -1734,9 +1947,11 @@ static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 
     NOVA_CALL_RESULT(result, FBBindBuffer, frameBuffer, attachmentPt, tags);
 
-    logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p. Result %d (%s)",
+    logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p (%s). Result %d (%s)",
         context->name, __func__,
-        frameBuffer, (int)attachmentPt, tags, result, mapNovaError(result));
+        frameBuffer, (int)attachmentPt,
+        tags, decodeTags(tags, context),
+        result, mapNovaError(result));
 
     checkSuccess(context, FBBindBuffer, result);
 
@@ -2773,12 +2988,12 @@ static W3DN_ErrorCode W3DN_ShaderGetObjectInfo(struct W3DN_Context_s *self, W3DN
 
     NOVA_CALL_RESULT(result, ShaderGetObjectInfo, shader, objectType, index, tags)
 
-    logLine("%s: %s: shader %p, objectType %u (%s), index %lu, tags %p. Result %d (%s)",
+    logLine("%s: %s: shader %p, objectType %u (%s), index %lu, tags %p (%s). Result %d (%s)",
         context->name, __func__,
         shader,
         objectType, decodeShaderObjectType(objectType),
         index,
-        tags,
+        tags, decodeShaderGetObjectInfoTags(tags, context),
         result,
         mapNovaError(result));
 
@@ -2907,10 +3122,10 @@ static W3DN_ErrorCode W3DN_TexGetParameters(struct W3DN_Context_s *self, W3DN_Te
 
     NOVA_CALL_RESULT(result, TexGetParameters, texture, tags)
 
-    logLine("%s: %s: texture %p, tags %p. Result %d (%s)",
+    logLine("%s: %s: texture %p, tags %p (%s). Result %d (%s)",
         context->name, __func__,
         texture,
-        tags,
+        tags, decodeTextureParameterTags(tags, context),
         result,
         mapNovaError(result));
 
@@ -2944,10 +3159,10 @@ static W3DN_ErrorCode W3DN_TexSetParameters(struct W3DN_Context_s *self, W3DN_Te
 
     NOVA_CALL_RESULT(result, TexSetParameters, texture, tags)
 
-    logLine("%s: %s: texture %p, tags %p. Result %d (%s)",
+    logLine("%s: %s: texture %p, tags %p (%s). Result %d (%s)",
         context->name, __func__,
         texture,
-        tags,
+        tags, decodeTextureParameterTags(tags, context),
         result,
         mapNovaError(result));
 
@@ -3017,10 +3232,10 @@ static W3DN_ErrorCode W3DN_TSGetParameters(struct W3DN_Context_s *self, W3DN_Tex
 
     NOVA_CALL_RESULT(result, TSGetParameters, texSampler, tags)
 
-    logLine("%s: %s: texSampler %p, tags %p. Result %d (%s)",
+    logLine("%s: %s: texSampler %p, tags %p (%s). Result %d (%s)",
         context->name, __func__,
         texSampler,
-        tags,
+        tags, decodeTextureSamplerParameterTags(tags, context),
         result,
         mapNovaError(result));
 
@@ -3035,10 +3250,10 @@ static W3DN_ErrorCode W3DN_TSSetParameters(struct W3DN_Context_s *self, W3DN_Tex
 
     NOVA_CALL_RESULT(result, TSSetParameters, texSampler, tags)
 
-    logLine("%s: %s: texSampler %p, tags %p. Result %d (%s)",
+    logLine("%s: %s: texSampler %p, tags %p (%s). Result %d (%s)",
         context->name, __func__,
         texSampler,
-        tags,
+        tags, decodeTextureSamplerParameterTags(tags, context),
         result,
         mapNovaError(result));
 
@@ -3419,6 +3634,9 @@ static W3DN_Context* my_W3DN_CreateContext(struct Warp3DNovaIFace *Self, W3DN_Er
                 nova->context = context;
 
                 find_process_name(nova);
+
+                logLine("%s: %s: tags %p (%s)", nova->name, __func__,
+                    tags, decodeTags(tags, nova));
 
                 IExec->MutexObtain(mutex);
 
