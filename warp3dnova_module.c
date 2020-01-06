@@ -1519,9 +1519,17 @@ static W3DN_ErrorCode W3DN_Clear(struct W3DN_Context_s *self, W3DN_RenderState *
 
     NOVA_CALL_RESULT(result, Clear, renderState, colour, depth, stencil)
 
-    logLine("%s: %s: renderState %p, colour %p, depth %p, stencil %p. Result %d (%s)",
+    logLine("%s: %s: renderState %p, colour %p (%f, %f, %f, %f), depth %p (%f), stencil %p (%lu). Result %d (%s)",
         context->name, __func__,
-        renderState, colour, depth, stencil, result, mapNovaError(result));
+        renderState,
+        colour,
+        colour ? colour[0] : 0.0f,
+        colour ? colour[1] : 0.0f,
+        colour ? colour[2] : 0.0f,
+        colour ? colour[3] : 0.0f,
+        depth, depth ? *depth : 0.0f,
+        stencil, stencil ? *stencil : 0,
+        result, mapNovaError(result));
 
     checkSuccess(context, Clear, result);
 
