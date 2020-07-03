@@ -62,6 +62,49 @@ static const ULONG micros = 0;
 
 TimerContext timer;
 
+static struct ClassLibrary* WindowBase;
+static struct ClassLibrary* RequesterBase;
+static struct ClassLibrary* ButtonBase;
+static struct ClassLibrary* LayoutBase;
+
+static Class* WindowClass;
+static Class* RequesterClass;
+static Class* ButtonClass;
+static Class* LayoutClass;
+
+static void OpenClasses()
+{
+    const int version = 53;
+
+    WindowBase = IIntuition->OpenClass("window.class", version, &WindowClass);
+    if (!WindowBase) {
+        logAlways("Failed to open window.class");
+    }
+
+    RequesterBase = IIntuition->OpenClass("requester.class", version, &RequesterClass);
+    if (!RequesterBase) {
+        logAlways("Failed to open requester.class");
+    }
+
+    ButtonBase = IIntuition->OpenClass("gadgets/button.gadget", version, &ButtonClass);
+    if (!ButtonBase) {
+        logAlways("Failed to open button.gadget");
+    }
+
+    LayoutBase = IIntuition->OpenClass("gadgets/layout.gadget", version, &LayoutClass);
+    if (!LayoutBase) {
+        logAlways("Failed to open layout.gadget");
+    }
+}
+
+static void CloseClasses()
+{
+    IIntuition->CloseClass(WindowBase);
+    IIntuition->CloseClass(RequesterBase);
+    IIntuition->CloseClass(ButtonBase);
+    IIntuition->CloseClass(LayoutBase);
+}
+
 static char* getApplicationName()
 {
     #define maxPathLen 255
@@ -95,7 +138,7 @@ static struct DiskObject* getDiskObject()
 
 static void show_about_window()
 {
-    objects[OID_AboutWindow] = IIntuition->NewObject(NULL, "requester.class",
+    objects[OID_AboutWindow] = IIntuition->NewObject(RequesterClass, NULL,
         REQ_TitleText, "About glSnoop",
         REQ_BodyText, VERSION_STRING DATE_STRING,
         REQ_GadgetText, "_Ok",
@@ -113,7 +156,7 @@ static void show_about_window()
 
 static Object* create_gui(LONG profiling)
 {
-    return IIntuition->NewObject(NULL, "window.class",
+    return IIntuition->NewObject(WindowClass, NULL,
         WA_ScreenTitle, VERSION_STRING DATE_STRING,
         WA_Title, VERSION_STRING,
         WA_Activate, TRUE,
@@ -129,21 +172,21 @@ static Object* create_gui(LONG profiling)
         WINDOW_AppPort, port, // Iconification needs it
         WINDOW_GadgetHelp, TRUE,
         WINDOW_NewMenu, menus,
-        WINDOW_Layout, IIntuition->NewObject(NULL, "layout.gadget",
+        WINDOW_Layout, IIntuition->NewObject(LayoutClass, NULL,
             LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
 
-            LAYOUT_AddChild, objects[OID_TracingLayout] = IIntuition->NewObject(NULL, "layout.gadget",
+            LAYOUT_AddChild, objects[OID_TracingLayout] = IIntuition->NewObject(LayoutClass, NULL,
                 LAYOUT_Orientation, LAYOUT_ORIENT_HORIZ,
                 LAYOUT_Label, "Tracing",
                 LAYOUT_BevelStyle, BVS_GROUP,
-                LAYOUT_AddChild, objects[OID_Trace] = IIntuition->NewObject(NULL, "button.gadget",
+                LAYOUT_AddChild, objects[OID_Trace] = IIntuition->NewObject(ButtonClass, NULL,
                     GA_Text, "Trace",
                     GA_ID, GID_Trace,
                     GA_RelVerify, TRUE, // TODO: required or not?
                     GA_Disabled, TRUE,
                     GA_HintInfo, "Enable function tracing to serial port",
                     TAG_DONE),
-                LAYOUT_AddChild, objects[OID_Pause] = IIntuition->NewObject(NULL, "button.gadget",
+                LAYOUT_AddChild, objects[OID_Pause] = IIntuition->NewObject(ButtonClass, NULL,
                     GA_Text, "Pause",
                     GA_ID, GID_Pause,
                     GA_RelVerify, TRUE, // TODO: required or not?
@@ -152,18 +195,18 @@ static Object* create_gui(LONG profiling)
                     TAG_DONE),
                 TAG_DONE), // horizontal layout.gadget
 
-            LAYOUT_AddChild, objects[OID_ProfilingLayout] = IIntuition->NewObject(NULL, "layout.gadget",
+            LAYOUT_AddChild, objects[OID_ProfilingLayout] = IIntuition->NewObject(LayoutClass, NULL,
                 LAYOUT_Orientation, LAYOUT_ORIENT_HORIZ,
                 LAYOUT_Label, "Profiling",
                 LAYOUT_BevelStyle, BVS_GROUP,
-                LAYOUT_AddChild, objects[OID_StartProfiling] = IIntuition->NewObject(NULL, "button.gadget",
+                LAYOUT_AddChild, objects[OID_StartProfiling] = IIntuition->NewObject(ButtonClass, NULL,
                     GA_Text, "Start",
                     GA_ID, GID_StartProfiling,
                     GA_RelVerify, TRUE,
                     GA_Disabled, TRUE, // When glSnoop starts, it's "ready to profile", hence we will disable Start
                     GA_HintInfo, "Initialize profiling statistics",
                     TAG_DONE),
-                LAYOUT_AddChild, objects[OID_FinishProfiling] = IIntuition->NewObject(NULL, "button.gadget",
+                LAYOUT_AddChild, objects[OID_FinishProfiling] = IIntuition->NewObject(ButtonClass, NULL,
                     GA_Text, "Finish",
                     GA_ID, GID_FinishProfiling,
                     GA_RelVerify, TRUE,
@@ -172,29 +215,29 @@ static Object* create_gui(LONG profiling)
                     TAG_DONE),
                 TAG_DONE), // horizontal layout.gadget
 
-            LAYOUT_AddChild, IIntuition->NewObject(NULL, "layout.gadget",
+            LAYOUT_AddChild, IIntuition->NewObject(LayoutClass, NULL,
                 LAYOUT_Orientation, LAYOUT_ORIENT_VERT,
                 LAYOUT_Label, "Information",
                 LAYOUT_BevelStyle, BVS_GROUP,
-                LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
+                LAYOUT_AddChild, IIntuition->NewObject(ButtonClass, NULL,
                     GA_ReadOnly, TRUE,
                     GA_Text, ogles2_version_string(),
                     BUTTON_BevelStyle, BVS_NONE,
                     BUTTON_Transparent, TRUE,
                     TAG_DONE),
-                LAYOUT_AddChild, IIntuition->NewObject(NULL, "button.gadget",
+                LAYOUT_AddChild, IIntuition->NewObject(ButtonClass, NULL,
                     GA_ReadOnly, TRUE,
                     GA_Text, warp3dnova_version_string(),
                     BUTTON_BevelStyle, BVS_NONE,
                     BUTTON_Transparent, TRUE,
                     TAG_DONE),
-                LAYOUT_AddChild, objects[OID_Ogles2Errors] = IIntuition->NewObject(NULL, "button.gadget",
+                LAYOUT_AddChild, objects[OID_Ogles2Errors] = IIntuition->NewObject(ButtonClass, NULL,
                     GA_ReadOnly, TRUE,
                     GA_Text, ogles2_errors_string(),
                     BUTTON_BevelStyle, BVS_NONE,
                     BUTTON_Transparent, TRUE,
                     TAG_DONE),
-                LAYOUT_AddChild, objects[OID_NovaErrors] = IIntuition->NewObject(NULL, "button.gadget",
+                LAYOUT_AddChild, objects[OID_NovaErrors] = IIntuition->NewObject(ButtonClass, NULL,
                     GA_ReadOnly, TRUE,
                     GA_Text, warp3dnova_errors_string(),
                     BUTTON_BevelStyle, BVS_NONE,
@@ -382,6 +425,8 @@ static void handle_events(void)
 // When profiling, Pause/Resume buttons are disabled
 void run_gui(LONG profiling)
 {
+    OpenClasses();
+
 	port = IExec->AllocSysObjectTags(ASOT_PORT,
 		ASOPORT_Name, "app_port",
 		TAG_DONE);
@@ -406,4 +451,6 @@ void run_gui(LONG profiling)
     if (port) {
         IExec->FreeSysObject(ASOT_PORT, port);
     }
+
+    CloseClasses();
 }
