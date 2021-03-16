@@ -290,6 +290,8 @@ static const char* mapNovaError(const W3DN_ErrorCode code)
         MAP_ENUM(W3DNEC_EXCEEDEDMAXTEXUNITS)
         MAP_ENUM(W3DNEC_EXCEEDEDMAXDIM)
         MAP_ENUM(W3DNEC_MAXERROR)
+        MAP_ENUM(W3DNEC_INVALIDLAYOUT)
+        MAP_ENUM(W3DNEC_NOTOURBUFFER)
     }
 
     #undef MAP_ENUM
@@ -345,6 +347,9 @@ static const char* decodeTextureType(const W3DN_TextureType type)
         MAP_ENUM(W3DN_TEXTURE_3D)
         MAP_ENUM(W3DN_TEXTURE_CUBEMAP)
         MAP_ENUM(W3DN_TEXTURE_END)
+        MAP_ENUM(W3DN_TEXTURE_1D_ARRAY)
+        MAP_ENUM(W3DN_TEXTURE_2D_ARRAY)
+        MAP_ENUM(W3DN_TEXTURE_CUBEMAP_ARRAY)
     }
 
     #undef MAP_ENUM
@@ -676,6 +681,12 @@ static const char* decodeCapQuery(const W3DN_CapQuery query)
         MAP_ENUM(W3DN_Q_POLYGONMODE)
         MAP_ENUM(W3DN_Q_FLATSHADE)
         MAP_ENUM(W3DN_Q_END)
+        MAP_ENUM(W3DN_Q_TEXTUREEXTSHARE)
+        MAP_ENUM(W3DN_Q_TEXTURE_1D_ARRAY)
+        MAP_ENUM(W3DN_Q_TEXTURE_2D_ARRAY)
+        MAP_ENUM(W3DN_Q_TEXTURE_CUBEMAP_ARRAY)
+        MAP_ENUM(W3DN_Q_GPUENDIANNESS)
+        MAP_ENUM(W3DN_Q_TEXTURE_RENDER_BGRA)
     }
 
     #undef MAP_ENUM
@@ -1497,9 +1508,17 @@ static W3DN_ErrorCode W3DN_BufferUnlock(struct W3DN_Context_s *self,
     W3DN_ErrorCode result = W3DNEC_SUCCESS;
 
 #if 0
+    typedef union {
+        uint32 u;
+        float f;
+    } Conversion;
+
+    Conversion c;
+
     const size_t items = bufferLock->size / 4;
     for (size_t i = 0; i < items; i++) {
-        logLine("[%u] = 0x%lX", i, bufferLock->buffer[i]);
+        c.u = bufferLock->buffer[i];
+        logLine("[%u] = %f (%lx)", i, c.f, c.u);
     }
 #endif
     NOVA_CALL_RESULT(result, BufferUnlock, bufferLock, writeOffset, writeSize)
