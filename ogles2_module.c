@@ -1038,6 +1038,11 @@ static const char* decodeTags(struct TagItem* tags, struct Ogles2Context* contex
             TAG_U32(OGLES2_CCT_SHADER_COMPAT_PATCH)
             TAG_HEX(OGLES2_CCT_CONTEXT_FOR_MODEID)
             TAG_U32(OGLES2_CCT_RESIZE_VIEWPORT)
+            TAG_U32(OGLES2_CCT_DEBUG_SHADER_LOG)
+            TAG_U32(OGLES2_CCT_DETECT_UNINITIALIZED_GLSL_VARS)
+            TAG_U32(OGLES2_CCT_SPIRV_OPLINES)
+            TAG_U32(OGLES2_CCT_SPIRV_OPLINES_OFFSET)
+            TAG_U32(OGLES2_CCT_SPIRV_OPTIMIZE)
             default:
                 snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
                 break;
