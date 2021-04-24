@@ -29,6 +29,7 @@ typedef enum NovaFunction {
     CreateShaderPipeline,
     CreateTexSampler,
     CreateTexture,
+    CreateTextureExtRMB,
     CreateVertexBufferObject,
     DBOGetAttr,
     DBOGetBuffer,
@@ -111,6 +112,8 @@ typedef enum NovaFunction {
     TexGenMipMaps,
     TexGetParameters,
     TexGetProperty,
+    TexGetRMBuffer,
+    TexGetSubResourceLayout,
     TexSetParameters,
     TexUpdateImage,
     TexUpdateSubImage,
@@ -144,6 +147,7 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(CreateShaderPipeline)
         MAP_ENUM(CreateTexSampler)
         MAP_ENUM(CreateTexture)
+        MAP_ENUM(CreateTextureExtRMB)
         MAP_ENUM(CreateVertexBufferObject)
         MAP_ENUM(DBOGetAttr)
         MAP_ENUM(DBOGetBuffer)
@@ -226,6 +230,8 @@ static const char* mapNovaFunction(const NovaFunction func)
         MAP_ENUM(TexGenMipMaps)
         MAP_ENUM(TexGetParameters)
         MAP_ENUM(TexGetProperty)
+        MAP_ENUM(TexGetRMBuffer)
+        MAP_ENUM(TexGetSubResourceLayout)
         MAP_ENUM(TexSetParameters)
         MAP_ENUM(TexUpdateImage)
         MAP_ENUM(TexUpdateSubImage)
@@ -346,10 +352,10 @@ static const char* decodeTextureType(const W3DN_TextureType type)
         MAP_ENUM(W3DN_TEXTURE_2D)
         MAP_ENUM(W3DN_TEXTURE_3D)
         MAP_ENUM(W3DN_TEXTURE_CUBEMAP)
-        MAP_ENUM(W3DN_TEXTURE_END)
         MAP_ENUM(W3DN_TEXTURE_1D_ARRAY)
         MAP_ENUM(W3DN_TEXTURE_2D_ARRAY)
         MAP_ENUM(W3DN_TEXTURE_CUBEMAP_ARRAY)
+        MAP_ENUM(W3DN_TEXTURE_END)
     }
 
     #undef MAP_ENUM
@@ -680,13 +686,13 @@ static const char* decodeCapQuery(const W3DN_CapQuery query)
         MAP_ENUM(W3DN_Q_POLYGONOFFSET)
         MAP_ENUM(W3DN_Q_POLYGONMODE)
         MAP_ENUM(W3DN_Q_FLATSHADE)
-        MAP_ENUM(W3DN_Q_END)
         MAP_ENUM(W3DN_Q_TEXTUREEXTSHARE)
         MAP_ENUM(W3DN_Q_TEXTURE_1D_ARRAY)
         MAP_ENUM(W3DN_Q_TEXTURE_2D_ARRAY)
         MAP_ENUM(W3DN_Q_TEXTURE_CUBEMAP_ARRAY)
         MAP_ENUM(W3DN_Q_GPUENDIANNESS)
         MAP_ENUM(W3DN_Q_TEXTURE_RENDER_BGRA)
+        MAP_ENUM(W3DN_Q_END)
     }
 
     #undef MAP_ENUM
@@ -730,6 +736,22 @@ static const char* decodeTextureProperty(const W3DN_TextureProperty property)
     #undef MAP_ENUM
 
     return "Unknown texture property";
+}
+
+static const char* decodeTexAspect(const W3DN_TexAspect aspect)
+{
+    #define MAP_ENUM(x) case x: return #x;
+
+    switch (aspect) {
+        MAP_ENUM(W3DN_TA_COLOUR)
+        MAP_ENUM(W3DN_TA_DEPTH)
+        MAP_ENUM(W3DN_TA_STENCIL)
+        MAP_ENUM(W3DN_TEXASPECT_END)
+    }
+
+    #undef MAP_ENUM
+
+    return "Unknown texture aspect";
 }
 
 static const char* mapNovaErrorPointerToString(const W3DN_ErrorCode* const pointer)
@@ -800,6 +822,9 @@ struct NovaContext {
     W3DN_Texture* (*old_CreateTexture)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, W3DN_TextureType texType,
         W3DN_PixelFormat pixelFormat, W3DN_ElementFormat elementFormat, uint32 width, uint32 height, uint32 depth,
         BOOL mipmapped, W3DN_BufferUsage usage);
+
+    W3DN_Texture* (*old_CreateTextureExtRMB)(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, void *rmBuffer, W3DN_ResourceLayout * layout,
+        W3DN_TextureType texType, W3DN_PixelFormat pixelFormat, W3DN_ElementFormat elementFormat, uint32 width, uint32 height, uint32 depth, BOOL mipmapped);
 
     W3DN_VertexBuffer* (*old_CreateVertexBufferObject)(struct W3DN_Context_s *self,
     		W3DN_ErrorCode *errCode, uint64 size, W3DN_BufferUsage usage, uint32 maxArrays, struct TagItem *tags);
@@ -1003,6 +1028,11 @@ struct NovaContext {
 
     W3DN_ErrorCode (*old_TexGetProperty)(struct W3DN_Context_s *self, W3DN_Texture *texture, W3DN_TextureProperty texProp, void *buffer);
 
+    void* (*old_TexGetRMBuffer)(struct W3DN_Context_s *self, W3DN_Texture *texture);
+
+    W3DN_ErrorCode (*old_TexGetSubResourceLayout)(struct W3DN_Context_s *self, W3DN_Texture *texture, W3DN_TexAspect aspect,
+         uint32 mipLevel, uint32 arrayIdx, W3DN_ResourceLayout *layout);
+
     W3DN_ErrorCode (*old_TexSetParameters)(struct W3DN_Context_s *self, W3DN_Texture *texture, struct TagItem *tags);
 
     W3DN_ErrorCode (*old_TexUpdateImage)(struct W3DN_Context_s *self, W3DN_Texture *texture, void *source,
@@ -1073,6 +1103,7 @@ static const char* decodeTags(struct TagItem* tags, struct NovaContext* context)
             TAG_HEX(W3DNTag_Texture)
             TAG_U32(W3DNTag_AllocDepthStencil)
             TAG_U32(W3DNTag_TextureMipLevel)
+            TAG_U32(W3DNTag_ChannelOrder)
             // CompileShader
             TAG_HEX(W3DNTag_FileName)
             TAG_HEX(W3DNTag_DataBuffer)
@@ -1080,7 +1111,24 @@ static const char* decodeTags(struct TagItem* tags, struct NovaContext* context)
             TAG_HEX(W3DNTag_Log)
             TAG_U32(W3DNTag_LogLevel)
             // CreateShaderPipeline
-            TAG_HEX(W3DNTag_Shader)
+            //TAG_HEX(W3DNTag_Shader) - TAG collision
+            // ShaderGetObjectInfo
+            TAG_HEX(W3DNTag_Offset)
+            TAG_HEX(W3DNTag_SizeBytes)
+            TAG_HEX(W3DNTag_Name)
+            TAG_HEX(W3DNTag_Location)
+            TAG_HEX(W3DNTag_Type)
+            TAG_HEX(W3DNTag_ElementType)
+            TAG_U32(W3DNTag_NumSubFields)
+            TAG_U32(W3DNTag_SubFieldIdx)
+            TAG_HEX(W3DNTag_ArrayLength)
+            TAG_HEX(W3DNTag_ArrayStride)
+            TAG_HEX(W3DNTag_MatrixStride)
+            TAG_HEX(W3DNTag_IsRowMajor)
+            TAG_HEX(W3DNTag_ArrayDims)
+            TAG_U32(W3DNTag_ArrayDimIdx)
+            // CreateVertexBufferObject / CreateDataBufferObject
+            TAG_U32(W3DNTag_EndianConversion)
             default:
                 snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
                 break;
@@ -1697,6 +1745,37 @@ static W3DN_Texture* W3DN_CreateTexture(struct W3DN_Context_s *self, W3DN_ErrorC
 
     checkPointer(context, CreateTexture, texture);
     checkSuccess(context, CreateTexture, mapNovaErrorPointerToCode(errCode));
+
+    return texture;
+}
+
+static W3DN_Texture* W3DN_CreateTextureExtRMB(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode, void *rmBuffer,
+    W3DN_ResourceLayout * layout, W3DN_TextureType texType, W3DN_PixelFormat pixelFormat, W3DN_ElementFormat elementFormat,
+    uint32 width, uint32 height, uint32 depth, BOOL mipmapped)
+{
+    W3DN_Texture* texture = NULL;
+
+    NOVA_CALL_RESULT(texture, CreateTextureExtRMB, errCode, rmBuffer, layout, texType, pixelFormat, elementFormat,
+        width, height, depth, mipmapped)
+
+    logLine("%s: %s: errCode %d (%s), rmBuffer %p, layout %p, texType %d (%s), pixelFormat %d (%s), elementFormat %d (%s), "
+        "width %lu, height %lu, depth %lu, mipmapped %d. Texture address %p",
+        context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        rmBuffer,
+        layout,
+        texType, decodeTextureType(texType),
+        pixelFormat, decodePixelFormat(pixelFormat),
+        elementFormat, decodeElementFormat(elementFormat),
+        width,
+        height,
+        depth,
+        mipmapped,
+        texture);
+
+    checkPointer(context, CreateTextureExtRMB, texture);
+    checkSuccess(context, CreateTextureExtRMB, mapNovaErrorPointerToCode(errCode));
 
     return texture;
 }
@@ -3180,6 +3259,43 @@ static W3DN_ErrorCode W3DN_TexGetProperty(struct W3DN_Context_s *self, W3DN_Text
     return result;
 }
 
+static void* W3DN_TexGetRMBuffer(struct W3DN_Context_s *self, W3DN_Texture *texture)
+{
+    void* result = NULL;
+
+    NOVA_CALL_RESULT(result, TexGetRMBuffer, texture)
+
+    logLine("%s: %s: texture %p. Result %p",
+        context->name, __func__,
+        texture,
+        result);
+
+    checkPointer(context, TexGetRMBuffer, result);
+
+    return result;
+}
+
+static W3DN_ErrorCode W3DN_TexGetSubResourceLayout(struct W3DN_Context_s *self, W3DN_Texture *texture, W3DN_TexAspect aspect,
+    uint32 mipLevel, uint32 arrayIdx, W3DN_ResourceLayout *layout)
+{
+    W3DN_ErrorCode result = W3DNEC_SUCCESS;
+
+    NOVA_CALL_RESULT(result, TexGetSubResourceLayout, texture, aspect, mipLevel, arrayIdx, layout)
+
+    logLine("%s: %s: texture %p, aspect %d (%s), mipLevel %lu, arrayIdx %lu, layout %p. Result %d (%s)",
+        context->name, __func__,
+        texture,
+        aspect, decodeTexAspect(aspect),
+        mipLevel,
+        arrayIdx,
+        layout,
+        result, mapNovaError(result));
+
+    checkSuccess(context, TexGetSubResourceLayout, result);
+
+    return result;
+}
+
 static W3DN_ErrorCode W3DN_TexSetParameters(struct W3DN_Context_s *self, W3DN_Texture *texture, struct TagItem *tags)
 {
     W3DN_ErrorCode result = W3DNEC_SUCCESS;
@@ -3420,6 +3536,7 @@ GENERATE_NOVA_PATCH(CreateRenderStateObject)
 GENERATE_NOVA_PATCH(CreateShaderPipeline)
 GENERATE_NOVA_PATCH(CreateTexSampler)
 GENERATE_NOVA_PATCH(CreateTexture)
+GENERATE_NOVA_PATCH(CreateTextureExtRMB)
 GENERATE_NOVA_PATCH(CreateVertexBufferObject)
 GENERATE_NOVA_PATCH(DBOGetAttr)
 GENERATE_NOVA_PATCH(DBOGetBuffer)
@@ -3502,6 +3619,8 @@ GENERATE_NOVA_PATCH(Submit)
 GENERATE_NOVA_PATCH(TexGenMipMaps)
 GENERATE_NOVA_PATCH(TexGetParameters)
 GENERATE_NOVA_PATCH(TexGetProperty)
+GENERATE_NOVA_PATCH(TexGetRMBuffer)
+GENERATE_NOVA_PATCH(TexGetSubResourceLayout)
 GENERATE_NOVA_PATCH(TexSetParameters)
 GENERATE_NOVA_PATCH(TexUpdateImage)
 GENERATE_NOVA_PATCH(TexUpdateSubImage)
@@ -3528,6 +3647,7 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_CreateShaderPipeline,
     patch_CreateTexSampler,
     patch_CreateTexture,
+    patch_CreateTextureExtRMB,
     patch_CreateVertexBufferObject,
     patch_DBOGetAttr,
     patch_DBOGetBuffer,
@@ -3610,6 +3730,8 @@ static void (*patches[])(BOOL, struct NovaContext *) = {
     patch_TexGenMipMaps,
     patch_TexGetParameters,
     patch_TexGetProperty,
+    patch_TexGetRMBuffer,
+    patch_TexGetSubResourceLayout,
     patch_TexSetParameters,
     patch_TexUpdateImage,
     patch_TexUpdateSubImage,
