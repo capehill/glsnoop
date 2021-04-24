@@ -3,7 +3,7 @@
 
 @node Main "glSnoop"
 
-    @{B}glSnoop User Guide v0.4@{UB}
+    @{B}glSnoop User Guide v1.0@{UB}
 
     @{" What is glSnoop for and what it does             " link WhatisThat}
     @{" How to use                                       " link Usage}
