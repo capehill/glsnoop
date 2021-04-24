@@ -1,14 +1,15 @@
 # glSnoop
-An experimental graphics API tracing tool for AmigaOS 4
 
-Work-in-progress, pull requests welcome!
+An experimental graphics API tracing tool for AmigaOS 4
 
 ## Tracing support
 
 glSnoop supports logging of:
 
-- ogles2.library
-- Warp3DNova.library
+- ogles2.library 3.1
+- Warp3DNova.library 1.83
+
+These are the current public and recommended library versions to use.
 
 Pausing stops the serial logging of functions until resumed.
 

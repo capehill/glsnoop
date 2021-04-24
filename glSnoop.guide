@@ -129,8 +129,8 @@
 
    glSnoop supports logging of:
 
-   ogles2.library 2.10: all (a)gl* functions
-   Warp3DNova.library 1.65: all context-related functions
+   ogles2.library 3.1: all (a)gl* functions
+   Warp3DNova.library 1.83: all context-related functions
 
 @endnode
 
