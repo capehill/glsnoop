@@ -1,4 +1,4 @@
-# glSnoop 0.4 filters
+# glSnoop 1.0 filters
 #
 # Comment out the unwanted function names
 
@@ -182,6 +182,7 @@ W3DN_CreateRenderStateObject
 W3DN_CreateShaderPipeline
 W3DN_CreateTexSampler
 W3DN_CreateTexture
+W3DN_CreateTextureExtRMB
 W3DN_CreateVertexBufferObject
 W3DN_DBOGetAttr
 W3DN_DBOGetBuffer
@@ -263,6 +264,8 @@ W3DN_Submit
 W3DN_TexGenMipMaps
 W3DN_TexGetParameters
 W3DN_TexGetProperty
+W3DN_TexGetRMBuffer
+W3DN_TexGetSubResourceLayout
 W3DN_TexSetParameters
 W3DN_TexUpdateImage
 W3DN_TexUpdateSubImage
