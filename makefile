@@ -1,11 +1,9 @@
 ifneq ($(shell uname), AmigaOS)
 	CC 		= ppc-amigaos-gcc
-	DELETE		= rm -f
 	STRIP = ppc-amigaos-strip
 	AMIGADATE = $(shell date +"%-d.%-m.%Y")
 else
 	CC 		= gcc
-	DELETE		= delete
 	STRIP = strip
 	AMIGADATE = $(shell date LFORMAT "%-d.%-m.%Y")
 endif
@@ -27,7 +25,7 @@ $(NAME): $(OBJS) makefile
 	$(CC) -o $@ $(OBJS) -lauto
 
 clean:
-	$(DELETE) $(OBJS)
+	$(RM) $(OBJS)
 
 strip:
 	$(STRIP) $(NAME)
