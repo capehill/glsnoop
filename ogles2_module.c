@@ -1283,12 +1283,6 @@ static void checkErrors(struct Ogles2Context * context, const Ogles2Function id)
     }
 }
 
-#define CHECK(x, id) \
-PROF_START \
-x; \
-PROF_FINISH(id) \
-checkErrors(context, id);
-
 #define GL_CALL(id, ...) \
 if (context->old_gl ## id) { \
     PROF_START \
