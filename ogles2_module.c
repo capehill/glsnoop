@@ -1264,7 +1264,7 @@ static struct Ogles2Context* find_context(struct OGLES2IFace *interface)
 
 // Error checking helpers
 
-static void checkErrors(struct Ogles2Context * context, const Ogles2Function id)
+static void checkErrors(struct Ogles2Context * context, const Ogles2Function id, const char* const name)
 {
     GLenum err;
 
@@ -1278,7 +1278,7 @@ static void checkErrors(struct Ogles2Context * context, const Ogles2Function id)
     }
 
     while ((err = func(context->interface)) != GL_NO_ERROR) {
-        logLine("%s: GL error %d (%s) detected", context->name, err, mapOgles2Error(err));
+        logLine("%s: GL error %d (%s) detected after %s", context->name, err, mapOgles2Error(err), name);
         context->profiling[id].errors++;
     }
 }
@@ -1288,7 +1288,7 @@ if (context->old_gl ## id) { \
     PROF_START \
     context->old_gl ## id(Self, ##__VA_ARGS__); \
     PROF_FINISH(id) \
-    checkErrors(context, id); \
+    checkErrors(context, id, #id); \
 } else { \
     logDebug("%s: " #id " function pointer is NULL (call ignored)", context->name); \
 }
@@ -1298,7 +1298,7 @@ if (context->old_agl ## id) { \
     PROF_START \
     context->old_agl ## id(Self, ##__VA_ARGS__); \
     PROF_FINISH(id) \
-    checkErrors(context, id); \
+    checkErrors(context, id, #id); \
 } else { \
     logDebug("%s: " #id " function pointer is NULL (call ignored)", context->name); \
 }
@@ -1308,7 +1308,7 @@ if (context->old_gl ## id) { \
     PROF_START \
     status = context->old_gl ## id(Self, ##__VA_ARGS__); \
     PROF_FINISH(id) \
-    checkErrors(context, id); \
+    checkErrors(context, id, #id); \
 } else { \
     logDebug("%s: " #id " function pointer is NULL (call ignored)", context->name); \
 }
@@ -1318,7 +1318,7 @@ if (context->old_agl ## id) { \
     PROF_START \
     status = context->old_agl ## id(Self, ##__VA_ARGS__); \
     PROF_FINISH(id) \
-    checkErrors(context, id); \
+    checkErrors(context, id, #id); \
 } else { \
     logDebug("%s: " #id " function pointer is NULL (call ignored)", context->name); \
 }
