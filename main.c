@@ -272,7 +272,7 @@ static void run(void)
 
 int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 {
-    logLine("*** glSnoop started. Built date: %s ***", __DATE__);
+    logLine("*** %s started. Built date: %s ***", VERSION_STRING, __DATE__);
 
     if (!parse_args()) {
         goto out;
