@@ -785,6 +785,8 @@ static const char* decodePrimitive(const int value)
     return "Unknown primitive";
 }
 
+#define MAX_GL_ERRORS 10
+
 // Store original function pointers so that they can be still called
 struct Ogles2Context
 {
@@ -798,6 +800,10 @@ struct Ogles2Context
     ProfilingItem profiling[Ogles2FunctionCount];
 
     PrimitiveCounter counter;
+
+    GLenum errors[MAX_GL_ERRORS];
+    size_t errorRead;
+    size_t errorWritten;
 
     void* (*old_aglCreateContext_AVOID)(struct OGLES2IFace *Self, ULONG * errcode, struct TagItem * tags);
     void* (*old_aglCreateContext2)(struct OGLES2IFace *Self, ULONG * errcode, struct TagItem * tags);
@@ -1278,6 +1284,14 @@ static void checkErrors(struct Ogles2Context * context, const Ogles2Function id,
     }
 
     while ((err = func(context->interface)) != GL_NO_ERROR) {
+        const size_t next = (context->errorWritten + 1) % MAX_GL_ERRORS;
+        if (next == context->errorRead) {
+            logLine("%s: GL error buffer overload after %s", context->name, name);
+        } else {
+            context->errors[next] = err;
+            context->errorWritten = next;
+        }
+
         logLine("%s: GL error %d (%s) detected after %s", context->name, err, mapOgles2Error(err), name);
         context->profiling[id].errors++;
     }
@@ -2235,14 +2249,18 @@ static void OGLES2_glGetBufferPointervOES(struct OGLES2IFace *Self, GLenum targe
     checkPointer(context, GetBufferPointervOES, *params);
 }
 
-// NOTE: each OpenGL call triggers error checking, so it's likely that this returns usually GL_NO_ERROR.
 static GLenum OGLES2_glGetError(struct OGLES2IFace *Self)
 {
     GET_CONTEXT
 
-    GLenum status = 0;
+    GLenum status = GL_NO_ERROR;
 
-    GL_CALL_STATUS(GetError)
+    context->profiling[GetError].callCount++;
+
+    if (context->errorRead != context->errorWritten) {
+        context->errorRead = (context->errorRead + 1) % MAX_GL_ERRORS;
+        status = context->errors[context->errorRead];
+    }
 
     logLine("%s: %s: error 0x%X (%s)", context->name, __func__,
         status, (status == GL_NO_ERROR) ? "GL_NO_ERROR" : mapOgles2Error(status));
@@ -2804,7 +2822,7 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
 
                     IExec->FreeVec(temp);
                 } else {
-                    logLine("Failed to allocate %d bytes", len);
+                    logLine("Failed to allocate %u bytes", len);
                 }
             }
         }
