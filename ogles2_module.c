@@ -1247,7 +1247,7 @@ static void EXEC_DropInterface(struct ExecIFace* Self, struct Interface* interfa
 GENERATE_PATCH(ExecIFace, GetInterface, EXEC, ExecContext)
 GENERATE_PATCH(ExecIFace, DropInterface, EXEC, ExecContext)
 
-static struct Ogles2Context* find_context(struct OGLES2IFace *interface)
+static struct Ogles2Context* find_context(const struct OGLES2IFace * const interface)
 {
     size_t i;
     struct Ogles2Context* context = NULL;
@@ -1286,7 +1286,7 @@ static void checkErrors(struct Ogles2Context * context, const Ogles2Function id,
     while ((err = func(context->interface)) != GL_NO_ERROR) {
         const size_t next = (context->errorWritten + 1) % MAX_GL_ERRORS;
         if (next == context->errorRead) {
-            logLine("%s: GL error buffer overload after %s", context->name, name);
+            logLine("%s: GL error buffer overflow after %s", context->name, name);
         } else {
             context->errors[next] = err;
             context->errorWritten = next;

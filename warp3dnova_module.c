@@ -1423,7 +1423,7 @@ static void find_process_name(struct NovaContext * context)
     find_process_name2((struct Node *)context->task, context->name);
 }
 
-static struct NovaContext* find_context(struct W3DN_Context_s* context)
+static struct NovaContext* find_context(const struct W3DN_Context_s* const context)
 {
     size_t i;
     struct NovaContext* result = NULL;

@@ -384,7 +384,6 @@ static void handle_events(void)
         if (wait & SIGBREAKF_CTRL_C) {
             puts("*** Break ***");
             running = FALSE;
-            break;
         }
 
         if (wait & signal) {
