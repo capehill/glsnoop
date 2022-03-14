@@ -1893,12 +1893,15 @@ static uint64 W3DN_DBOGetAttr(struct W3DN_Context_s *self, W3DN_DataBuffer *data
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, DBOGetAttr, dataBuffer, attr)
-
-    logLine("%s: %s: dataBuffer %p, attr %u (%s). Result %llu",
+    logLine("%s: %s: dataBuffer %p, attr %u (%s)",
         context->name, __func__,
         dataBuffer,
-        attr, decodeBufferAttribute(attr),
+        attr, decodeBufferAttribute(attr));
+
+    NOVA_CALL_RESULT(result, DBOGetAttr, dataBuffer, attr)
+
+    logLine("%s: %s: <- Result %llu",
+        context->name, __func__,
         result);
 
     return result;
@@ -1911,12 +1914,16 @@ static W3DN_ErrorCode W3DN_DBOGetBuffer(struct W3DN_Context_s *self, W3DN_DataBu
 
     GET_CONTEXT
 
+    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %p, size %p, targetShader %p, tags %p (%s)",
+        context->name, __func__,
+        dataBuffer, bufferIdx, offset, size, targetShader,
+        tags, decodeTags(tags, context));
+
     NOVA_CALL_RESULT(result, DBOGetBuffer, dataBuffer, bufferIdx, offset, size, targetShader, tags)
 
-    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu, size %llu, targetShader %p, tags %p (%s). Result %d (%s)",
+    logLine("%s: %s: <- offset %llu, size %llu, targetShader %p. Result %d (%s)",
         context->name, __func__,
-        dataBuffer, bufferIdx, *offset, *size, *targetShader,
-        tags, decodeTags(tags, context),
+        *offset, *size, *targetShader,
         result, mapNovaError(result));
 
     checkSuccess(context, DBOGetBuffer, result);
@@ -1930,13 +1937,17 @@ static W3DN_BufferLock* W3DN_DBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 
     GET_CONTEXT
 
+    logLine("%s: %s: errCode %p, buffer %p, readOffset %llu, readSize %llu",
+        context->name, __func__,
+        errCode, buffer, readOffset, readSize);
+
     NOVA_CALL_RESULT(lock, DBOLock, errCode, buffer, readOffset, readSize)
 
-    logLine("%s: %s: errCode %d (%s), buffer %p, readOffset %llu, readSize %llu. Buffer lock address %p",
+    logLine("%s: %s: <- errCode %d (%s). Buffer lock address %p",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
-        buffer, readOffset, readSize, lock);
+        lock);
 
     checkPointer(context, DBOLock, lock);
     checkSuccess(context, DBOLock, mapNovaErrorPointerToCode(errCode));
@@ -1951,12 +1962,15 @@ static W3DN_ErrorCode W3DN_DBOSetBuffer(struct W3DN_Context_s *self, W3DN_DataBu
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, DBOSetBuffer, dataBuffer, bufferIdx, offset, size, targetShader, tags)
-
-    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu. size %llu, targetShader %p, tags %p (%s). Result %d (%s)",
+    logLine("%s: %s: dataBuffer %p, bufferIdx %lu, offset %llu. size %llu, targetShader %p, tags %p (%s)",
         context->name, __func__,
         dataBuffer, bufferIdx, offset, size, targetShader,
-        tags, decodeTags(tags, context),
+        tags, decodeTags(tags, context));
+
+    NOVA_CALL_RESULT(result, DBOSetBuffer, dataBuffer, bufferIdx, offset, size, targetShader, tags)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
         result, mapNovaError(result));
 
     checkSuccess(context, DBOSetBuffer, result);
@@ -1968,10 +1982,10 @@ static void W3DN_Destroy(struct W3DN_Context_s *self)
 {
     GET_CONTEXT
 
-    NOVA_CALL(Destroy)
-
     logLine("%s: %s",
         context->name, __func__);
+
+    NOVA_CALL(Destroy)
 
     size_t i;
 
@@ -1996,98 +2010,98 @@ static void W3DN_DestroyDataBufferObject(struct W3DN_Context_s *self, W3DN_DataB
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyDataBufferObject, dataBuffer)
-
     logLine("%s: %s: dataBuffer %p",
         context->name, __func__,
         dataBuffer);
+
+    NOVA_CALL(DestroyDataBufferObject, dataBuffer)
 }
 
 static void W3DN_DestroyFrameBuffer(struct W3DN_Context_s *self, W3DN_FrameBuffer *frameBuffer)
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyFrameBuffer, frameBuffer)
-
     logLine("%s: %s: frameBuffer %p",
         context->name, __func__,
         frameBuffer);
+
+    NOVA_CALL(DestroyFrameBuffer, frameBuffer)
 }
 
 static void W3DN_DestroyRenderStateObject(struct W3DN_Context_s *self, W3DN_RenderState *renderState)
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyRenderStateObject, renderState)
-
     logLine("%s: %s: renderState %p",
         context->name, __func__,
         renderState);
+
+    NOVA_CALL(DestroyRenderStateObject, renderState)
 }
 
 static void W3DN_DestroyShader(struct W3DN_Context_s *self, W3DN_Shader *shader)
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyShader, shader)
-
     logLine("%s: %s: shader %p",
         context->name, __func__,
         shader);
+
+    NOVA_CALL(DestroyShader, shader)
 }
 
 static void W3DN_DestroyShaderLog(struct W3DN_Context_s *self, const char *shaderLog)
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyShaderLog, shaderLog)
-
     logLine("%s: %s: shaderLog %p",
         context->name, __func__,
         shaderLog);
+
+    NOVA_CALL(DestroyShaderLog, shaderLog)
 }
 
 static void W3DN_DestroyShaderPipeline(struct W3DN_Context_s *self, W3DN_ShaderPipeline *shaderPipeline)
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyShaderPipeline, shaderPipeline)
-
     logLine("%s: %s: shaderPipeline %p",
         context->name, __func__,
         shaderPipeline);
+
+    NOVA_CALL(DestroyShaderPipeline, shaderPipeline)
 }
 
 static void W3DN_DestroyTexSampler(struct W3DN_Context_s *self, W3DN_TextureSampler *texSampler)
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyTexSampler, texSampler)
-
     logLine("%s: %s: texSampler %p",
         context->name, __func__,
         texSampler);
+
+    NOVA_CALL(DestroyTexSampler, texSampler)
 }
 
 static void W3DN_DestroyTexture(struct W3DN_Context_s *self, W3DN_Texture *texture)
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyTexture, texture)
-
     logLine("%s: %s: texture %p",
         context->name, __func__,
         texture);
+
+    NOVA_CALL(DestroyTexture, texture)
 }
 
 static void W3DN_DestroyVertexBufferObject(struct W3DN_Context_s *self, W3DN_VertexBuffer *vertexBuffer)
 {
     GET_CONTEXT
 
-    NOVA_CALL(DestroyVertexBufferObject, vertexBuffer)
-
     logLine("%s: %s: vertexBuffer %p", context->name, __func__,
         vertexBuffer);
+
+    NOVA_CALL(DestroyVertexBufferObject, vertexBuffer)
 }
 
 static void countPrimitive(PrimitiveCounter * counter, const W3DN_Primitive primitive, const uint32 count)
@@ -2127,12 +2141,15 @@ static W3DN_ErrorCode W3DN_DrawArrays(struct W3DN_Context_s *self,
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, DrawArrays, renderState, primitive, base, count)
-
-    logLine("%s: %s: renderState %p, primitive %u (%s), base %lu, count %lu. Result %d (%s)", context->name, __func__,
+    logLine("%s: %s: renderState %p, primitive %u (%s), base %lu, count %lu", context->name, __func__,
         renderState,
         primitive, decodePrimitive(primitive),
-        base, count, result, mapNovaError(result));
+        base, count);
+
+    NOVA_CALL_RESULT(result, DrawArrays, renderState, primitive, base, count)
+
+    logLine("%s: %s: <- Result %d (%s)", context->name, __func__,
+        result, mapNovaError(result));
 
     countPrimitive(&context->counter, primitive, count);
     checkSuccess(context, DrawArrays, result);
@@ -2148,13 +2165,17 @@ static W3DN_ErrorCode W3DN_DrawElements(struct W3DN_Context_s *self,
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, DrawElements, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx)
-
-    logLine("%s: %s: renderState %p, primitive %u (%s), baseVertex %lu, count %lu, indexBuffer %p, arrayIdx %lu. Result %d (%s)",
+    logLine("%s: %s: renderState %p, primitive %u (%s), baseVertex %lu, count %lu, indexBuffer %p, arrayIdx %lu",
         context->name, __func__,
         renderState,
         primitive, decodePrimitive(primitive),
-        baseVertex, count, indexBuffer, arrayIdx, result, mapNovaError(result));
+        baseVertex, count, indexBuffer, arrayIdx);
+
+    NOVA_CALL_RESULT(result, DrawElements, renderState, primitive, baseVertex, count, indexBuffer, arrayIdx)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     countPrimitive(&context->counter, primitive, count);
     checkSuccess(context, DrawElements, result);
