@@ -2190,12 +2190,15 @@ static W3DN_ErrorCode W3DN_FBBindBuffer(struct W3DN_Context_s *self,
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, FBBindBuffer, frameBuffer, attachmentPt, tags);
-
-    logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p (%s). Result %d (%s)",
+    logLine("%s: %s: frameBuffer %p, attachmentPt %d, tags %p (%s)",
         context->name, __func__,
         frameBuffer, (int)attachmentPt,
-        tags, decodeTags(tags, context),
+        tags, decodeTags(tags, context));
+
+    NOVA_CALL_RESULT(result, FBBindBuffer, frameBuffer, attachmentPt, tags);
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
         result, mapNovaError(result));
 
     checkSuccess(context, FBBindBuffer, result);
@@ -2210,12 +2213,15 @@ static uint64 W3DN_FBGetAttr(struct W3DN_Context_s *self,
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, FBGetAttr, frameBuffer, attrib)
-
-    logLine("%s: %s: frameBuffer %p, attrib %u (%s). Result %llu",
+    logLine("%s: %s: frameBuffer %p, attrib %u (%s)",
         context->name, __func__,
         frameBuffer,
-        attrib, decodeFrameBufferAttribute(attrib),
+        attrib, decodeFrameBufferAttribute(attrib));
+
+    NOVA_CALL_RESULT(result, FBGetAttr, frameBuffer, attrib)
+
+    logLine("%s: %s: <- Result %llu",
+        context->name, __func__,
         result);
 
     return result;
@@ -2228,11 +2234,17 @@ static struct BitMap* W3DN_FBGetBufferBM(struct W3DN_Context_s *self,
 
     GET_CONTEXT
 
+    logLine("%s: %s: frameBuffer %p, attachmentPt %lu, errCode %p",
+        context->name, __func__,
+        frameBuffer, attachmentPt, errCode);
+
     NOVA_CALL_RESULT(bitmap, FBGetBufferBM, frameBuffer, attachmentPt, errCode)
 
-    logLine("%s: %s: frameBuffer %p, attachmentPt %lu. Bitmap address %p. Result %d (%s)",
+    logLine("%s: %s: <- Bitmap address %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, attachmentPt, bitmap, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+        bitmap,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode));
 
     checkPointer(context, FBGetBufferBM, bitmap);
     checkSuccess(context, FBGetBufferBM, mapNovaErrorPointerToCode(errCode));
@@ -2247,11 +2259,17 @@ static W3DN_Texture*  W3DN_FBGetBufferTex(struct W3DN_Context_s *self,
 
     GET_CONTEXT
 
+    logLine("%s: %s: frameBuffer %p, attachmentPt %lu, errCode %p",
+        context->name, __func__,
+        frameBuffer, attachmentPt, errCode);
+
     NOVA_CALL_RESULT(texture, FBGetBufferTex, frameBuffer, attachmentPt, errCode)
 
-    logLine("%s: %s: frameBuffer %p, attachmentPt %lu. Texture address %p. Result %d (%s)",
+    logLine("%s: %s: <- Texture address %p. Result %d (%s)",
         context->name, __func__,
-        frameBuffer, attachmentPt, texture, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+        texture,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode));
 
     checkPointer(context, FBGetBufferTex, texture);
     checkSuccess(context, FBGetBufferTex, mapNovaErrorPointerToCode(errCode));
@@ -2265,11 +2283,16 @@ static W3DN_ErrorCode W3DN_FBGetStatus(struct W3DN_Context_s *self, W3DN_FrameBu
 
     GET_CONTEXT
 
+    logLine("%s: %s: frameBuffer %p",
+        context->name, __func__,
+        frameBuffer);
+
     NOVA_CALL_RESULT(result, FBGetStatus, frameBuffer)
 
-    logLine("%s: %s: frameBuffer %p. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        frameBuffer, result, mapNovaError(result));
+        result,
+        mapNovaError(result));
 
     checkSuccess(context, FBGetStatus, result);
 
@@ -2282,11 +2305,15 @@ static struct BitMap* W3DN_GetBitMapTexture(struct W3DN_Context_s *self, W3DN_Re
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, texUnit %lu",
+        context->name, __func__,
+        renderState, texUnit);
+
     NOVA_CALL_RESULT(bitmap, GetBitMapTexture, renderState, texUnit)
 
-    logLine("%s: %s: renderState %p, texUnit %lu. Bitmap address %p",
+    logLine("%s: %s: <- Bitmap address %p",
         context->name, __func__,
-        renderState, texUnit, bitmap);
+        bitmap);
 
     checkPointer(context, GetBitMapTexture, bitmap);
 
@@ -2300,11 +2327,15 @@ static W3DN_ErrorCode W3DN_GetBlendColour(struct W3DN_Context_s *self, W3DN_Rend
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, red %p, green %p, blue %p, alpha %p",
+        context->name, __func__,
+        renderState, red, green, blue, alpha);
+
     NOVA_CALL_RESULT(result, GetBlendColour, renderState, red, green, blue, alpha);
 
-    logLine("%s: %s: renderState %p, red %f, green %f, blue %f, alpha %f. Result %d (%s)",
+    logLine("%s: %s: <- red %f, green %f, blue %f, alpha %f. Result %d (%s)",
         context->name, __func__,
-        renderState, *red, *green, *blue, *alpha,
+        *red, *green, *blue, *alpha,
         result,
         mapNovaError(result));
 
@@ -2320,12 +2351,14 @@ static W3DN_ErrorCode W3DN_GetBlendEquation(struct W3DN_Context_s *self, W3DN_Re
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %p, alphaEquation %p",
+        context->name, __func__,
+        renderState, buffIdx, colEquation, alphaEquation);
+
     NOVA_CALL_RESULT(result, GetBlendEquation, renderState, buffIdx, colEquation, alphaEquation);
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %u (%s), alphaEquation %u (%s). Result %d (%s)",
+    logLine("%s: %s: <- colEquation %u (%s), alphaEquation %u (%s). Result %d (%s)",
         context->name, __func__,
-        renderState,
-        buffIdx,
         *colEquation, decodeBlendEquation(*colEquation),
         *alphaEquation, decodeBlendEquation(*alphaEquation),
         result,
@@ -2343,12 +2376,14 @@ static W3DN_ErrorCode W3DN_GetBlendMode(struct W3DN_Context_s *self, W3DN_Render
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %p, colDst %p, alphaSrc %p, alphaDst %p",
+        context->name, __func__,
+        renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst);
+
     NOVA_CALL_RESULT(result, GetBlendMode, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %u (%s), colDst %u (%s), alphaSrc %u (%s), alphaDst %u (%s). Result %d (%s)",
+    logLine("%s: %s: <- colSrc %u (%s), colDst %u (%s), alphaSrc %u (%s), alphaDst %u (%s). Result %d (%s)",
         context->name, __func__,
-        renderState,
-        buffIdx,
         *colSrc, decodeBlendMode(*colSrc),
         *colDst, decodeBlendMode(*colDst),
         *alphaSrc, decodeBlendMode(*alphaSrc),
@@ -2367,12 +2402,14 @@ static uint8 W3DN_GetColourMask(struct W3DN_Context_s *self, W3DN_RenderState *r
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, index %lu",
+        context->name, __func__,
+        renderState, index);
+
     NOVA_CALL_RESULT(mask, GetColourMask, renderState, index)
 
-    logLine("%s: %s: renderState %p, index %lu. Mask value 0x%x",
+    logLine("%s: %s: <- Mask value 0x%x",
         context->name, __func__,
-        renderState,
-        index,
         mask);
 
     return mask;
@@ -2384,11 +2421,14 @@ static W3DN_CompareFunc W3DN_GetDepthCompareFunc(struct W3DN_Context_s *self, W3
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p",
+        context->name, __func__,
+        renderState);
+
     NOVA_CALL_RESULT(function, GetDepthCompareFunc, renderState)
 
-    logLine("%s: %s: renderState %p. Compare function %u (%s)",
+    logLine("%s: %s: <- Compare function %u (%s)",
         context->name, __func__,
-        renderState,
         function, decodeCompareFunc(function));
 
     return function;
