@@ -2835,11 +2835,14 @@ static BOOL W3DN_IsDone(struct W3DN_Context_s *self, uint32 submitID)
 
     GET_CONTEXT
 
+    logLine("%s: %s: submitID %lu",
+        context->name, __func__,
+        submitID);
+
     NOVA_CALL_RESULT(result, IsDone, submitID)
 
-    logLine("%s: %s: submitID %lu. Result %d",
+    logLine("%s: %s: <- Result %d",
         context->name, __func__,
-        submitID,
         result);
 
     return result;
@@ -2851,11 +2854,14 @@ static uint32 W3DN_Query(struct W3DN_Context_s *self, W3DN_CapQuery query)
 
     GET_CONTEXT
 
+    logLine("%s: %s: query %u (%s)",
+        context->name, __func__,
+        query, decodeCapQuery(query));
+
     NOVA_CALL_RESULT(result, Query, query)
 
-    logLine("%s: %s: query %u (%s). Result %lu",
+    logLine("%s: %s: <- Result %lu",
         context->name, __func__,
-        query, decodeCapQuery(query),
         result);
 
     return result;
@@ -2867,14 +2873,15 @@ static W3DN_ErrorCode W3DN_RSOCopy(struct W3DN_Context_s *self, W3DN_RenderState
 
     GET_CONTEXT
 
+    logLine("%s: %s: dest %p, src %p",
+        context->name, __func__,
+        dest, src);
+
     NOVA_CALL_RESULT(result, RSOCopy, dest, src)
 
-    logLine("%s: %s: dest %p, src %p. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        dest,
-        src,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, RSOCopy, result);
 
@@ -2887,14 +2894,15 @@ static W3DN_ErrorCode W3DN_RSOSetMaster(struct W3DN_Context_s *self, W3DN_Render
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, master %p",
+        context->name, __func__,
+        renderState, master);
+
     NOVA_CALL_RESULT(result, RSOSetMaster, renderState, master)
 
-    logLine("%s: %s: renderState %p, master %p. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        master,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, RSOSetMaster, result);
 
@@ -2907,17 +2915,15 @@ static W3DN_ErrorCode W3DN_SetBlendColour(struct W3DN_Context_s *self, W3DN_Rend
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, red %f, green %f, blue %f, alpha %f",
+        context->name, __func__,
+        renderState, red, green, blue, alpha);
+
     NOVA_CALL_RESULT(result, SetBlendColour, renderState, red, green, blue, alpha)
 
-    logLine("%s: %s: renderState %p, red %f, green %f, blue %f, alpha %f. Result %d (%s).",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        red,
-        green,
-        blue,
-        alpha,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetBlendColour, result);
 
@@ -2930,15 +2936,16 @@ static W3DN_ErrorCode W3DN_SetBlendEquation(struct W3DN_Context_s *self, W3DN_Re
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, buffIdx %lu, equation %u (%s)",
+        context->name, __func__,
+        renderState, buffIdx,
+        equation, decodeBlendEquation(equation));
+
     NOVA_CALL_RESULT(result, SetBlendEquation, renderState, buffIdx, equation)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, equation %u (%s). Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        buffIdx,
-        equation, decodeBlendEquation(equation),
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetBlendEquation, result);
 
@@ -2952,16 +2959,17 @@ static W3DN_ErrorCode W3DN_SetBlendEquationSeparate(struct W3DN_Context_s *self,
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %u (%s), alphaEquation %u (%s)",
+        context->name, __func__,
+        renderState, buffIdx,
+        colEquation, decodeBlendEquation(colEquation),
+        alphaEquation, decodeBlendEquation(alphaEquation));
+
     NOVA_CALL_RESULT(result, SetBlendEquationSeparate, renderState, buffIdx, colEquation, alphaEquation)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, colEquation %u (%s), alphaEquation %u (%s). Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        buffIdx,
-        colEquation, decodeBlendEquation(colEquation),
-        alphaEquation, decodeBlendEquation(alphaEquation),
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetBlendEquationSeparate, result);
 
@@ -2974,16 +2982,17 @@ static W3DN_ErrorCode W3DN_SetBlendMode(struct W3DN_Context_s *self, W3DN_Render
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, buffIdx %lu, src %u (%s), dst %u (%s)",
+        context->name, __func__,
+        renderState, buffIdx,
+        src, decodeBlendMode(src),
+        dst, decodeBlendMode(dst));
+
     NOVA_CALL_RESULT(result, SetBlendMode, renderState, buffIdx, src, dst)
 
-    logLine("%s: %s: renderState %p, buffIdx %lu, src %u (%s), dst %u (%s). Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        buffIdx,
-        src, decodeBlendMode(src),
-        dst, decodeBlendMode(dst),
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetBlendMode, result);
 
@@ -2997,18 +3006,19 @@ static W3DN_ErrorCode W3DN_SetBlendModeSeparate(struct W3DN_Context_s *self, W3D
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetBlendModeSeparate, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst)
-
-    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %u (%s), colDst %u (%s), alphaSrc %u (%s), alphaDst %u (%s). Result %d (%s)",
+    logLine("%s: %s: renderState %p, buffIdx %lu, colSrc %u (%s), colDst %u (%s), alphaSrc %u (%s), alphaDst %u (%s)",
         context->name, __func__,
-        renderState,
-        buffIdx,
+        renderState, buffIdx,
         colSrc, decodeBlendMode(colSrc),
         colDst, decodeBlendMode(colDst),
         alphaSrc, decodeBlendMode(alphaSrc),
-        alphaDst, decodeBlendMode(alphaDst),
-        result,
-        mapNovaError(result));
+        alphaDst, decodeBlendMode(alphaDst));
+
+    NOVA_CALL_RESULT(result, SetBlendModeSeparate, renderState, buffIdx, colSrc, colDst, alphaSrc, alphaDst)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetBlendModeSeparate, result);
 
@@ -3021,15 +3031,15 @@ static W3DN_ErrorCode W3DN_SetColourMask(struct W3DN_Context_s *self, W3DN_Rende
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, index %lu, mask 0x%x",
+        context->name, __func__,
+        renderState, index, mask);
+
     NOVA_CALL_RESULT(result, SetColourMask, renderState, index, mask)
 
-    logLine("%s: %s: renderState %p, index %lu, mask 0x%x. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        index,
-        mask,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetColourMask, result);
 
@@ -3042,14 +3052,16 @@ static W3DN_ErrorCode W3DN_SetDepthCompareFunc(struct W3DN_Context_s *self, W3DN
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetDepthCompareFunc, renderState, func)
-
-    logLine("%s: %s: renderState %p, func %u (%s). Result %d (%s)",
+    logLine("%s: %s: renderState %p, func %u (%s)",
         context->name, __func__,
         renderState,
-        func, decodeCompareFunc(func),
-        result,
-        mapNovaError(result));
+        func, decodeCompareFunc(func));
+
+    NOVA_CALL_RESULT(result, SetDepthCompareFunc, renderState, func)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetDepthCompareFunc, result);
 
@@ -3062,14 +3074,16 @@ static W3DN_ErrorCode W3DN_SetFrontFace(struct W3DN_Context_s *self, W3DN_Render
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetFrontFace, renderState, face)
-
-    logLine("%s: %s: renderState %p, face %u (%s). Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s)",
         context->name, __func__,
         renderState,
-        face, decodeFace(face),
-        result,
-        mapNovaError(result));
+        face, decodeFace(face));
+
+    NOVA_CALL_RESULT(result, SetFrontFace, renderState, face)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetFrontFace, result);
 
@@ -3082,14 +3096,15 @@ static W3DN_ErrorCode W3DN_SetLineWidth(struct W3DN_Context_s *self, W3DN_Render
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, width %f",
+        context->name, __func__,
+        renderState, width);
+
     NOVA_CALL_RESULT(result, SetLineWidth, renderState, width)
 
-    logLine("%s: %s: renderState %p, width %f. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        width,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetLineWidth, result);
 
@@ -3102,15 +3117,17 @@ static W3DN_ErrorCode W3DN_SetPolygonMode(struct W3DN_Context_s *self, W3DN_Rend
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetPolygonMode, renderState, face, mode)
-
-    logLine("%s: %s: renderState %p, face %u (%s), mode %u (%s). Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), mode %u (%s)",
         context->name, __func__,
         renderState,
         face, decodeFaceSelect(face),
-        mode, decodePolygonMode(mode),
-        result,
-        mapNovaError(result));
+        mode, decodePolygonMode(mode));
+
+    NOVA_CALL_RESULT(result, SetPolygonMode, renderState, face, mode)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetPolygonMode, result);
 
@@ -3123,16 +3140,15 @@ static W3DN_ErrorCode W3DN_SetPolygonOffset(struct W3DN_Context_s *self, W3DN_Re
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, factor %f, units %f, clamp %f",
+        context->name, __func__,
+        renderState, factor, units, clamp);
+
     NOVA_CALL_RESULT(result, SetPolygonOffset, renderState, factor, units, clamp)
 
-    logLine("%s: %s: renderState %p, factor %f, units %f, clamp %f. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        factor,
-        units,
-        clamp,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetPolygonOffset, result);
 
@@ -3145,14 +3161,16 @@ static W3DN_ErrorCode W3DN_SetProvokingVertex(struct W3DN_Context_s *self, W3DN_
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetProvokingVertex, renderState, mode)
-
-    logLine("%s: %s: renderState %p, mode %u (%s). Result %d (%s)",
+    logLine("%s: %s: renderState %p, mode %u (%s)",
         context->name, __func__,
         renderState,
-        mode, decodeProvokingVertexMode(mode),
-        result,
-        mapNovaError(result));
+        mode, decodeProvokingVertexMode(mode));
+
+    NOVA_CALL_RESULT(result, SetProvokingVertex, renderState, mode)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetProvokingVertex, result);
 
@@ -3166,11 +3184,15 @@ static W3DN_ErrorCode W3DN_SetRenderTarget(struct W3DN_Context_s *self,
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, frameBuffer %p",
+        context->name, __func__,
+        renderState, frameBuffer);
+
     NOVA_CALL_RESULT(result, SetRenderTarget, renderState, frameBuffer)
 
-    logLine("%s: %s: renderState %p, frameBuffer %p. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState, frameBuffer, result, mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetRenderTarget, result);
 
@@ -3184,17 +3206,15 @@ static W3DN_ErrorCode W3DN_SetScissor(struct W3DN_Context_s *self, W3DN_RenderSt
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, x %lu, y %lu, width %lu, height %lu",
+        context->name, __func__,
+        renderState, x, y, width, height);
+
     NOVA_CALL_RESULT(result, SetScissor, renderState, x, y, width, height)
 
-    logLine("%s: %s: renderState %p, x %lu, y %lu, width %lu, height %lu. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        x,
-        y,
-        width,
-        height,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetScissor, result);
 
@@ -3208,11 +3228,15 @@ static W3DN_ErrorCode W3DN_SetShaderPipeline(struct W3DN_Context_s *self, W3DN_R
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, shaderPipeline %p",
+        context->name, __func__,
+        renderState, shaderPipeline);
+
     NOVA_CALL_RESULT(result, SetShaderPipeline, renderState, shaderPipeline)
 
-    logLine("%s: %s: renderState %p, shaderPipeline %p. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState, shaderPipeline, result, mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetShaderPipeline, result);
 
@@ -3226,13 +3250,16 @@ static W3DN_ErrorCode W3DN_SetState(struct W3DN_Context_s *self, W3DN_RenderStat
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetState, renderState, stateFlag, value)
-
-    logLine("%s: %s: renderState %p, stateFlag %u (%s), value %u (%s). Result %d (%s)",
+    logLine("%s: %s: renderState %p, stateFlag %u (%s), value %u (%s)",
         context->name, __func__,
         renderState,
         stateFlag, decodeStateFlag(stateFlag),
-        value, decodeState(value),
+        value, decodeState(value));
+
+    NOVA_CALL_RESULT(result, SetState, renderState, stateFlag, value)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
         result, mapNovaError(result));
 
     checkSuccess(context, SetState, result);
@@ -3247,16 +3274,17 @@ static W3DN_ErrorCode W3DN_SetStencilFunc(struct W3DN_Context_s *self, W3DN_Rend
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetStencilFunc, renderState, func, ref, mask)
-
-    logLine("%s: %s: renderState %p, func %u (%s), ref %lu, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, func %u (%s), ref %lu, mask 0x%lx",
         context->name, __func__,
         renderState,
         func, decodeCompareFunc(func),
-        ref,
-        mask,
-        result,
-        mapNovaError(result));
+        ref, mask);
+
+    NOVA_CALL_RESULT(result, SetStencilFunc, renderState, func, ref, mask)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetStencilFunc, result);
 
@@ -3270,17 +3298,18 @@ static W3DN_ErrorCode W3DN_SetStencilFuncSeparate(struct W3DN_Context_s *self, W
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetStencilFuncSeparate, renderState, face, func, ref, mask)
-
-    logLine("%s: %s: renderState %p, face %u (%s), func %u (%s), ref %lu, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), func %u (%s), ref %lu, mask 0x%lx",
         context->name, __func__,
         renderState,
         face, decodeFaceSelect(face),
         func, decodeCompareFunc(func),
-        ref,
-        mask,
-        result,
-        mapNovaError(result));
+        ref, mask);
+
+    NOVA_CALL_RESULT(result, SetStencilFuncSeparate, renderState, face, func, ref, mask)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetStencilFuncSeparate, result);
 
@@ -3294,16 +3323,18 @@ static W3DN_ErrorCode W3DN_SetStencilOp(struct W3DN_Context_s *self, W3DN_Render
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetStencilOp, renderState, sFail, dpFail, dpPass)
-
-    logLine("%s: %s: renderState %p, sFail %u (%s), dpFail %u (%s), dpPass %u (%s). Result %d (%s)",
+    logLine("%s: %s: renderState %p, sFail %u (%s), dpFail %u (%s), dpPass %u (%s)",
         context->name, __func__,
         renderState,
         sFail, decodeStencilOp(sFail),
         dpFail, decodeStencilOp(dpFail),
-        dpPass, decodeStencilOp(dpPass),
-        result,
-        mapNovaError(result));
+        dpPass, decodeStencilOp(dpPass));
+
+    NOVA_CALL_RESULT(result, SetStencilOp, renderState, sFail, dpFail, dpPass)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetStencilOp, result);
 
@@ -3317,17 +3348,19 @@ static W3DN_ErrorCode W3DN_SetStencilOpSeparate(struct W3DN_Context_s *self, W3D
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetStencilOpSeparate, renderState, face, sFail, dpFail, dpPass)
-
-    logLine("%s: %s: renderState %p, face %u (%s), sFail %u (%s), dpFail %u (%s), dpPass %u (%s). Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), sFail %u (%s), dpFail %u (%s), dpPass %u (%s)",
         context->name, __func__,
         renderState,
         face, decodeFaceSelect(face),
         sFail, decodeStencilOp(sFail),
         dpFail, decodeStencilOp(dpFail),
-        dpPass, decodeStencilOp(dpPass),
-        result,
-        mapNovaError(result));
+        dpPass, decodeStencilOp(dpPass));
+
+    NOVA_CALL_RESULT(result, SetStencilOpSeparate, renderState, face, sFail, dpFail, dpPass)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetStencilOpSeparate, result);
 
@@ -3340,14 +3373,15 @@ static W3DN_ErrorCode W3DN_SetStencilWriteMask(struct W3DN_Context_s *self, W3DN
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, mask 0x%lx",
+        context->name, __func__,
+        renderState, mask);
+
     NOVA_CALL_RESULT(result, SetStencilWriteMask, renderState, mask)
 
-    logLine("%s: %s: renderState %p, mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        mask,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetStencilWriteMask, result);
 
@@ -3361,15 +3395,17 @@ static W3DN_ErrorCode W3DN_SetStencilWriteMaskSeparate(struct W3DN_Context_s *se
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, SetStencilWriteMaskSeparate, renderState, face, mask)
-
-    logLine("%s: %s: renderState %p, face %u (%s), mask 0x%lx. Result %d (%s)",
+    logLine("%s: %s: renderState %p, face %u (%s), mask 0x%lx",
         context->name, __func__,
         renderState,
         face, decodeFaceSelect(face),
-        mask,
-        result,
-        mapNovaError(result));
+        mask);
+
+    NOVA_CALL_RESULT(result, SetStencilWriteMaskSeparate, renderState, face, mask)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, SetStencilWriteMaskSeparate, result);
 
@@ -3383,19 +3419,15 @@ static W3DN_ErrorCode W3DN_SetViewport(struct W3DN_Context_s *self, W3DN_RenderS
 
     GET_CONTEXT
 
+    logLine("%s: %s: renderState %p, x %f, y %f, width %f, height %f, zNear %f, zFar %f",
+        context->name, __func__,
+        renderState, x, y, width, height, zNear, zFar);
+
     NOVA_CALL_RESULT(result, SetViewport, renderState, x, y, width, height, zNear, zFar);
 
-    logLine("%s: %s: renderState %p, x %f, y %f, width %f, height %f, zNear %f, zFar %f. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        renderState,
-        x,
-        y,
-        width,
-        height,
-        zNear,
-        zFar,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, SetViewport, result);
 
