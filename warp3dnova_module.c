@@ -3441,14 +3441,17 @@ static uint32 W3DN_ShaderGetCount(struct W3DN_Context_s *self, W3DN_ErrorCode *e
 
     GET_CONTEXT
 
+    logLine("%s: %s: errCode %p, shader %p, objectType %u (%s)",
+        context->name, __func__,
+        errCode, shader,
+        objectType, decodeShaderObjectType(objectType));
+
     NOVA_CALL_RESULT(count, ShaderGetCount, errCode, shader, objectType)
 
-    logLine("%s: %s: errCode %d (%s), shader %p, objectType %u (%s). Shader count %lu",
+    logLine("%s: %s: <- errCode %d (%s). Shader count %lu",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
-        shader,
-        objectType, decodeShaderObjectType(objectType),
         count);
 
     checkSuccess(context, ShaderGetCount, mapNovaErrorPointerToCode(errCode));
@@ -3463,16 +3466,19 @@ static W3DN_ErrorCode W3DN_ShaderGetObjectInfo(struct W3DN_Context_s *self, W3DN
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, ShaderGetObjectInfo, shader, objectType, index, tags)
-
-    logLine("%s: %s: shader %p, objectType %u (%s), index %lu, tags %p (%s). Result %d (%s)",
+    logLine("%s: %s: shader %p, objectType %u (%s), index %lu, tags %p",
         context->name, __func__,
         shader,
         objectType, decodeShaderObjectType(objectType),
         index,
-        tags, decodeShaderGetObjectInfoTags(tags, context),
-        result,
-        mapNovaError(result));
+        tags);
+
+    NOVA_CALL_RESULT(result, ShaderGetObjectInfo, shader, objectType, index, tags)
+
+    logLine("%s: %s: <- tags (%s). Result %d (%s)",
+        context->name, __func__,
+        decodeShaderGetObjectInfoTags(tags, context),
+        result, mapNovaError(result));
 
     checkSuccess(context, ShaderGetObjectInfo, result);
 
@@ -3486,15 +3492,18 @@ static uint32 W3DN_ShaderGetOffset(struct W3DN_Context_s *self, W3DN_ErrorCode *
 
     GET_CONTEXT
 
+    logLine("%s: %s: errCode %p, shader %p, objectType %u (%s), name '%s'",
+        context->name, __func__,
+        errCode, shader,
+        objectType, decodeShaderObjectType(objectType),
+        name);
+
     NOVA_CALL_RESULT(offset, ShaderGetOffset, errCode, shader, objectType, name)
 
-    logLine("%s: %s: errCode %d (%s), shader %p, objectType %u (%s), name '%s'. Offset %lu",
+    logLine("%s: %s: <- errCode %d (%s). Offset %lu",
         context->name, __func__,
         mapNovaErrorPointerToCode(errCode),
         mapNovaErrorPointerToString(errCode),
-        shader,
-        objectType, decodeShaderObjectType(objectType),
-        name,
         offset);
 
     checkSuccess(context, ShaderGetOffset, mapNovaErrorPointerToCode(errCode));
@@ -3510,11 +3519,14 @@ static uint64 W3DN_ShaderGetTotalStorage(struct W3DN_Context_s *self, W3DN_Shade
 
     GET_CONTEXT
 
+    logLine("%s: %s: shader %p",
+        context->name, __func__,
+        shader);
+
     NOVA_CALL_RESULT(size, ShaderGetTotalStorage, shader)
 
-    logLine("%s: %s: shader %p. Size %llu",
+    logLine("%s: %s: <- Size %llu",
         context->name, __func__,
-        shader,
         size);
 
     return size;
@@ -3526,11 +3538,14 @@ static W3DN_ShaderType W3DN_ShaderGetType(struct W3DN_Context_s *self, W3DN_Shad
 
     GET_CONTEXT
 
+    logLine("%s: %s: shader %p",
+        context->name, __func__,
+        shader);
+
     NOVA_CALL_RESULT(type, ShaderGetType, shader)
 
-    logLine("%s: %s: shader %p. Type %u (%s)",
+    logLine("%s: %s: <- Type %u (%s)",
         context->name, __func__,
-        shader,
         type, decodeShaderType(type));
 
     return type;
@@ -3543,12 +3558,15 @@ static W3DN_Shader* W3DN_ShaderPipelineGetShader(struct W3DN_Context_s *self, W3
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(shader, ShaderPipelineGetShader, shaderPipeline, shaderType)
-
-    logLine("%s: %s: shaderPipeline %p, shaderType %u (%s). Shader %p",
+    logLine("%s: %s: shaderPipeline %p, shaderType %u (%s)",
         context->name, __func__,
         shaderPipeline,
-        shaderType, decodeShaderType(shaderType),
+        shaderType, decodeShaderType(shaderType));
+
+    NOVA_CALL_RESULT(shader, ShaderPipelineGetShader, shaderPipeline, shaderType)
+
+    logLine("%s: %s: <- Shader %p",
+        context->name, __func__,
         shader);
 
     checkPointer(context, ShaderPipelineGetShader, shader);
@@ -3563,12 +3581,15 @@ static uint32 W3DN_Submit(struct W3DN_Context_s *self, W3DN_ErrorCode *errCode)
 
     GET_CONTEXT
 
+    logLine("%s: %s: errCode %p",
+        context->name, __func__,
+        errCode);
+
     NOVA_CALL_RESULT(result, Submit, &myErrCode)
 
-    logLine("%s: %s: errCode %d (%s). Submit ID %lu",
+    logLine("%s: %s: <- errCode %d (%s). Submit ID %lu",
         context->name, __func__,
-        myErrCode,
-        mapNovaError(myErrCode),
+        myErrCode, mapNovaError(myErrCode),
         result);
 
     if (result == 0 && myErrCode != W3DNEC_QUEUEEMPTY) {
