@@ -3611,15 +3611,15 @@ static W3DN_ErrorCode W3DN_TexGenMipMaps(struct W3DN_Context_s *self, W3DN_Textu
 
     GET_CONTEXT
 
+    logLine("%s: %s: texture %p, base %lu, last %lu",
+        context->name, __func__,
+        texture, base, last);
+
     NOVA_CALL_RESULT(result, TexGenMipMaps, texture, base, last)
 
-    logLine("%s: %s: texture %p, base %lu, last %lu. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        texture,
-        base,
-        last,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, TexGenMipMaps, result);
 
@@ -3632,14 +3632,16 @@ static W3DN_ErrorCode W3DN_TexGetParameters(struct W3DN_Context_s *self, W3DN_Te
 
     GET_CONTEXT
 
+    logLine("%s: %s: texture %p, tags %p",
+        context->name, __func__,
+        texture, tags);
+
     NOVA_CALL_RESULT(result, TexGetParameters, texture, tags)
 
-    logLine("%s: %s: texture %p, tags %p (%s). Result %d (%s)",
+    logLine("%s: %s: <- tags (%s). Result %d (%s)",
         context->name, __func__,
-        texture,
-        tags, decodeTextureParameterTags(tags, context),
-        result,
-        mapNovaError(result));
+        decodeTextureParameterTags(tags, context),
+        result, mapNovaError(result));
 
     checkSuccess(context, TexGetParameters, result);
 
@@ -3652,15 +3654,19 @@ static W3DN_ErrorCode W3DN_TexGetProperty(struct W3DN_Context_s *self, W3DN_Text
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, TexGetProperty, texture, texProp, buffer)
-
-    logLine("%s: %s: texture %p, texProp %u (%s), buffer %p. Result %d (%s)",
+    logLine("%s: %s: texture %p, texProp %u (%s), buffer %p",
         context->name, __func__,
         texture,
         texProp, decodeTextureProperty(texProp),
-        buffer,
-        result,
-        mapNovaError(result));
+        buffer);
+
+    NOVA_CALL_RESULT(result, TexGetProperty, texture, texProp, buffer)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
+
+    // TODO: could log *buffer
 
     checkSuccess(context, TexGetProperty, result);
 
@@ -3673,11 +3679,14 @@ static void* W3DN_TexGetRMBuffer(struct W3DN_Context_s *self, W3DN_Texture *text
 
     GET_CONTEXT
 
+    logLine("%s: %s: texture %p",
+        context->name, __func__,
+        texture);
+
     NOVA_CALL_RESULT(result, TexGetRMBuffer, texture)
 
-    logLine("%s: %s: texture %p. Result %p",
+    logLine("%s: %s: <- Result %p",
         context->name, __func__,
-        texture,
         result);
 
     checkPointer(context, TexGetRMBuffer, result);
@@ -3692,16 +3701,19 @@ static W3DN_ErrorCode W3DN_TexGetSubResourceLayout(struct W3DN_Context_s *self, 
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, TexGetSubResourceLayout, texture, aspect, mipLevel, arrayIdx, layout)
-
-    logLine("%s: %s: texture %p, aspect %d (%s), mipLevel %lu, arrayIdx %lu, layout %p. Result %d (%s)",
+    logLine("%s: %s: texture %p, aspect %d (%s), mipLevel %lu, arrayIdx %lu, layout %p",
         context->name, __func__,
         texture,
         aspect, decodeTexAspect(aspect),
-        mipLevel,
-        arrayIdx,
-        layout,
+        mipLevel, arrayIdx, layout);
+
+    NOVA_CALL_RESULT(result, TexGetSubResourceLayout, texture, aspect, mipLevel, arrayIdx, layout)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
         result, mapNovaError(result));
+
+    // TODO: could log *layout
 
     checkSuccess(context, TexGetSubResourceLayout, result);
 
@@ -3714,14 +3726,16 @@ static W3DN_ErrorCode W3DN_TexSetParameters(struct W3DN_Context_s *self, W3DN_Te
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, TexSetParameters, texture, tags)
-
-    logLine("%s: %s: texture %p, tags %p (%s). Result %d (%s)",
+    logLine("%s: %s: texture %p, tags %p (%s)",
         context->name, __func__,
         texture,
-        tags, decodeTextureParameterTags(tags, context),
-        result,
-        mapNovaError(result));
+        tags, decodeTextureParameterTags(tags, context));
+
+    NOVA_CALL_RESULT(result, TexSetParameters, texture, tags)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, TexSetParameters, result);
 
@@ -3735,18 +3749,15 @@ static W3DN_ErrorCode W3DN_TexUpdateImage(struct W3DN_Context_s *self, W3DN_Text
 
     GET_CONTEXT
 
+    logLine("%s: %s: texture %p, source %p, level %lu, arrayIdx %lu, srcBytesPerRow %lu, srcRowsPerLayer %lu",
+        context->name, __func__,
+        texture, source, level, arrayIdx, srcBytesPerRow, srcRowsPerLayer);
+
     NOVA_CALL_RESULT(result, TexUpdateImage, texture, source, level, arrayIdx, srcBytesPerRow, srcRowsPerLayer)
 
-    logLine("%s: %s: texture %p, source %p, level %lu, arrayIdx %lu, srcBytesPerRow %lu, srcRowsPerLayer %lu. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        texture,
-        source,
-        level,
-        arrayIdx,
-        srcBytesPerRow,
-        srcRowsPerLayer,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, TexUpdateImage, result);
 
@@ -3761,26 +3772,21 @@ static W3DN_ErrorCode W3DN_TexUpdateSubImage(struct W3DN_Context_s *self, W3DN_T
 
     GET_CONTEXT
 
+    logLine("%s: %s: texture %p, source %p, level %lu, arrayIdx %lu, srcBytesPerRow %lu, srcRowsPerLayer %lu, "
+        "dstX %lu, dstY %lu, dstLayer %lu, width %lu, height %lu, depth %lu",
+        context->name, __func__,
+        texture, source,
+        level, arrayIdx,
+        srcBytesPerRow, srcRowsPerLayer,
+        dstX, dstY, dstLayer,
+        width, height, depth);
+
     NOVA_CALL_RESULT(result, TexUpdateSubImage, texture, source,
         level, arrayIdx, srcBytesPerRow, srcRowsPerLayer, dstX, dstY, dstLayer, width, height, depth)
 
-    logLine("%s: %s: texture %p, source %p, level %lu, arrayIdx %lu, srcBytesPerRow %lu, srcRowsPerLayer %lu, "
-        "dstX %lu, dstY %lu, dstLayer %lu, width %lu, height %lu, depth %lu. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        texture,
-        source,
-        level,
-        arrayIdx,
-        srcBytesPerRow,
-        srcRowsPerLayer,
-        dstX,
-        dstY,
-        dstLayer,
-        width,
-        height,
-        depth,
-        result,
-        mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, TexUpdateSubImage, result);
 
@@ -3793,14 +3799,16 @@ static W3DN_ErrorCode W3DN_TSGetParameters(struct W3DN_Context_s *self, W3DN_Tex
 
     GET_CONTEXT
 
+    logLine("%s: %s: texSampler %p, tags %p",
+        context->name, __func__,
+        texSampler, tags);
+
     NOVA_CALL_RESULT(result, TSGetParameters, texSampler, tags)
 
-    logLine("%s: %s: texSampler %p, tags %p (%s). Result %d (%s)",
+    logLine("%s: %s: <- tags (%s). Result %d (%s)",
         context->name, __func__,
-        texSampler,
-        tags, decodeTextureSamplerParameterTags(tags, context),
-        result,
-        mapNovaError(result));
+        decodeTextureSamplerParameterTags(tags, context),
+        result, mapNovaError(result));
 
     checkSuccess(context, TSGetParameters, result);
 
@@ -3813,14 +3821,16 @@ static W3DN_ErrorCode W3DN_TSSetParameters(struct W3DN_Context_s *self, W3DN_Tex
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, TSSetParameters, texSampler, tags)
-
-    logLine("%s: %s: texSampler %p, tags %p (%s). Result %d (%s)",
+    logLine("%s: %s: texSampler %p, tags %p (%s)",
         context->name, __func__,
         texSampler,
-        tags, decodeTextureSamplerParameterTags(tags, context),
-        result,
-        mapNovaError(result));
+        tags, decodeTextureSamplerParameterTags(tags, context));
+
+    NOVA_CALL_RESULT(result, TSSetParameters, texSampler, tags)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, TSSetParameters, result);
 
@@ -3835,13 +3845,18 @@ static W3DN_ErrorCode W3DN_VBOGetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     GET_CONTEXT
 
+    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %p, normalized %p, numElements %p, stride %p, offset %p, count %p",
+        context->name, __func__,
+        buffer, arrayIdx, elementType,
+        normalized, numElements, stride, offset, count);
+
     NOVA_CALL_RESULT(result, VBOGetArray, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count)
 
-    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %u (%s), normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
+    logLine("%s: %s: <- elementType %u (%s), normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
         context->name, __func__,
-        buffer, arrayIdx,
         *elementType, decodeElementFormat(*elementType),
-        *normalized, *numElements, *stride, *offset, *count, result, mapNovaError(result));
+        *normalized, *numElements, *stride, *offset, *count,
+        result, mapNovaError(result));
 
     checkSuccess(context, VBOGetArray, result);
 
@@ -3854,11 +3869,13 @@ static uint64 W3DN_VBOGetAttr(struct W3DN_Context_s *self, W3DN_VertexBuffer *ve
 
     GET_CONTEXT
 
+    logLine("%s: %s: vertexBuffer %p, attr %u (%s)", context->name, __func__,
+        vertexBuffer,
+        attr, decodeBufferAttribute(attr));
+
     NOVA_CALL_RESULT(result, VBOGetAttr, vertexBuffer, attr)
 
-    logLine("%s: %s: vertexBuffer %p, attr %u (%s). Result %llu", context->name, __func__,
-        vertexBuffer,
-        attr, decodeBufferAttribute(attr),
+    logLine("%s: %s: <- Result %llu", context->name, __func__,
         result);
 
     return result;
@@ -3871,10 +3888,15 @@ static W3DN_BufferLock* W3DN_VBOLock(struct W3DN_Context_s *self, W3DN_ErrorCode
 
     GET_CONTEXT
 
+    logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %p", context->name, __func__,
+        buffer, readOffset, readSize, result, errCode);
+
     NOVA_CALL_RESULT(result, VBOLock, errCode, buffer, readOffset, readSize)
 
-    logLine("%s: %s: buffer %p, readOffset %llu, readSize %llu. Lock address %p, errCode %u (%s)", context->name, __func__,
-        buffer, readOffset, readSize, result, mapNovaErrorPointerToCode(errCode), mapNovaErrorPointerToString(errCode));
+    logLine("%s: %s: <- errCode %u (%s). Lock address %p", context->name, __func__,
+        mapNovaErrorPointerToCode(errCode),
+        mapNovaErrorPointerToString(errCode),
+        result);
 
     checkPointer(context, VBOLock, result);
     checkSuccess(context, VBOLock, mapNovaErrorPointerToCode(errCode));
@@ -3890,13 +3912,17 @@ static W3DN_ErrorCode W3DN_VBOSetArray(struct W3DN_Context_s *self, W3DN_VertexB
 
     GET_CONTEXT
 
-    NOVA_CALL_RESULT(result, VBOSetArray, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count)
-
-    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %u (%s), normalized %d, numElements %llu, stride %llu, offset %llu, count %llu. Result %d (%s)",
+    logLine("%s: %s: buffer %p, arrayIdx %lu, elementType %u (%s), normalized %d, numElements %llu, stride %llu, offset %llu, count %llu",
         context->name, __func__,
         buffer, arrayIdx,
         elementType, decodeElementFormat(elementType),
-        normalized, numElements, stride, offset, count, result, mapNovaError(result));
+        normalized, numElements, stride, offset, count);
+
+    NOVA_CALL_RESULT(result, VBOSetArray, buffer, arrayIdx, elementType, normalized, numElements, stride, offset, count)
+
+    logLine("%s: %s: <- Result %d (%s)",
+        context->name, __func__,
+        result, mapNovaError(result));
 
     checkSuccess(context, VBOSetArray, result);
 
@@ -3909,11 +3935,15 @@ static W3DN_ErrorCode W3DN_WaitDone(struct W3DN_Context_s *self, uint32 submitID
 
     GET_CONTEXT
 
+    logLine("%s: %s: submitID %lu, timeout %lu",
+        context->name, __func__,
+        submitID, timeout);
+
     NOVA_CALL_RESULT(result, WaitDone, submitID, timeout)
 
-    logLine("%s: %s: submitID %lu, timeout %lu. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        submitID, timeout, result, mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, WaitDone, result);
 
@@ -3926,11 +3956,15 @@ static W3DN_ErrorCode W3DN_WaitIdle(struct W3DN_Context_s *self, uint32 timeout)
 
     GET_CONTEXT
 
+    logLine("%s: %s: timeout %lu",
+        context->name, __func__,
+        timeout);
+
     NOVA_CALL_RESULT(result, WaitIdle, timeout)
 
-    logLine("%s: %s: timeout %lu. Result %d (%s)",
+    logLine("%s: %s: <- Result %d (%s)",
         context->name, __func__,
-        timeout, result, mapNovaError(result));
+        result, mapNovaError(result));
 
     checkSuccess(context, WaitIdle, result);
 
