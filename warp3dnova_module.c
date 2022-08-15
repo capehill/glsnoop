@@ -442,6 +442,7 @@ static const char* decodeFrameBufferAttribute(const W3DN_FrameBufferAttribute at
         MAP_ENUM(W3DN_FBATTR_DEPTH_FORMAT)
         MAP_ENUM(W3DN_FBATTR_STENCIL_FORMAT)
         MAP_ENUM(W3DN_FBATTR_END)
+        MAP_ENUM(W3DN_FBATTR_ORIGIN_LOWER_LEFT)
     }
 
     #undef MAP_ENUM
@@ -1129,6 +1130,7 @@ static const char* decodeTags(struct TagItem* tags, struct NovaContext* context)
             TAG_U32(W3DNTag_ArrayDimIdx)
             // CreateVertexBufferObject / CreateDataBufferObject
             TAG_U32(W3DNTag_EndianConversion)
+            TAG_U32(W3DNTag_OriginLowerLeft)
             default:
                 snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
                 break;
