@@ -1049,6 +1049,7 @@ static const char* decodeTags(struct TagItem* tags, struct Ogles2Context* contex
             TAG_U32(OGLES2_CCT_SPIRV_OPLINES)
             TAG_U32(OGLES2_CCT_SPIRV_OPLINES_OFFSET)
             TAG_U32(OGLES2_CCT_SPIRV_OPTIMIZE)
+            TAG_U32(OGLES2_CCT_SHARE_WITH)
             default:
                 snprintf(temp, sizeof(temp), "[Unknown tag %lu]", tag->ti_Tag);
                 break;
