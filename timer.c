@@ -1,5 +1,6 @@
 #include "timer.h"
 #include "logger.h"
+#include "profiling.h"
 
 #include <proto/exec.h>
 #include <proto/timer.h>
@@ -7,6 +8,7 @@
 
 #include <stdio.h>
 
+static MyClock start;
 static ULONG frequency = 0;
 static int users = 0;
 
@@ -14,8 +16,7 @@ TimerContext triggerTimer;
 
 static void read_frequency(void)
 {
-    struct EClockVal clockVal;
-    frequency = ITimer->ReadEClock(&clockVal);
+    frequency = ITimer->ReadEClock(&start.clockVal);
 
     logLine("Timer frequency %lu ticks / second", frequency);
 }
@@ -217,3 +218,20 @@ double timer_ticks_to_us(const uint64 ticks)
 {
     return 1000000.0 * timer_ticks_to_s(ticks);
 }
+
+double timer_get_elapsed_seconds()
+{
+    double time = 0.0;
+
+    if (ITimer) {
+        struct MyClock now;
+
+        ITimer->ReadEClock(&now.clockVal);
+
+        const uint64 elapsed = now.ticks - start.ticks;
+        time = timer_ticks_to_s(elapsed);
+    }
+
+    return time;
+}
+
