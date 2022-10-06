@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "timer.h"
 
 #include <proto/exec.h>
 
@@ -11,13 +12,14 @@ static BOOL verbose = FALSE;
 static void logLineImpl(const char * fmt, va_list ap)
 {
     char buffer[16 * 1024];
-    const int len = vsnprintf(buffer, sizeof(buffer), fmt, ap);
-
     char* ptr = buffer;
+
+    const int len = vsnprintf(buffer, sizeof(buffer), fmt, ap);
+    const double time = timer_get_elapsed_seconds();
 
     while (TRUE) {
         char serialBuffer[4 * 1024]; // Sashimi has 4k buffer
-        const size_t wantedToWrite = snprintf(serialBuffer, sizeof(serialBuffer), "%s\n", ptr);
+        const size_t wantedToWrite = snprintf(serialBuffer, sizeof(serialBuffer), "[%.6f] %s\n", time, ptr);
 
         IExec->DebugPrintF("%s", serialBuffer);
 
