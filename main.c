@@ -272,6 +272,10 @@ static void run(void)
 
 int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
 {
+    if (!timer_init(&timer)) {
+        goto out;
+    }
+
     logLine("*** %s started. Built date: %s ***", VERSION_STRING, __DATE__);
 
     if (!parse_args()) {
@@ -284,10 +288,6 @@ int main(int argc __attribute__((unused)), char* argv[] __attribute__((unused)))
     }
 
     mainTask = IExec->FindTask(NULL);
-
-    if (!timer_init(&timer)) {
-        goto out;
-    }
 
     if (startTime || duration) {
         if (!timer_init(&triggerTimer)) {
@@ -338,9 +338,9 @@ out:
         timer_quit(&triggerTimer);
     }
 
-    timer_quit(&timer);
-
     logLine("glSnoop exiting");
+
+    timer_quit(&timer);
 
     return 0;
 }
