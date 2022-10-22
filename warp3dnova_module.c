@@ -1315,15 +1315,16 @@ static void profileResults(struct NovaContext* const context)
 
     logAlways("  Draw calls/s %.1f", drawcalls / seconds);
 
-    logAlways("%30s | %10s | %10s | %20s | %20s | %24s | %20s",
-        "function", "call count", "errors", "duration (ms)", "avg. call dur. (us)", timeUsedBuffer, "% of CPU time");
+    logAlways("%30s | %10s | %10s | %10s | %20s | %20s | %24s | %20s",
+        "function", "call count", "errors", "nullptrs", "duration (ms)", "avg. call dur. (us)", timeUsedBuffer, "% of CPU time");
 
     for (int i = 0; i < NovaFunctionCount; i++) {
         if (stats[i].callCount > 0) {
-            logAlways("%30s | %10llu | %10llu | %20.6f | %20.3f | %24.2f | %20.2f",
+            logAlways("%30s | %10llu | %10llu | %10llu | %20.6f | %20.3f | %24.2f | %20.2f",
                 mapNovaFunction(stats[i].index),
                 stats[i].callCount,
                 stats[i].errors,
+                stats[i].nullptrs,
                 timer_ticks_to_ms(stats[i].ticks),
                 timer_ticks_to_us(stats[i].ticks) / stats[i].callCount,
                 (double)stats[i].ticks * 100.0 / context->ticks,
@@ -1448,7 +1449,7 @@ static void checkPointer(struct NovaContext* context, const NovaFunction id, con
 {
     if (!ptr) {
         logLine("%s: Warning: NULL pointer detected", context->name);
-        context->profiling[id].errors++;
+        context->profiling[id].nullptrs++;
         errorCount++;
     }
 }
