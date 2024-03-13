@@ -63,7 +63,7 @@ typedef struct PrimitiveCounter {
     snprintf(timeUsedBuffer, sizeof(timeUsedBuffer), "%% of %.6f ms", timeUsed); \
     logAlways("  Function calls used %.6f ms, %.2f %% of context life-time %.6f ms", \
         timeUsed, \
-        (double)context->ticks * 100.0 / totalTicks, \
+        (double)context->ticks * 100.0 / (double)totalTicks, \
         timer_ticks_to_ms(totalTicks));
 
 int tickComparison(const void* first, const void* second);

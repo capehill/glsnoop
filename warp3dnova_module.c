@@ -1301,7 +1301,7 @@ static void profileResults(struct NovaContext* const context)
 
     PROF_FINISH_CONTEXT
 
-    const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount;
+    const double drawcalls = (double)(context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount);
 
     // Copy items, otherwise sorthing will ruin the further profiling
     ProfilingItem stats[NovaFunctionCount];
@@ -1326,9 +1326,9 @@ static void profileResults(struct NovaContext* const context)
                 stats[i].errors,
                 stats[i].nullptrs,
                 timer_ticks_to_ms(stats[i].ticks),
-                timer_ticks_to_us(stats[i].ticks) / stats[i].callCount,
-                (double)stats[i].ticks * 100.0 / context->ticks,
-                (double)stats[i].ticks * 100.0 / totalTicks);
+                timer_ticks_to_us(stats[i].ticks) / (double)stats[i].callCount,
+                (double)stats[i].ticks * 100.0 / (double)context->ticks,
+                (double)stats[i].ticks * 100.0 / (double)totalTicks);
         }
     }
 

@@ -766,7 +766,7 @@ static const char* decodeCapability(const GLenum value)
     return "Unknown capability";
 }
 
-static const char* decodePrimitive(const int value)
+static const char* decodePrimitive(const GLenum value)
 {
     #define MAP_ENUM(x) case x: return #x;
 
@@ -1086,10 +1086,10 @@ static void profileResults(struct Ogles2Context* const context)
 
     PROF_FINISH_CONTEXT
 
-    const double drawcalls = context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount +
-        context->profiling[DrawElementsBaseVertexOES].callCount;
+    const double drawcalls = (double)(context->profiling[DrawElements].callCount + context->profiling[DrawArrays].callCount +
+        context->profiling[DrawElementsBaseVertexOES].callCount);
 
-    const uint64 swaps = context->profiling[SwapBuffers].callCount;
+    const double swaps = (double)context->profiling[SwapBuffers].callCount;
 
     // Copy items, otherwise sorthing will ruin the further profiling
     ProfilingItem stats[Ogles2FunctionCount];
@@ -1117,9 +1117,9 @@ static void profileResults(struct Ogles2Context* const context)
                 stats[i].callCount,
                 stats[i].errors,
                 timer_ticks_to_ms(stats[i].ticks),
-                timer_ticks_to_us(stats[i].ticks) / stats[i].callCount,
-                (double)stats[i].ticks * 100.0 / context->ticks,
-                (double)stats[i].ticks * 100.0 / totalTicks);
+                timer_ticks_to_us(stats[i].ticks) / (double)stats[i].callCount,
+                (double)stats[i].ticks * 100.0 / (double)context->ticks,
+                (double)stats[i].ticks * 100.0 / (double)totalTicks);
         }
     }
 
@@ -1968,7 +1968,7 @@ static void OGLES2_glDrawArrays(struct OGLES2IFace *Self, GLenum mode, GLint fir
 
     GL_CALL(DrawArrays, mode, first, count)
 
-    countPrimitive(&context->counter, mode, count);
+    countPrimitive(&context->counter, mode, (size_t)count);
 }
 
 static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices)
@@ -1983,7 +1983,7 @@ static void OGLES2_glDrawElements(struct OGLES2IFace *Self, GLenum mode, GLsizei
 
     GL_CALL(DrawElements, mode, count, type, indices)
 
-    countPrimitive(&context->counter, mode, count);
+    countPrimitive(&context->counter, mode, (size_t)count);
 }
 
 static void OGLES2_glDrawElementsBaseVertexOES(struct OGLES2IFace *Self, GLenum mode, GLsizei count, GLenum type, const void * indices, GLint basevertex)
@@ -1998,7 +1998,7 @@ static void OGLES2_glDrawElementsBaseVertexOES(struct OGLES2IFace *Self, GLenum 
 
     GL_CALL(DrawElementsBaseVertexOES, mode, count, type, indices, basevertex)
 
-    countPrimitive(&context->counter, mode, count);
+    countPrimitive(&context->counter, mode, (size_t)count);
 }
 
 static void OGLES2_glEnable(struct OGLES2IFace *Self, GLenum cap)
@@ -2929,7 +2929,7 @@ static void OGLES2_glShaderSource(struct OGLES2IFace *Self, GLuint shader, GLsiz
                 logLine("Line %u: length 0:", i);
             } else {
                 // Use temporary buffer to NUL-terminate strings
-                const size_t len = length[i] + 1;
+                const size_t len = (size_t)length[i] + 1;
 
                 char* temp = IExec->AllocVecTags(len, TAG_DONE);
 
@@ -3028,7 +3028,7 @@ static void OGLES2_glTexImage2D(struct OGLES2IFace *Self, GLenum target, GLint l
     logLine("%s: %s: target 0x%X (%s), level %d, internalformat 0x%X (%s), width %u, height %u, border %d, format 0x%X (%s), type 0x%X (%s), pixels %p", context->name, __func__,
         target, decodeValue(target),
         level,
-        internalformat, decodeValue(internalformat),
+        internalformat, decodeValue((GLenum)internalformat),
         width, height, border,
         format, decodeValue(format),
         type, decodeValue(type),
@@ -3068,7 +3068,7 @@ static void OGLES2_glTexParameteri(struct OGLES2IFace *Self, GLenum target, GLen
     logLine("%s: %s: target 0x%X (%s), pname 0x%X (%s), param 0x%X (%s)", context->name, __func__,
         target, decodeValue(target),
         pname, decodeValue(pname),
-        param, decodeValue(param));
+        param, decodeValue((GLenum)param));
 
     GL_CALL(TexParameteri, target, pname, param)
 }

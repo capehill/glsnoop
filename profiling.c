@@ -31,40 +31,40 @@ void primitiveStats(const PrimitiveCounter* const counter, const double seconds,
         return;
     }
 
-    logAlways("    Total vertices %llu. %.1f vertices/s, %.1f vertices/call, consisting of:", total, total / seconds, total / drawcalls);
+    logAlways("    Total vertices %llu. %.1f vertices/s, %.1f vertices/call, consisting of:", total, (double)total / seconds, (double)total / drawcalls);
 
     if (counter->triangles) {
         logAlways("    - Triangle vertices %llu. %.1f verts/s, %.1f verts/call", counter->triangles,
-            counter->triangles / seconds, counter->triangles / drawcalls);
+            (double)counter->triangles / seconds, (double)counter->triangles / drawcalls);
     }
 
     if (counter->triangleStrips) {
         logAlways("    - Triangle strip vertices %llu. %.1f verts/s, %.1f verts/call", counter->triangleStrips,
-            counter->triangleStrips / seconds, counter->triangleStrips / drawcalls);
+            (double)counter->triangleStrips / seconds, (double)counter->triangleStrips / drawcalls);
     }
 
     if (counter->triangleFans) {
         logAlways("    - Triangle fan vertices %llu. %.1f verts/s, %.1f verts/call", counter->triangleFans,
-            counter->triangleFans / seconds, counter->triangleFans / drawcalls);
+            (double)counter->triangleFans / seconds, (double)counter->triangleFans / drawcalls);
     }
 
     if (counter->lines) {
         logAlways("    - Line vertices %llu. %.1f verts/s, %.1f verts/call", counter->lines,
-            counter->lines / seconds, counter->lines / drawcalls);
+            (double)counter->lines / seconds, (double)counter->lines / drawcalls);
     }
 
     if (counter->lineStrips) {
         logAlways("    - Line strip vertices %llu. %.1f verts/s, %.1f verts/call", counter->lineStrips,
-            counter->lineStrips / seconds, counter->lineStrips / drawcalls);
+            (double)counter->lineStrips / seconds, (double)counter->lineStrips / drawcalls);
     }
 
     if (counter->lineLoops) {
         logAlways("    - Line loop vertices %llu. %.1f verts/s, %.1f verts/call", counter->lineLoops,
-            counter->lineLoops / seconds, counter->lineLoops / drawcalls);
+            (double)counter->lineLoops / seconds, (double)counter->lineLoops / drawcalls);
     }
 
     if (counter->points) {
         logAlways("    - Point vertices %llu. %.1f verts/s, %.1f verts/call", counter->points,
-            counter->points / seconds, counter->points / drawcalls);
+            (double)counter->points / seconds, (double)counter->points / drawcalls);
     }
 }

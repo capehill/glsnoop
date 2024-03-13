@@ -46,7 +46,7 @@ BOOL timer_init(TimerContext * tc)
         goto out;
     }
 
-    tc->device = IExec->OpenDevice(TIMERNAME, UNIT_WAITUNTIL,
+    tc->device = (BYTE)IExec->OpenDevice(TIMERNAME, UNIT_WAITUNTIL,
         (struct IORequest *) tc->request, 0);
 
     if (tc->device) {

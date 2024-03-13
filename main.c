@@ -117,11 +117,11 @@ static BOOL parse_args(void)
         }
 
         if (params.startTime) {
-            startTime = *params.startTime;
+            startTime = (ULONG)*params.startTime;
         }
 
         if (params.duration) {
-            duration = *params.duration;
+            duration = (ULONG)*params.duration;
         }
 
         IDOS->FreeArgs(result);

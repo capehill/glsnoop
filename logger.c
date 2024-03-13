@@ -19,7 +19,7 @@ static void logLineImpl(const char * fmt, va_list ap)
 
     while (TRUE) {
         char serialBuffer[4 * 1024]; // Sashimi has 4k buffer
-        const size_t wantedToWrite = snprintf(serialBuffer, sizeof(serialBuffer), "[%.6f] %s\n", time, ptr);
+        const size_t wantedToWrite = (size_t)snprintf(serialBuffer, sizeof(serialBuffer), "[%.6f] %s\n", time, ptr);
 
         IExec->DebugPrintF("%s", serialBuffer);
 
