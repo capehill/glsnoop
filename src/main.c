@@ -11,7 +11,7 @@
 #include <proto/icon.h>
 
 #include <stdio.h>
-#include <string.H>
+#include <string.h>
 #include <stdlib.h>
 
 struct Params {

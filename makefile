@@ -1,15 +1,15 @@
 ifneq ($(shell uname), AmigaOS)
-	CC 		= ppc-amigaos-gcc
-	STRIP = ppc-amigaos-strip
 	AMIGADATE = $(shell date +"%-d.%-m.%Y")
 else
-	CC 		= gcc
-	STRIP = strip
 	AMIGADATE = $(shell date LFORMAT "%-d.%-m.%Y")
 endif
 
+CC = ppc-amigaos-gcc
+STRIP = ppc-amigaos-strip
+
 NAME = glSnoop
-OBJS = main.o ogles2_module.o warp3dnova_module.o logger.o gui.o common.o filter.o timer.o profiling.o
+SRCS = $(wildcard src/*.c)
+OBJS = $(SRCS:.c=.o)
 DEPS = $(OBJS:.o=.d)
 
 CFLAGS = -Wall -Wextra -Wconversion -O3 -gstabs -D__AMIGA_DATE__=\"$(AMIGADATE)\"
@@ -25,7 +25,7 @@ $(NAME): $(OBJS) makefile
 	$(CC) -o $@ $(OBJS) -lauto
 
 clean:
-	$(RM) $(OBJS)
+	$(RM) $(OBJS) $(DEPS)
 
 strip:
 	$(STRIP) $(NAME)
